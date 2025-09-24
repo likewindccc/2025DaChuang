@@ -1,0 +1,127 @@
+# ==================== Python 项目 .gitignore ====================
+# 2025大创 - 农村女性就业市场动态演化机制研究项目
+# 忽略虚拟环境、缓存文件、临时文件等不需要版本控制的文件
+
+# ===== 虚拟环境 =====
+venv/
+.venv/
+env/
+.env/
+ENV/
+env.bak/
+venv.bak/
+
+# ===== Python 缓存和编译文件 =====
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.dll
+*.pyd
+
+# ===== 分发和打包 =====
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# ===== 测试和覆盖率 =====
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# ===== Jupyter Notebook 检查点 =====
+.ipynb_checkpoints
+
+# ===== IPython =====
+profile_default/
+ipython_config.py
+
+# ===== 环境配置文件 =====
+.env
+.venv
+.ENV
+.env.local
+.env.*.local
+
+# ===== IDE 和编辑器文件 =====
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ===== 系统文件 =====
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ===== 日志和临时文件 =====
+*.log
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# ===== 数据文件（大文件）=====
+# 注意：根据需要调整，有些数据文件可能需要版本控制
+*.csv.bak
+*.xlsx.bak
+*.pickle
+*.pkl
+*.h5
+*.hdf5
+
+# ===== 模型和结果文件 =====
+# 注意：根据研究需要，某些结果文件可能需要保留
+models/checkpoints/
+results/temp/
+output/temp/
+
+# ===== 文档生成 =====
+docs/_build/
+.readthedocs.yml
+site/
+
+# ===== 其他 =====
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+cython_debug/
+
+# ===== 项目特定 =====
+# 如果有特定的临时文件或测试输出，可以在这里添加
+*_test.py.backup
+*_old.py
+experimental/
+deprecated/

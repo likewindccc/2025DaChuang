@@ -1,0 +1,65 @@
+# 农村女性就业市场动态演化机制研究项目依赖
+# 基于平均场博弈与主体建模思想
+# Python 3.12.5
+
+# 核心数据科学库
+numpy==1.26.4
+pandas==2.2.3
+scipy==1.14.1
+
+# 统计分析
+statsmodels==0.14.4
+scikit-learn==1.5.2
+
+# 可视化
+matplotlib==3.9.2
+seaborn==0.13.2
+plotly==5.24.1
+
+# 数值优化
+cvxpy==1.5.3
+
+# 机器学习/深度学习 (用于ABM模拟)
+torch==2.4.1
+torchvision==0.19.1
+
+# Jupyter支持
+jupyter==1.1.1
+ipykernel==6.29.5
+notebook==7.2.2
+
+# 进度条
+tqdm==4.66.5
+
+# 并行计算
+joblib==1.4.2
+multiprocessing-logging==0.3.4
+
+# 数据验证
+pydantic==2.9.2
+
+# 网络分析 (用于匹配算法)
+networkx==3.3
+
+# 配置文件处理
+pyyaml==6.0.2
+toml==0.10.2
+
+# 数据库支持 (用于存储模拟结果)
+sqlite3
+
+# 时间序列分析
+arch==7.0.0
+
+# 经济学建模相关
+quantecon==0.7.2
+
+# Copula建模 (用于虚拟个体生成)
+copulas==0.12.3
+
+# 测试框架
+pytest==8.3.3
+pytest-cov==5.0.0
+
+# 文档生成
+sphinx==8.0.2
