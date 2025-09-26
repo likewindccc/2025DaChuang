@@ -1,2 +1,5 @@
 ﻿Model,Fitted,Log_Likelihood,N_Params,AIC,BIC
 Gaussian,True,-1592.1407120857853,6,3196.2814241715705,3218.504119019508
+RegularVine,False,-inf,0,inf,inf
+CenterVine,False,-inf,0,inf,inf
+DirectVine,False,-inf,0,inf,inf
