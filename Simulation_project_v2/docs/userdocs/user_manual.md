@@ -22,10 +22,10 @@
 
 ```bash
 # 1. 进入项目目录
-cd D:\Python\2025大创\Simulation_project_v2
+cd D:\Python\2025DaChuang\Simulation_project_v2
 
 # 2. 激活项目虚拟环境（重要！使用项目专属环境）
-D:\Python\2025大创\venv\Scripts\Activate.ps1
+D:\Python\2025DaChuang\venv\Scripts\Activate.ps1
 # 或直接运行激活脚本
 activate_env.bat
 
@@ -61,10 +61,10 @@ python -m src.main --config config/experiments/baseline.yaml --mode simulation
 
 ```powershell
 # 激活项目专属虚拟环境（重要！）
-D:\Python\2025大创\venv\Scripts\Activate.ps1
+D:\Python\2025DaChuang\venv\Scripts\Activate.ps1
 
 # 或使用快捷脚本
-cd D:\Python\2025大创\Simulation_project_v2
+cd D:\Python\2025DaChuang\Simulation_project_v2
 activate_env.bat
 
 # 安装依赖（如果尚未安装）

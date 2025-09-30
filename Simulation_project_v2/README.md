@@ -71,10 +71,10 @@ Simulation_project_v2/
 
 ```bash
 # ⚠️ 重要：激活项目专属虚拟环境
-D:\Python\2025大创\venv\Scripts\Activate.ps1
+D:\Python\2025DaChuang\venv\Scripts\Activate.ps1
 
 # 或使用快捷脚本（推荐）
-cd D:\Python\2025大创\Simulation_project_v2
+cd D:\Python\2025DaChuang\Simulation_project_v2
 activate_env.bat
 
 # 安装依赖
@@ -85,7 +85,7 @@ pip install -r ../requirements.txt
 
 ```bash
 # 进入项目目录
-cd D:\Python\2025大创\Simulation_project_v2
+cd D:\Python\2025DaChuang\Simulation_project_v2
 
 # 运行主程序（待实现）
 python -m src.main --config config/default/base_config.yaml

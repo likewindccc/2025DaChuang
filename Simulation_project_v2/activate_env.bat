@@ -6,10 +6,10 @@ echo ================================================
 echo   Simulation_project_v2 环境激活脚本
 echo ================================================
 echo.
-echo 正在激活虚拟环境: D:\Python\2025大创\venv
+echo 正在激活虚拟环境: D:\Python\2025DaChuang\venv
 echo.
 
-call "D:\Python\2025大创\venv\Scripts\activate.bat"
+call "D:\Python\2025DaChuang\venv\Scripts\activate.bat"
 
 if %ERRORLEVEL% EQU 0 (
     echo.
@@ -25,7 +25,7 @@ if %ERRORLEVEL% EQU 0 (
 ) else (
     echo.
     echo ✗ 虚拟环境激活失败！
-    echo 请检查路径: D:\Python\2025大创\venv
+    echo 请检查路径: D:\Python\2025DaChuang\venv
     echo ================================================
 )
 

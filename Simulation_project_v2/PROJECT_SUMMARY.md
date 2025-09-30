@@ -229,11 +229,11 @@ Simulation_project_v2/
 
 ## ⚠️ 重要提醒：虚拟环境
 
-本项目使用**项目专属虚拟环境**: `D:\Python\2025大创\venv`
+本项目使用**项目专属虚拟环境**: `D:\Python\2025DaChuang\venv`
 
 ```bash
 # ✅ 正确：使用项目虚拟环境
-D:\Python\2025大创\venv\Scripts\Activate.ps1
+D:\Python\2025DaChuang\venv\Scripts\Activate.ps1
 # 或使用快捷脚本
 activate_env.bat
 
