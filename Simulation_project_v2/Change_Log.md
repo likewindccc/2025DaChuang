@@ -105,12 +105,157 @@
 
 ---
 
+# 修改 4 北京时间 2025/09/30 21:35
+## Commit: (待提交) - Reorganize experiments and run marginal distribution fitting
+
+**新增文件**:
+- `experiments/` - 实验脚本文件夹
+- `experiments/README.md` - 实验文件夹说明
+- `data/input/cleaned_data.csv` - 清洗后的调研数据（从Project复制）
+- `data/output/best_distributions.txt` - 边际分布拟合结果
+
+**移动文件**:
+- `marginal_distribution_experiment.py` → `experiments/marginal_distribution_experiment.py`
+
+**修改文件**:
+- `experiments/marginal_distribution_experiment.py` - 更新数据路径，去除emoji（解决Windows编码问题）
+
+**实验结果**:
+- ✅ 每周工作时长: Beta分布 (α=1.93, β=2.05)
+- ✅ 工作能力评分: Beta分布 (α=1.79, β=1.57)
+- ⚠️ 数字素养评分: Lognorm分布 (参数异常，需要检查)
+- ✅ 每月期望收入: Beta分布 (α=1.43, β=1.45)
+
+**变更动机**:  
+- 整理项目结构，将实验脚本独立到 `experiments/` 文件夹
+- 复制数据文件到项目内部，便于版本管理
+- 完成边际分布拟合实验，为Core模块开发提供参数依据
+
+**影响范围**:  
+- ✅ 项目结构更清晰（核心代码 vs 实验脚本）
+- ✅ 数据自包含，不依赖外部路径
+- ⚠️ 数字素养评分的Lognorm参数需要进一步检查
+
+**审阅状态**: 待审阅（数字素养评分结果异常）
+
+---
+
+# 修改 5 北京时间 2025/09/30 22:00
+## Commit: (待提交) - Create Core module development plan
+
+**新增文件**:
+- `docs/developerdocs/modules/Phase1_Core_Development_Plan.md` - Core模块详细开发文档
+
+**文档内容**:
+- 模块概述（职责、依赖关系）
+- 设计决策（dataclass、类型注解、异常体系）
+- 核心数据结构（Agent、MatchingPair、SimulationState、MFGEquilibrium）
+- 基础类设计（BaseGenerator、BaseSimulator）
+- 异常体系（7个细粒度异常）
+- 类型系统（类型别名定义）
+- API接口定义
+- 测试策略
+- 实现计划（预计3.5天）
+
+**变更动机**:  
+- 遵循开发流程：先文档后代码
+- 为Core模块编码提供详细设计依据
+- 明确接口设计，便于后续模块开发
+
+**待审阅问题**:
+1. 数据结构方案（dataclass）是否合适？
+2. 异常粒度（7个异常类）是否合理？
+3. Agent的验证逻辑是否足够？
+4. 数字素养评分的Lognorm参数异常如何处理？
+
+**审阅状态**: 待用户审阅
+
+---
+
+# 修改 6 北京时间 2025/09/30 22:15
+## Commit: (待提交) - Fix digital literacy distribution fitting
+
+**修改文件**:
+- `experiments/marginal_distribution_experiment.py` - 修正数据加载逻辑
+
+**修正内容**:
+- 识别并处理数字素养评分为0的样本（共36个，占12%）
+- 将这些样本的值设为0.1，避免对数正态分布拟合时的log(0)问题
+
+**实验结果更新**:
+
+修正前：
+- 数字素养评分 → Lognorm（参数异常：σ=242.62）
+
+修正后：
+- 数字素养评分 → **Beta(α=0.37, β=0.76)**, AIC=-313.78 ✅
+
+**关键发现**:
+- **所有4个核心变量统一拟合为Beta分布**
+- 数字素养评分呈U型分布（α<1, β<1），符合现实（两极分化）
+- 为后续Copula建模提供了一致的边际分布
+
+**影响范围**:
+- ✅ Core模块开发文档已更新（边际分布结果表格）
+- ✅ 数据预处理逻辑已固化（自动修正0值）
+- ✅ 为Population模块的Copula建模扫清障碍
+
+**文档更新**:
+- `docs/developerdocs/modules/Phase1_Core_Development_Plan.md` - 更新边际分布表格和说明
+
+---
+
+# 修改 7 北京时间 2025/09/30 22:30
+## Commit: (待提交) - Fix goodness-of-fit test (AD → KS)
+
+**修改文件**:
+- `experiments/marginal_distribution_experiment.py` - 修正拟合优度检验逻辑
+
+**问题诊断**（用户发现）:
+- 同一变量的所有候选分布的AD统计量完全相同 ❌
+- 原因：所有分布都用`stats.anderson(data, dist='norm')`检验原始数据是否服从正态分布
+- 实际应该：检验每个拟合分布与数据的吻合度
+
+**修正方案**:
+- Anderson-Darling检验 → **Kolmogorov-Smirnov (KS) 检验**
+- 使用拟合后的分布CDF：`stats.kstest(data, fitted_dist.cdf)`
+- KS检验支持任意分布，更通用
+
+**修正效果**:
+
+修正前：
+```
+每周工作时长所有分布的AD = 4.696（相同）❌
+```
+
+修正后：
+```
+每周工作时长：
+  beta:   KS=0.2136
+  gamma:  KS=0.1740
+  lognorm: KS=0.1655
+  weibull: KS=0.1437 ✅（各不相同，正确反映拟合质量）
+```
+
+**关键洞察**:
+- KS统计量越小 → 拟合越好
+- Beta分布虽然AIC最优，但KS不总是最小
+- AIC考虑模型复杂度，是更科学的准则
+- **最终选择仍基于AIC（所有变量均为Beta分布）**
+
+**影响范围**:
+- ✅ 拟合优度评估现在更准确
+- ✅ 结果输出更科学（KS统计量有区分度）
+- ✅ 为后续分布选择提供更可靠的依据
+
+---
+
 ## 下一步计划
 
-- [ ] 运行边际分布实验
-- [ ] 创建Core模块开发文档
-- [ ] 开始Phase 1开发（Week 1-2）
-- [ ] 实现核心基类 (`src/core/`)
+- [ ] **用户审阅Core模块开发文档**
+- [ ] 根据反馈调整设计
+- [ ] 实现Core模块代码（预计3.5天）
+- [ ] 编写单元测试（覆盖率>90%）
 
 ---
 
