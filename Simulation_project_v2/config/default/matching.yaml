@@ -1,0 +1,14 @@
+# Module 2: Matching Engine 配置
+
+algorithm:
+  type: "gale_shapley"
+  max_iterations: 10000  # GS算法最大迭代次数
+  
+preference:
+  method: "weighted_distance"  # 偏好计算方法
+  weights: [0.3, 0.3, 0.2, 0.2]  # T, S, D, W 权重
+  normalization: true  # 是否归一化特征
+
+market_tightness:
+  initial_theta: 1.0  # 初始市场紧张度（V/U）
+  update_method: "ratio"  # 更新方法

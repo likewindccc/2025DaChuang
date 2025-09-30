@@ -1,0 +1,52 @@
+# Module 5: Calibration 配置
+
+genetic_algorithm:
+  population_size: 100
+  n_generations: 50
+  crossover_prob: 0.7
+  mutation_prob: 0.2
+  tournament_size: 3
+  
+  # 并行评估
+  n_processes: 4  # CPU核心数
+  
+  # 中间结果保存
+  checkpoint_frequency: 5  # 每5代保存一次
+
+objective_function:
+  weights:
+    unemployment_rate: 0.4
+    match_rate: 0.3
+    average_wage: 0.2
+    market_tightness: 0.1
+  
+  targets:
+    unemployment_rate: 0.05  # 5%
+    match_rate: 0.75         # 75%
+    average_wage: 4500.0     # ¥4500
+    market_tightness: 1.0    # θ=1
+
+parameter_space:
+  # 企业参数（17维）
+  enterprise_mean_T: [30.0, 50.0]
+  enterprise_mean_S: [50.0, 80.0]
+  enterprise_mean_D: [40.0, 80.0]
+  enterprise_mean_W: [3000.0, 6000.0]
+  
+  enterprise_std_T: [5.0, 15.0]
+  enterprise_std_S: [10.0, 20.0]
+  enterprise_std_D: [10.0, 20.0]
+  enterprise_std_W: [500.0, 1500.0]
+  
+  # 相关系数（-1到1）
+  enterprise_corr_TS: [-0.5, 0.5]
+  enterprise_corr_TD: [-0.5, 0.5]
+  enterprise_corr_TW: [-0.5, 0.5]
+  enterprise_corr_SD: [-0.5, 0.5]
+  enterprise_corr_SW: [-0.5, 0.5]
+  enterprise_corr_DW: [-0.5, 0.5]
+  
+  # MFG参数
+  rho: [0.9, 0.99]
+  kappa: [0.5, 2.0]
+  mu: [0.01, 0.1]

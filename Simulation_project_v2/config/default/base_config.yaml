@@ -1,0 +1,23 @@
+# 基础配置文件
+# Base Configuration for Simulation_project_v2
+
+project:
+  name: "Simulation_project_v2"
+  version: "2.0"
+  description: "农村女性就业市场MFG模拟系统"
+
+simulation:
+  random_seed: 42
+  n_labor: 10000
+  n_enterprise: 5000
+  
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  save_to_file: true
+  log_dir: "results/logs"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+output:
+  save_intermediate: true
+  output_dir: "data/output"
+  results_dir: "results"

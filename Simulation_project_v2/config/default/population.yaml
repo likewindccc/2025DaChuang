@@ -1,0 +1,22 @@
+# Module 1: Population Generator 配置
+
+labor:
+  copula_type: "GaussianMultivariate"
+  random_seed: 42
+  variables:
+    - "T"  # 每周工作时长
+    - "S"  # 工作能力评分
+    - "D"  # 数字素养评分
+    - "W"  # 每月期望收入
+
+enterprise:
+  distribution: "multivariate_normal"
+  random_seed: 42
+  # 参数将通过校准确定
+  mean: [40.0, 65.0, 60.0, 4500.0]  # 初始值
+  cov_diagonal: [100.0, 225.0, 225.0, 1000000.0]  # 初始方差
+  variables:
+    - "T_req"  # 工作时长要求
+    - "S_req"  # 技能要求
+    - "D_req"  # 数字化要求
+    - "W_offer"  # 提供薪资

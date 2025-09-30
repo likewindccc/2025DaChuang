@@ -1,0 +1,27 @@
+# Module 4: MFG Simulator 配置
+
+state_space:
+  grid_size: [50, 50]  # T和S维度的网格大小
+  T_range: [0, 168]    # 每周工作时长范围（小时）
+  S_range: [0, 100]    # 技能评分范围
+
+solver:
+  max_iterations: 500
+  tolerance: 1.0e-6
+  
+  # 贝尔曼方程参数
+  rho: 0.95          # 贴现因子
+  kappa: 1.0         # 努力成本系数
+  
+  # KFE演化参数
+  mu: 0.05           # 外生离职率
+  
+  # 收敛判断
+  convergence_criteria:
+    value_function: 1.0e-4
+    policy: 1.0e-4
+    theta: 1.0e-3
+
+optimization:
+  use_numba: true
+  parallel: false  # 贝尔曼迭代暂不并行（可能导致数值不稳定）

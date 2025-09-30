@@ -1,0 +1,17 @@
+# 基准实验配置
+
+# 继承默认配置
+base_configs:
+  - ../default/base_config.yaml
+  - ../default/population.yaml
+  - ../default/matching.yaml
+  - ../default/estimation.yaml
+  - ../default/mfg.yaml
+
+experiment:
+  name: "baseline"
+  description: "基准实验：默认参数下的市场模拟"
+
+# 覆盖/补充参数
+simulation:
+  random_seed: 42
