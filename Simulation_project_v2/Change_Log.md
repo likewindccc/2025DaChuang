@@ -250,12 +250,137 @@
 
 ---
 
+---
+
+# 修改 8 北京时间 2025/10/01 00:40
+## Commit: (待提交) - Implement Core module (Phase 1, Week 1)
+
+**新增文件**:
+- `src/core/data_structures.py` - 核心数据结构（467行）
+- `src/core/exceptions.py` - 异常体系（208行）
+- `src/core/types.py` - 类型定义（350行）
+- `src/core/base_generator.py` - 生成器基类（220行）
+- `src/core/base_simulator.py` - 模拟器基类（270行）
+- `src/core/__init__.py` - 公共接口（200行）
+- `test_core_module.py` - 功能验证脚本
+
+**实现内容**:
+
+1. **数据结构** (`data_structures.py`):
+   - `Agent`: 个体基类（劳动力/企业），支持to_array/from_array转换
+   - `MatchingPair`: 匹配对，记录匹配结果和质量
+   - `SimulationState`: 模拟状态，完整记录某时刻的系统状态
+   - `MFGEquilibrium`: MFG均衡结果，包含值函数、策略、分布
+
+2. **异常体系** (`exceptions.py`):
+   - `SimulationError`: 基础异常
+   - 6个子异常：DataValidationError, CopulaFittingError, MatchingError, 
+     ConvergenceError, ConfigurationError, CalibrationError
+   - 异常映射工具：`get_exception_class()`
+
+3. **类型系统** (`types.py`):
+   - 基础类型：AgentID, TimeStep, ParameterDict
+   - NumPy类型：AgentFeatures, PreferenceMatrix, ValueFunction, Distribution等
+   - 函数类型：ObjectiveFunction, MatchFunction, UtilityFunction
+   - 配置类型：Config, ExperimentConfig
+   - 类型检查工具：is_valid_agent_features(), is_valid_distribution()等
+
+4. **基础类** (`base_generator.py`, `base_simulator.py`):
+   - `BaseGenerator`: 生成器抽象基类，定义fit→generate→validate流程
+   - `BaseSimulator`: 模拟器抽象基类，定义setup→run→get_results流程
+   - 支持参数持久化（save/load）
+   - 完整的生命周期管理
+
+5. **公共接口** (`__init__.py`):
+   - 导出40+个组件
+   - 完整性检查
+   - 模块信息查询：get_module_info(), print_module_summary()
+
+**代码规范**:
+- ✅ 100% PEP8规范
+- ✅ 所有公共接口有完整docstring
+- ✅ 所有函数有类型注解
+- ✅ 所有数据结构有__post_init__验证
+- ✅ 无linter错误
+
+**测试结果**:
+```
+测试1: Agent数据结构           ✅ 通过
+测试2: MatchingPair数据结构     ✅ 通过
+测试3: SimulationState数据结构  ✅ 通过
+测试4: MFGEquilibrium数据结构   ✅ 通过
+测试5: 异常体系                ✅ 通过
+测试6: 模块信息                ✅ 通过
+─────────────────────────────────────
+总测试数: 6
+通过: 6
+失败: 0
+```
+
+**关键设计**:
+- 使用dataclass实现数据结构（轻量、类型安全）
+- 细粒度异常设计（7个异常类）
+- 严格类型注解（支持mypy检查）
+- Agent的to_array顺序固定为[T, S, D, W]
+- additional_attrs保持灵活Dict结构
+
+**影响范围**:
+- ✅ 为所有后续模块提供统一基础
+- ✅ Population模块可继承BaseGenerator
+- ✅ Matching/MFG模块可继承BaseSimulator
+- ✅ 统一的异常处理和类型系统
+- ✅ 代码总行数：~1715行（含注释）
+
+**代码统计**:
+- 数据结构: 4个类，467行
+- 异常: 7个类，208行
+- 类型: 20+个别名，350行
+- 基础类: 2个抽象类，490行
+- 公共接口: 200行
+- **总计: ~1715行（含文档字符串）**
+
+---
+
+---
+
+# 修改 9 北京时间 2025/10/01 00:50
+## Commit: (待提交) - Fix experiments folder location
+
+**问题发现**（用户指出）:
+- 实验文件被错误地放在 `docs/developerdocs/experiments/` ❌
+- 应该在项目根目录的 `experiments/` ✅
+
+**修正操作**:
+- 创建根目录 `experiments/` 文件夹
+- 移动 `marginal_distribution_experiment.py` 到正确位置
+- 移动 `README.md` 到正确位置
+- 删除错误的 `docs/developerdocs/experiments/` 目录
+
+**修正后的正确结构**:
+```
+Simulation_project_v2/
+├── experiments/                          ✅ 正确位置
+│   ├── marginal_distribution_experiment.py
+│   └── README.md
+└── docs/developerdocs/                   
+    ├── architecture.md
+    ├── modules/
+    └── ...                               ✅ 不再有experiments/
+```
+
+**影响范围**:
+- ✅ 目录结构现在符合项目规范
+- ✅ 实验脚本仍可正常运行
+- ✅ 文档目录更清晰
+
+---
+
 ## 下一步计划
 
-- [ ] **用户审阅Core模块开发文档**
-- [ ] 根据反馈调整设计
-- [ ] 实现Core模块代码（预计3.5天）
-- [ ] 编写单元测试（覆盖率>90%）
+- [ ] 编写Core模块单元测试（使用pytest，覆盖率>90%）
+- [ ] 开始Phase 1, Week 2：Population模块开发
+- [ ] 创建Population模块开发文档
+- [ ] 实现LaborGenerator和EnterpriseGenerator
 
 ---
 
