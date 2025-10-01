@@ -10,11 +10,13 @@ from .preference import (
 )
 from .gale_shapley import gale_shapley, verify_stability
 from .matching_result import MatchingResult
+from .matching_engine import MatchingEngine
 
 __all__ = [
     'compute_labor_preference_matrix',
     'compute_enterprise_preference_matrix',
     'gale_shapley',
     'verify_stability',
-    'MatchingResult'
+    'MatchingResult',
+    'MatchingEngine'
 ]
