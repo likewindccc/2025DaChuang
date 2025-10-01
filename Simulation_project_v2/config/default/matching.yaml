@@ -1,14 +1,38 @@
-# Module 2: Matching Engine 配置
+# Matching模块配置文件
+
+preference:
+  labor:
+    # 劳动力偏好函数参数：P_ij = γ₀ - γ₁Tⱼ - γ₂max(0,Sⱼ-Sᵢ) - γ₃max(0,Dⱼ-Dᵢ) + γ₄Wⱼ
+    gamma_0: 1.0            # 截距项（基准偏好）
+    gamma_1: 0.01           # 工作时长负面系数
+    gamma_2: 0.5            # 技能要求超过惩罚系数
+    gamma_3: 0.5            # 数字素养要求超过惩罚系数
+    gamma_4: 0.001          # 工资正面权重
+  
+  enterprise:
+    # 企业偏好函数参数：P_ji = β₀ + β₁Tᵢ + β₂Sᵢ + β₃Dᵢ + β₄Wᵢ
+    beta_0: 0.0             # 截距项（基准偏好）
+    beta_1: 0.5             # 工作时间权重
+    beta_2: 1.0             # 技能水平权重
+    beta_3: 1.0             # 数字素养权重
+    beta_4: -0.001          # 期望工资权重（负数：降本增效）
 
 algorithm:
-  type: "gale_shapley"
-  max_iterations: 10000  # GS算法最大迭代次数
-  
-preference:
-  method: "weighted_distance"  # 偏好计算方法
-  weights: [0.3, 0.3, 0.2, 0.2]  # T, S, D, W 权重
-  normalization: true  # 是否归一化特征
+  method: "gale_shapley"    # 匹配算法：gale_shapley
+  max_iterations: 10000     # 最大迭代次数（安全限制）
+  proposer: "labor"         # 提议方：labor（劳动力提议）或enterprise（企业提议）
 
-market_tightness:
-  initial_theta: 1.0  # 初始市场紧张度（V/U）
-  update_method: "ratio"  # 更新方法
+performance:
+  use_numba: true           # 使用Numba加速
+  parallel: true            # 并行计算偏好矩阵
+  fastmath: true            # 快速数学运算
+  cache: true               # 缓存编译结果
+
+output:
+  save_preference_matrix: false      # 是否保存偏好矩阵
+  save_matching_details: true        # 是否保存匹配详情
+  log_level: "INFO"                  # 日志级别
+  
+validation:
+  verify_stability: true    # 是否验证稳定性
+  compute_quality: true     # 是否计算匹配质量指标
