@@ -375,14 +375,180 @@ Simulation_project_v2/
 
 ---
 
+# 修改 10 北京时间 2025/10/01 11:06
+## Commit: (待提交) - Add control variables to distribution fitting and correlation analysis
+
+**新增文件**:
+- `experiments/enhanced_marginal_distribution_experiment.py` - 增强版边际分布实验（含控制变量）
+- `data/output/enhanced_distribution_summary.txt` - 实验结果总结
+- `data/output/correlation_pearson.csv` - Pearson相关系数矩阵
+- `data/output/correlation_spearman.csv` - Spearman相关系数矩阵
+- `data/output/correlation_kendall.csv` - Kendall相关系数矩阵
+- `data/output/correlation_heatmap.png` - 相关性热图
+- `results/figures/*.png` - 8张分布拟合对比图（核心+控制变量）
+
+**修改文件**:
+- `experiments/enhanced_marginal_distribution_experiment.py` - 修正0值处理逻辑
+- `docs/developerdocs/modules/Phase1_Population_Development_Plan.md` - 更新边际分布实验结果
+- `Change_Log.md` - 本文档
+
+**变更内容**:
+1. **扩展实验范围**：
+   - 原：仅4个核心变量（每周工作时长、工作能力、数字素养、期望收入）
+   - 现：8个变量（4核心 + 4控制：年龄、孩子数量、学历、累计工作年限）
+
+2. **相关性分析**：
+   - 计算三种相关系数矩阵（Pearson、Spearman、Kendall）
+   - 生成相关性热图
+   - 识别15组关键相关性（|ρ|>0.3）
+
+3. **0值修正**：
+   - 将0值检测与修正从单一变量扩展到所有8个变量
+   - 检测到4个变量存在0值：数字素养评分(36个)、孩子数量(23个)、学历(1个)、累计工作年限(21个)
+   - 为0值样本添加0.1偏移，避免对数正态分布拟合失败
+
+4. **可视化增强**：
+   - 为每个变量生成对比图（理论分布曲线 vs 原始数据散点/直方图）
+   - 共生成8张高质量可视化图
+
+**实验结果**（重大发现）:
+
+修复前：
+- 孩子数量和累计工作年限的Lognorm拟合出现极端异常参数（AIC < -26000, KS > 0.5）❌
+
+修复后：
+- **所有8个变量的最佳分布统一为Beta分布**！✅
+- 所有KS统计量正常（< 0.4）
+
+**关键相关性**（Spearman系数）:
+- 年龄 ↔ 学历：-0.754（强负相关）
+- 数字素养评分 ↔ 学历：0.577（正相关）
+- 年龄 ↔ 累计工作年限：0.605（正相关）
+- 每周工作时长 ↔ 每月期望收入：0.549（正相关）
+- 工作能力评分 ↔ 数字素养评分：0.448（正相关）
+
+**最终结论**:
+- **核心变量**：每周工作时长、工作能力评分、数字素养评分、每月期望收入 → 全部Beta分布
+- **控制变量**：年龄、孩子数量、学历、累计工作年限 → 全部Beta分布
+
+**影响范围**:  
+- ✅ 确定Population模块边际分布选择策略：统一使用Beta分布（简化实现）
+- ✅ 简化Copula建模实现（边际分布类型一致）
+- ✅ 为Phase1 Population模块提供完整参数配置（8个变量）
+- ✅ 提出8维联合Copula生成方案（保留所有相关性）
+- ✅ 为LaborGenerator开发提供相关性矩阵数据
+
+**设计决策**:
+- 采用方案A：8维联合Copula（4核心 + 4控制变量）
+- 理由：自动保留所有相关性，统计一致性最强，实现简单
+
+**用户反馈**: 
+- 用户发现0值导致的拟合异常，要求对所有包含0值的变量进行修正 ✅
+- 用户要求加入控制变量的相关性分析和可视化 ✅
+
+---
+
+# 修改 11 北京时间 2025/10/01 11:17
+## Commit: (待提交) - Correct discrete vs continuous variable handling in distribution fitting
+
+**修改文件**:
+- `experiments/enhanced_marginal_distribution_experiment.py` - 重大修正：区分离散与连续变量
+
+**删除文件**:
+- `experiments/corrected_marginal_distribution_experiment.py` - 删除有bug的临时实验文件
+
+**变更内容**:
+1. **变量分类修正** ⭐关键改进：
+   - 连续变量（6个）：每周工作时长、工作能力评分、数字素养评分、每月期望收入、年龄、累计工作年限
+   - 离散变量（2个）：孩子数量（只有4个值：0,1,2,3）、学历（只有7个等级：0-6）
+
+2. **建模方法修正**：
+   - 连续变量 → Beta分布拟合（KS < 0.4，拟合质量良好）
+   - 离散变量 → 经验分布（直接使用观测概率，统计上最准确）
+
+3. **函数新增**：
+   - `fit_discrete_distribution()` - 离散变量拟合（经验分布）
+   - `plot_discrete_distribution()` - 离散变量分布图（频数图 + 概率图）
+
+4. **0值修正逻辑调整**：
+   - 仅对连续变量进行0值修正（+0.1偏移）
+   - 离散变量保持原值（0是有意义的取值）
+
+**问题诊断**（用户反馈）:
+- 孩子数量和学历是离散变量，用连续分布强行拟合效果很差
+- 孩子数量Beta拟合KS=0.35（不理想）
+- 学历Beta拟合KS=0.21（勉强可接受，但仍不够准确）
+
+**修正效果**:
+
+修正前：
+- 孩子数量 → Beta分布 (AIC=-450.27, KS=0.3500) ⚠️ 统计上不严谨
+- 学历 → Beta分布 (AIC=-133.31, KS=0.2122) ⚠️ 统计上不严谨
+
+修正后：
+- 孩子数量 → 经验分布 (4个唯一值，概率=[7.7%, 37.0%, 45.7%, 9.7%]) ✅ 完全准确
+- 学历 → 经验分布 (7个等级，主要集中在3级和4级各35.3%) ✅ 完全准确
+
+**最终结论**（修正后）:
+- **连续变量（6个）**：全部使用Beta分布
+  - 核心：每周工作时长、工作能力评分、数字素养评分、每月期望收入
+  - 控制：年龄、累计工作年限
+- **离散变量（2个）**：全部使用经验分布
+  - 控制：孩子数量、学历
+
+**影响范围**:  
+- ✅ 提高建模的统计严谨性（离散变量用离散分布）
+- ✅ 简化Population模块实现（经验分布直接抽样，无需参数拟合）
+- ✅ 为Copula建模提供正确的变量分类指导
+- ✅ 修正Phase1 Population开发计划（6维Copula + 2个离散变量条件生成）
+
+**用户反馈**: 
+- 用户指出孩子数量和学历是离散变量，不应用连续分布拟合 ✅
+- 用户要求直接修改现有代码而非创建新文件 ✅
+
+---
+
+# 修改 12 北京时间 2025/10/01 11:21
+## Commit: (待提交) - Clean up redundant and obsolete files
+
+**删除文件**:
+- `temp_output.txt` - 临时调试输出文件（13KB）
+- `data/output/best_distributions.txt` - 旧版实验结果（仅4个核心变量）
+- `data/output/corrected_distribution_summary.txt` - 有bug的实验结果（来自已删除的临时脚本）
+- `experiments/marginal_distribution_experiment.py` - 旧版实验脚本（已被enhanced版本取代）
+
+**清理原因**:
+1. **temp_output.txt**: 实验调试时的临时文件，无保留价值
+2. **best_distributions.txt**: 早期版本结果，已被`enhanced_distribution_summary.txt`完全取代
+3. **corrected_distribution_summary.txt**: 来自有bug的临时脚本，结果不准确（Weibull拟合错误）
+4. **marginal_distribution_experiment.py**: 旧版脚本，功能已完全被`enhanced_marginal_distribution_experiment.py`覆盖
+
+**保留的关键文件**:
+- ✅ `experiments/enhanced_marginal_distribution_experiment.py` - 最新完整版实验脚本
+- ✅ `data/output/enhanced_distribution_summary.txt` - 正确的8变量实验结果
+- ✅ `data/output/correlation_*.csv` - 相关性分析结果（3个文件）
+- ✅ `results/figures/*.png` - 8张分布拟合可视化图
+
+**影响范围**:  
+- ✅ 项目结构更清晰，无冗余文件
+- ✅ 减少混淆，确保只使用最新正确的实验结果
+- ✅ 释放约26KB存储空间
+- ✅ 便于后续Git版本管理
+
+**用户确认**: 用户选择方案A（立即删除所有冗余文件）✅
+
+---
+
 ## 下一步计划
 
 - [ ] 编写Core模块单元测试（使用pytest，覆盖率>90%）
-- [ ] 开始Phase 1, Week 2：Population模块开发
-- [ ] 创建Population模块开发文档
-- [ ] 实现LaborGenerator和EnterpriseGenerator
+- [ ] 实现LaborGenerator（6维Copula + 2个离散变量条件生成）
+- [ ] 实现EnterpriseGenerator（四维正态分布）
+- [ ] 编写Population模块单元测试
+- [ ] 生成验证（KS检验）
 
 ---
 
 **文档维护规则**: 每次commit后必须更新本文档  
-**格式**: 北京时间 + Commit哈希 + 文件清单 + 动机说明
+**格式**: 北京时间 + Commit哈希 + 文件清单 + 动机说明  
+**顺序**: 最新修改放在最下面（按时间正序排列）
