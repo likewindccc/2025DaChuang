@@ -275,7 +275,7 @@ def _run_integrity_check():
         for name in __all__:
             if name.startswith('__'):
                 continue
-            if not hasattr(__import__(__name__), name):
+            if name not in globals():
                 raise ImportError(f"导出的符号 '{name}' 不可用")
         
         # 检查数据结构
