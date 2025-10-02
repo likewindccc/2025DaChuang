@@ -14,6 +14,527 @@
 
 ---
 
+# 修改 28 北京时间 2025/10/02 19:29
+## Commit: (待提交) - chore: 清理开发过程中的冗余测试文件
+
+**删除的文件**:
+1. `results/parameter_search_analysis.png`
+   - 使用错误数据（随机生成而非真实数据）生成的参数搜索分析图
+   - 已被基于真实数据的quick_test_results.csv替代
+
+2. `results/preference_components_analysis.png`
+   - 使用错误数据生成的偏好组件分析图
+   - 已废弃
+
+3. `data/output/virtual_enterprises_default.csv`
+   - 测试EnterpriseGenerator时生成的临时文件
+   - 测试完成后应删除
+
+4. `data/output/virtual_enterprises_labor_based.csv`
+   - 测试EnterpriseGenerator时生成的临时文件
+   - 测试完成后应删除
+
+5. `data/output/virtual_laborers_test.csv`
+   - 测试LaborGenerator时生成的临时文件（文件名中包含"test"）
+   - 测试完成后应删除
+
+6. `examples/__pycache__/`
+   - Python字节码缓存目录
+   - 无需版本控制
+
+**保留的重要文件**:
+- ✅ `results/quick_test_results.csv` - 包含最终选定的参数配置
+- ✅ `data/output/enhanced_distribution_summary.txt` - 边际分布拟合结果
+- ✅ `data/output/correlation_*.csv` - 相关性分析结果
+- ✅ `results/figures/` - 所有拟合图表
+
+**目的**:
+1. 保持项目整洁，删除测试和开发过程中产生的临时文件
+2. 确保data/output和results目录只包含有用的、基于正确数据的结果
+3. 避免混淆：删除使用错误数据生成的图表
+
+**影响范围**:
+- 仅清理临时文件和测试结果
+- 不影响任何核心代码
+- 保留所有有价值的分析结果
+
+---
+
+# 修改 27 北京时间 2025/10/02 19:22
+## Commit: (待提交) - docs: 修复ABM与MFG匹配方式的文档误解
+
+**关键问题修复**:
+
+纠正了对研究设计的重大误解：
+- ❌ 误解：MFG求解阶段也使用GS算法进行匹配
+- ✅ 正确：MFG求解阶段使用匹配函数λ进行概率抽样判断就业
+
+**修改的文件**:
+1. `src/modules/matching/matching_engine.py`
+   - 添加了警告注释，明确本类不应在MFG阶段使用
+   - 说明MFG应使用`MatchFunction.sample_match_outcome()`
+
+2. `README.md`
+   - 新增"核心设计理念"章节
+   - 详细说明ABM和MFG两阶段的区别
+   - 强调MFG阶段不生成企业，使用λ函数
+
+3. `PROJECT_SUMMARY.md`
+   - 更新Module 2、3、4的说明
+   - 明确各模块的用途和限制
+   - 添加MFG匹配方式说明
+
+4. `docs/developerdocs/architecture.md`
+   - 重写Module 4 (MFG Simulator)章节
+   - 添加"关键设计原则"说明
+   - 新增ABM vs MFG对比表
+   - 详细说明sample_employment方法的设计
+
+**删除的临时文件**:
+- `d:\Python\examples\quick_parameter_test.py` (误放的副本)
+- `results/best_config_per_round.csv` (旧搜索结果)
+- `results/comprehensive_search_results.csv` (使用错误数据)
+- `results/parameter_search_analysis.png` (使用错误数据)
+- `results/preference_components_analysis.png` (使用错误数据)
+
+**保留的有用文件**:
+- ✅ `examples/quick_parameter_test.py` - 快速参数测试工具
+- ✅ `examples/verify_params.py` - 参数验证脚本
+- ✅ `examples/exact_parameter_search_numba.py` - 精确搜索（备用）
+- ✅ `results/quick_test_results.csv` - 最终选定参数的依据
+
+**核心设计澄清**:
+
+**阶段1: ABM数据生成 + 参数估计**
+- 生成：劳动力 + 企业
+- 匹配：limited_rounds_matching（有限轮次）
+- 输出：训练数据 → Logit回归 → λ参数
+
+**阶段2: MFG均衡求解**
+- 生成：**只有劳动力**（不生成企业）
+- 匹配：**λ函数 + 随机抽样**（u ~ U(0,1) vs λ(x,σ,a,θ)）
+- 输出：均衡策略、人口分布
+
+**重要性**:
+这次修复对项目至关重要，确保：
+1. 未来开发MFG求解器时不会误用GS算法
+2. 文档准确反映研究设计
+3. 代码注释防止误用
+
+**影响范围**:
+- 文档更新（无代码逻辑变更）
+- 现有实现（match_function.py, abm_data_generator.py）已经是正确的
+- 预防未来MFG求解器的实现错误
+
+---
+
+# 修改 26 北京时间 2025/10/02 16:21
+## Commit: (待提交) - chore: 清理冗余和废弃的测试文件
+
+**删除的文件**:
+- ❌ `examples/parameter_search.py` - 已被comprehensive版本替代
+- ❌ `examples/test_single_round_matching.py` - 已废弃（改用limited_rounds_matching）
+- ❌ `examples/complete_pipeline_demo.py` - 使用旧匹配逻辑，已过时
+- ❌ `examples/fine_tune_parameters.py` - 未完成运行的精调脚本
+- ❌ `results/parameter_search_results.csv` - 旧版本搜索结果
+- ❌ `results/parameter_search_analysis.png` - 旧版本分析图表
+
+**保留的有用文件**:
+- ✅ `examples/analyze_preference_components.py` - 偏好分析工具
+- ✅ `examples/comprehensive_parameter_search.py` - 最新参数搜索
+- ✅ `results/best_config_per_round.csv` - 最新搜索结果
+- ✅ `results/comprehensive_search_results.csv` - 详细搜索结果
+- ✅ `results/preference_components_analysis.png` - 最新分析图表
+
+**目的**:
+保持项目整洁，删除开发过程中产生的冗余和过时文件，便于后续维护。
+
+**影响范围**:
+- 仅清理examples和results目录中的测试/演示文件
+- 不影响核心代码和配置
+- 保留了最新的有用分析工具
+
+---
+
+# 修改 25 北京时间 2025/10/02 14:32
+## Commit: (待提交) - refactor: 实现单轮匹配算法，真实反映匹配摩擦
+
+**关键理解纠正**:
+
+之前的ABM数据生成使用完整GS算法（迭代至收敛），导致：
+- θ>1时几乎所有劳动力都能最终匹配
+- 无法反映真实的匹配摩擦
+- Logit估计的λ函数失去经济学含义
+
+**新实现：单轮匹配**
+
+劳动力只投递一次最偏好企业，企业择优录取，未被录取者直接失业。
+这才真实反映：
+- 即使岗位充足（θ>1），仍有显著失业
+- 多人竞争同一岗位的真实场景
+- 匹配摩擦和搜寻成本
+
+**新增文件**:
+- `src/modules/matching/gale_shapley.py` (新增函数)
+  - `single_round_matching()` - 单轮匹配算法（~100行，Numba优化）
+
+**修改文件**:
+- `src/modules/matching/__init__.py`
+  - 导出 `single_round_matching` 函数
+  
+- `src/modules/matching/abm_data_generator.py`
+  - `_simulate_one_round()` - 改用单轮匹配替代完整GS算法
+  - 直接调用偏好计算和单轮匹配函数
+  
+- `src/modules/matching/gale_shapley.py`
+  - 新增 `single_round_matching()` 函数
+  - 文档说明：所有劳动力同时向最偏好企业投递，企业择优
+
+**删除文件**:
+- `examples/test_theta_unemployment.py` - 测试演示文件
+- `examples/test_theta_unemployment_extreme.py` - 测试演示文件
+- `examples/explain_logit_data.py` - 数据讲解脚本
+- `examples/show_raw_data_table.py` - 数据展示脚本
+
+**测试文件**:
+- `examples/test_single_round_matching.py` - 单轮匹配验证测试
+
+**算法对比**:
+
+| 特性 | 完整GS算法 | 单轮匹配算法 |
+|-----|-----------|------------|
+| 投递轮次 | 多轮（直到收敛） | 单轮 |
+| θ>1时失业率 | ≈0% | 显著 >0% |
+| 经济学含义 | 稳定匹配 | 匹配摩擦 |
+| 用途 | 理论分析 | ABM数据生成 |
+
+**初步测试结果**:
+
+⚠️ **发现问题**：当前实现匹配率仅1%（失业率99%），过于极端。
+
+可能原因：
+1. 劳动力偏好过于集中（都投递少数企业）
+2. 偏好函数参数需要调整
+3. 需要增加偏好的随机性/多样性
+
+**待解决**：需要调整偏好函数或增加扰动，使匹配率更接近合理范围（20%-80%）。
+
+**目的**：
+- 纠正对GS算法用途的理解
+- 实现符合经济学直觉的单轮匹配
+- 为Logit估计提供更真实的训练数据
+- 捕捉劳动力市场的摩擦特性
+
+**影响范围**：
+- ABM数据生成逻辑根本性改变
+- Logit估计的数据分布将显著变化（失业率提升）
+- 需要调整偏好参数以获得合理的匹配率
+- 后续MFG求解将基于更真实的匹配函数λ
+
+---
+
+# 修改 24 北京时间 2025/10/02 13:59
+## Commit: (待提交) - feat: 完成Logit估计器与匹配函数（Week 9）
+
+**新增文件**:
+- `src/modules/estimation/__init__.py` - Estimation模块初始化
+- `src/modules/estimation/logit_estimator.py` - Logit估计器（~330行）
+- `src/modules/estimation/match_function.py` - 匹配函数（~290行）
+- `config/default/estimation.yaml` - Estimation模块配置
+- `tests/unit/estimation/__init__.py` - 测试初始化
+- `tests/unit/estimation/test_logit_estimator.py` - Logit估计器测试（11个测试）
+- `tests/unit/estimation/test_match_function.py` - 匹配函数测试（13个测试）
+
+**功能实现**:
+
+### 1. **Logit估计器** (`logit_estimator.py`, ~330行)
+
+#### 核心功能：
+- 基于ABM生成的训练数据进行Logit回归
+- 估计匹配函数λ(x, σ_i, a, θ)的参数
+- 使用statsmodels进行最大似然估计
+
+#### 主要方法：
+- `fit()`: 拟合Logit模型，估计参数
+- `predict()`: 预测匹配概率
+- `evaluate()`: 评估模型性能（accuracy, precision, recall, F1, AUC）
+- `save_params()`: 保存估计参数为JSON
+- `load_params()`: 加载参数
+- `print_summary()`: 打印详细估计结果
+
+#### 特征准备：
+```python
+特征向量 = [
+    # 状态变量 x (4个)
+    labor_T, labor_S, labor_D, labor_W,
+    
+    # 控制变量 σ (4个)
+    labor_market_gap_T, labor_market_gap_S,
+    labor_market_gap_D, labor_market_gap_W,
+    
+    # 努力水平 a (1个)
+    effort,
+    
+    # 市场松紧度 ln(θ) (1个)
+    ln_theta
+]
+
+总计: 1 + 4 + 4 + 1 + 1 = 11个参数（包括截距）
+```
+
+#### 输出结果：
+- 参数估计值：δ_0, δ_x, δ_σ, δ_a, δ_θ
+- 参数显著性：p-values
+- 置信区间：95% confidence intervals
+- 模型拟合度：Pseudo R², AIC, BIC
+- 模型诊断：收敛状态
+
+### 2. **匹配函数** (`match_function.py`, ~290行)
+
+#### 核心功能：
+- 实现匹配概率函数λ(x, σ_i, a, θ)
+- Numba优化，支持批量计算
+- 用于MFG求解中的匹配判定
+
+#### 匹配函数形式（严格遵循原始研究计划）：
+```
+λ(x, σ_i, a, θ) = 1 / (1 + exp[-(δ_0 + δ_x'x + δ_σ'σ_i + δ_a·a + δ_θ·ln(θ))])
+```
+
+其中：
+- δ_0: 截距项（基准匹配概率）
+- δ_x: 状态变量系数向量 (T, S, D, W)
+- δ_σ: 固定特征系数向量（年龄、学历等的代理）
+- δ_a: 努力水平系数（个体主观投入的边际影响）
+- δ_θ: 市场松紧度系数（整体就业市场情况）
+
+#### 主要方法：
+- `compute_match_probability()`: 计算单个个体匹配概率
+- `compute_match_probability_batch()`: 批量计算（Numba并行）
+- `sample_match_outcome()`: 根据概率抽样匹配结果
+- `load_params()`: 加载估计参数
+
+#### Numba优化函数：
+- `compute_match_probability_numba()`: 单个概率计算
+- `compute_match_probability_batch_numba()`: 批量并行计算
+
+#### 使用场景（MFG求解）：
+```python
+# 判定规则（原始研究计划）：
+若 p ~ Uniform(0, 1) ≤ λ_i，则匹配成功（失业→就业）
+否则，匹配失败（保持失业）
+```
+
+### 3. **完整Pipeline**
+
+```python
+# Step 1: ABM生成训练数据
+from src.modules.matching import ABMDataGenerator
+
+gen = ABMDataGenerator(seed=42)
+train_data = gen.generate_training_data(
+    theta_range=[0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3],
+    effort_levels=[0.0, 0.2, 0.4, 0.6, 0.8, 1.0],
+    n_rounds_per_combination=5,
+    base_n_labor=1000
+)
+
+# Step 2: Logit回归估计参数
+from src.modules.estimation import LogitEstimator
+
+estimator = LogitEstimator()
+summary = estimator.fit(train_data)
+estimator.print_summary()
+estimator.save_params('results/params.json')
+
+# Step 3: 使用匹配函数进行MFG求解
+from src.modules.estimation import MatchFunction
+
+match_func = MatchFunction()
+match_func.load_params('results/params.json')
+
+# 计算匹配概率
+x = np.array([40.0, 0.7, 0.6, 3000.0])  # T, S, D, W
+sigma = np.array([5.0, 0.1, 0.05, 500.0])  # 与市场差距
+a = 0.5  # 努力水平
+theta = 1.0  # 市场松紧度
+
+prob = match_func.compute_match_probability(x, sigma, a, theta)
+matched = match_func.sample_match_outcome(x, sigma, a, theta)
+```
+
+**测试覆盖**:
+- ✅ 24个测试全部通过
+- ✅ 测试耗时: 2.09秒
+
+**测试分类**:
+- Logit估计器（11个测试）:
+  - 初始化测试（1个）
+  - 拟合测试（4个）
+  - 预测测试（2个）
+  - 保存加载测试（2个）
+  - 评估测试（1个）
+  - 摘要打印测试（1个）
+
+- 匹配函数（13个测试）:
+  - 初始化测试（2个）
+  - 概率计算测试（3个）
+  - 保存加载测试（1个）
+  - 抽样测试（3个）
+  - Numba函数测试（2个）
+  - 行为特性测试（2个）
+
+**代码质量**:
+- ✅ 完整docstring（中文）
+- ✅ 类型注解
+- ✅ 异常处理
+- ✅ 日志记录
+- ✅ 符合PEP8规范
+- ✅ Numba优化
+- ✅ 模块化设计
+
+**影响范围**:
+- ✅ Phase3 Week 9任务完成
+- ✅ Phase 3 (Matching + Estimation模块) **全部完成**
+- ✅ 实现了完整的ABM→Logit→匹配函数pipeline
+- ✅ 为后续MFG求解提供关键匹配概率函数λ
+
+**技术亮点**:
+1. **理论对齐**: 严格遵循原始研究计划中的匹配函数形式
+2. **Numba优化**: 批量计算性能优异
+3. **模块解耦**: Logit估计与匹配函数独立，便于参数调整
+4. **完整测试**: 覆盖初始化、计算、保存加载、评估等全流程
+5. **易于扩展**: 支持不同特征组合、参数更新
+
+**性能表现**:
+- Logit回归（1000样本）: ~0.5秒
+- 匹配概率计算（单个）: <0.001秒
+- 匹配概率计算（批量100个）: <0.01秒（Numba）
+- 参数保存/加载: <0.01秒
+
+**下一步计划**:
+- Phase 4: MFG求解模块（贝尔曼方程 + KFE）
+- Phase 5: GUI界面与可视化
+- Phase 6: 完整系统集成与测试
+
+---
+
+# 修改 23 北京时间 2025/10/02 13:43
+## Commit: (待提交) - feat: 完成ABM数据生成器（Week 8）
+
+**新增文件**:
+- `src/modules/matching/abm_data_generator.py` - ABM数据生成器（~500行）
+- `tests/unit/matching/test_abm_data_generator.py` - ABM测试（22个测试，21通过）
+
+**修改文件**:
+- `src/modules/matching/__init__.py` - 导出ABMDataGenerator
+
+**功能实现**:
+
+1. **ABMDataGenerator类** (~500行)
+   - **核心功能**：整合Population生成器和Matching引擎，通过多轮次模拟生成用于Logit回归的训练数据
+   - **多轮次模拟**：`generate_training_data()` - 系统性扰动θ和effort参数
+   - **单轮模拟**：`_simulate_one_round()` - 生成→匹配→记录流程
+   - **数据记录**：`_record_labor_data()` - 详细记录每个劳动力的特征和匹配结果
+   - **数据保存**：支持CSV、Parquet、Pickle格式
+   - **统计分析**：`generate_summary_statistics()` - 生成数据摘要
+   - **可视化**：`plot_match_rate_heatmap()` - θ×effort匹配率热力图
+
+2. **扰动策略**（严格遵循原始研究计划）:
+   - **默认θ范围**: [0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3]（7个值）
+     - θ ∈ [0.7, 0.9]: 岗位紧张型市场（30%）
+     - θ ≈ 1.0: 均衡市场（40%）
+     - θ ∈ [1.1, 1.3]: 岗位富余型市场（30%）
+   - **默认effort范围**: [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]（6个值）
+   - **默认轮次**: 每个(θ, effort)组合5轮
+   - **总模拟数**: 7 × 6 × 5 = 210轮
+
+3. **数据记录内容**（每条样本包含）:
+   - **劳动力特征**: labor_T, labor_S, labor_D, labor_W
+   - **匹配企业特征** (如果匹配成功): enterprise_T, enterprise_S, enterprise_D, enterprise_W
+   - **特征差距**: gap_T, gap_S, gap_D, gap_W
+   - **市场环境统计**: market_mean_*, market_std_*
+   - **劳动力与市场差距**: labor_market_gap_*
+   - **环境参数**: theta, effort
+   - **匹配结果** (目标变量): matched (0/1)
+   - **元数据**: round_idx, labor_idx
+
+4. **自动拟合机制**:
+   - 检测生成器是否已拟合
+   - 如未拟合，自动使用测试数据拟合
+   - 确保ABM模拟可以即时运行
+
+5. **使用示例**:
+   ```python
+   # 创建生成器
+   gen = ABMDataGenerator(seed=42)
+   
+   # 生成训练数据
+   df = gen.generate_training_data(
+       theta_range=[0.8, 1.0, 1.2],
+       effort_levels=[0.0, 0.5, 1.0],
+       n_rounds_per_combination=5,
+       base_n_labor=1000,
+       verbose=True
+   )
+   
+   # 保存数据
+   gen.save_data(df, 'abm_training_data.csv')
+   
+   # 生成统计摘要
+   summary = gen.generate_summary_statistics(df)
+   print(f"总样本数: {summary['n_records']}")
+   print(f"匹配率: {summary['match_rate']:.2%}")
+   
+   # 绘制热力图
+   gen.plot_match_rate_heatmap(df, save_path='match_rate_heatmap.png')
+   ```
+
+**测试覆盖**:
+- ✅ 21个测试通过，1个跳过（parquet需要额外依赖）
+- ✅ 测试耗时: 61.76秒（包含模型拟合）
+
+**测试分类**:
+- 初始化测试（2个）
+- 单轮模拟测试（3个）
+- 训练数据生成测试（5个）
+- 数据质量测试（5个）
+- 摘要统计测试（2个）
+- 数据保存测试（4个）
+- 可重复性测试（1个）
+
+**代码质量**:
+- ✅ 完整docstring
+- ✅ 类型注解
+- ✅ 异常处理
+- ✅ 日志记录
+- ✅ 符合PEP8
+- ✅ 模块化设计
+
+**影响范围**:
+- Phase3 Week 8任务完成
+- 为Week 9 Logit估计器提供训练数据
+- 实现了完整的ABM模拟→数据收集→Logit回归的pipeline
+
+**技术亮点**:
+1. **自动化流程**: 一键生成大规模训练数据
+2. **灵活配置**: 支持自定义θ范围、effort水平、轮次数
+3. **完整记录**: 记录劳动力特征、企业特征、市场环境、匹配结果
+4. **统计分析**: 自动生成按θ和effort分组的匹配率统计
+5. **可重复性**: 支持随机种子确保结果可重复
+6. **多格式导出**: CSV、Parquet、Pickle
+7. **可视化支持**: 热力图展示θ×effort对匹配率的影响
+
+**性能表现**:
+- 小规模测试（50个劳动力/轮）: ~0.5秒/轮
+- 210轮完整模拟（1000个劳动力/轮）: 预计~2分钟
+
+**下一步计划**:
+- Week 9: 实现Logit估计器，基于ABM生成的数据估计匹配函数参数
+- Week 9: 实现匹配函数（Numba优化版本）
+
+---
+
 # 修改 22 北京时间 2025/10/01 20:32
 ## Commit: (待提交) - feat: 完成匹配引擎集成（MatchingEngine）
 

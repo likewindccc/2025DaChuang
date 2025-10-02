@@ -2,6 +2,16 @@
 匹配引擎
 
 集成偏好计算和Gale-Shapley算法，提供高层接口用于批量匹配模拟。
+
+⚠️ 重要说明：
+本模块实现完全收敛的Gale-Shapley算法，主要用于以下场景：
+1. ABM数据生成阶段（注：实际使用limited_rounds_matching代替）
+2. 实验对比、基准测试等需要稳定匹配的场景
+
+❌ 不应用于：
+- MFG求解阶段：MFG求解器应使用match_function.py中的MatchFunction类
+  通过随机抽样判断就业，而不是使用GS算法进行实际匹配
+- 原因：MFG中企业被抽象为匹配概率场，不需要显式生成企业个体
 """
 
 import numpy as np
@@ -32,10 +42,15 @@ class MatchingEngine:
     匹配引擎：整合偏好计算和GS算法
     
     提供高层接口用于：
-    - 单轮匹配
+    - 单轮匹配（完全收敛的GS算法）
     - 批量模拟
     - 参数调整
     - 结果统计
+    
+    ⚠️ 使用限制：
+    - 本类不应在MFG求解阶段使用
+    - MFG求解应使用 estimation.match_function.MatchFunction
+    - 详见模块文档顶部说明
     """
     
     def __init__(self, config: Optional[Dict] = None, config_path: Optional[str] = None):
@@ -74,22 +89,22 @@ class MatchingEngine:
     
     @staticmethod
     def _default_config() -> Dict:
-        """返回默认配置"""
+        """返回默认配置（已优化参数）"""
         return {
             'preference': {
                 'labor': {
                     'gamma_0': 1.0,
                     'gamma_1': 0.01,
-                    'gamma_2': 0.5,
-                    'gamma_3': 0.5,
-                    'gamma_4': 0.001
+                    'gamma_2': 0.02,
+                    'gamma_3': 0.05,
+                    'gamma_4': 0.0001
                 },
                 'enterprise': {
                     'beta_0': 0.0,
-                    'beta_1': 0.5,
-                    'beta_2': 1.0,
-                    'beta_3': 1.0,
-                    'beta_4': -0.001
+                    'beta_1': 0.01,
+                    'beta_2': 0.02,
+                    'beta_3': 0.05,
+                    'beta_4': -0.0001
                 }
             },
             'algorithm': {

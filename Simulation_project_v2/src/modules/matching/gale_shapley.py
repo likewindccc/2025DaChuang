@@ -2,6 +2,7 @@
 Gale-Shapley稳定匹配算法
 
 实现延迟接受算法（Deferred Acceptance Algorithm），保证产生稳定匹配。
+同时提供单轮匹配算法，用于ABM数据生成。
 """
 
 import numpy as np
@@ -236,4 +237,117 @@ def compute_matching_statistics(
         stats['matched_enterprise_avg_W'] = float(np.mean(matched_enterprise_features[:, 3]))
     
     return stats
+
+
+@njit(cache=True)
+def limited_rounds_matching(
+    labor_pref_order: np.ndarray,
+    enterprise_pref_order: np.ndarray,
+    max_rounds: int = 10
+) -> np.ndarray:
+    """
+    固定轮次匹配算法（用于ABM数据生成）
+    
+    与完整GS算法不同，此函数只进行固定轮次的匹配：
+    1. 劳动力按偏好顺序依次投递（延迟接受机制）
+    2. 执行max_rounds轮后停止（无论是否收敛）
+    3. 超过max_rounds仍未匹配的劳动力视为失业
+    
+    这样可以真实反映匹配摩擦：
+    - 即使θ>1（岗位充足），仍会有失业
+    - 因为劳动力只有有限次投递机会
+    - 模拟现实中的搜寻成本和时间约束
+    
+    Args:
+        labor_pref_order: (n_labor, n_enterprise) 劳动力偏好排序
+                         每行是该劳动力对所有企业的偏好排序（索引）
+        enterprise_pref_order: (n_enterprise, n_labor) 企业偏好排序
+                              每行是该企业对所有劳动力的偏好排序（索引）
+        max_rounds: 最大投递轮次（默认10轮）
+    
+    Returns:
+        matching: (n_labor,) 匹配结果
+                 matching[i] = j 表示劳动力i匹配到企业j
+                 matching[i] = -1 表示劳动力i未匹配（失业）
+    
+    Example:
+        假设3个劳动力，2个企业，max_rounds=2：
+        
+        第1轮：
+        - 劳动力0向企业0投递 → 企业0接受
+        - 劳动力1向企业0投递 → 企业0比较，假设更偏好劳动力1，替换劳动力0
+        - 劳动力2向企业1投递 → 企业1接受
+        
+        第2轮：
+        - 劳动力0被拒，向企业1投递 → 企业1已有劳动力2，比较后拒绝劳动力0
+        
+        结果：
+        - 劳动力0失业（虽然企业还有空缺，但2轮已用完）
+        - 劳动力1匹配到企业0
+        - 劳动力2匹配到企业1
+        - matching = [-1, 0, 1]，失业率=33.3%
+    """
+    n_labor = labor_pref_order.shape[0]
+    n_enterprise = enterprise_pref_order.shape[0]
+    
+    # 初始化匹配结果
+    matching = np.full(n_labor, -1, dtype=np.int32)  # 劳动力→企业
+    reverse_matching = np.full(n_enterprise, -1, dtype=np.int32)  # 企业→劳动力
+    
+    # 记录每个劳动力下一个要提议的企业索引（在其偏好列表中的位置）
+    next_proposal = np.zeros(n_labor, dtype=np.int32)
+    
+    # 构建企业的偏好排名映射（用于快速比较）
+    # enterprise_rank[j, i] = 劳动力i在企业j偏好中的排名（0最好）
+    enterprise_rank = np.zeros((n_enterprise, n_labor), dtype=np.int32)
+    for j in range(n_enterprise):
+        for rank in range(n_labor):
+            labor_id = enterprise_pref_order[j, rank]
+            enterprise_rank[j, labor_id] = rank
+    
+    # 自由劳动力队列（使用数组模拟）
+    free_labor = np.arange(n_labor, dtype=np.int32)
+    free_count = n_labor
+    
+    # 主循环：每个劳动力最多投递max_rounds次
+    while free_count > 0:
+        # 取出一个自由劳动力
+        i = free_labor[free_count - 1]
+        free_count -= 1
+        
+        # 检查i是否已达到投递上限或已申请完所有企业
+        if next_proposal[i] >= max_rounds or next_proposal[i] >= n_enterprise:
+            continue  # i无法继续投递，保持未匹配状态
+        
+        # i向其偏好列表中的下一个企业j提议
+        j = labor_pref_order[i, next_proposal[i]]
+        next_proposal[i] += 1
+        
+        if reverse_matching[j] == -1:
+            # 企业j职位空缺，直接匹配
+            matching[i] = j
+            reverse_matching[j] = i
+        else:
+            # 企业j已有匹配的劳动力k
+            k = reverse_matching[j]
+            
+            # 比较企业j对i和k的偏好（排名越小越好）
+            rank_i = enterprise_rank[j, i]
+            rank_k = enterprise_rank[j, k]
+            
+            if rank_i < rank_k:
+                # 企业j更偏好i，解除与k的匹配
+                matching[k] = -1
+                free_labor[free_count] = k
+                free_count += 1
+                
+                # 匹配i和j
+                matching[i] = j
+                reverse_matching[j] = i
+            else:
+                # 企业j拒绝i，i继续为自由
+                free_labor[free_count] = i
+                free_count += 1
+    
+    return matching
 

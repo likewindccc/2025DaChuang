@@ -1,0 +1,108 @@
+{
+  "params": {
+    "const": 6.307043312276903,
+    "delta_labor_T": -73.8698397242113,
+    "delta_labor_S": 3.7734746666937014,
+    "delta_labor_D": 0.18879362707091082,
+    "delta_labor_W": 0.3613725463887787,
+    "delta_sigma_labor_market_gap_T": 74.70523143634145,
+    "delta_sigma_labor_market_gap_S": -4.049850481081418,
+    "delta_sigma_labor_market_gap_D": 0.8572503475376315,
+    "delta_sigma_labor_market_gap_W": -0.3632453821621342,
+    "delta_a": -0.8464027339335387,
+    "delta_theta": 77.00666758328317
+  },
+  "feature_names": [
+    "const",
+    "delta_labor_T",
+    "delta_labor_S",
+    "delta_labor_D",
+    "delta_labor_W",
+    "delta_sigma_labor_market_gap_T",
+    "delta_sigma_labor_market_gap_S",
+    "delta_sigma_labor_market_gap_D",
+    "delta_sigma_labor_market_gap_W",
+    "delta_a",
+    "delta_theta"
+  ],
+  "summary": {
+    "params": {
+      "const": 6.307043312276903,
+      "delta_labor_T": -73.8698397242113,
+      "delta_labor_S": 3.7734746666937014,
+      "delta_labor_D": 0.18879362707091082,
+      "delta_labor_W": 0.3613725463887787,
+      "delta_sigma_labor_market_gap_T": 74.70523143634145,
+      "delta_sigma_labor_market_gap_S": -4.049850481081418,
+      "delta_sigma_labor_market_gap_D": 0.8572503475376315,
+      "delta_sigma_labor_market_gap_W": -0.3632453821621342,
+      "delta_a": -0.8464027339335387,
+      "delta_theta": 77.00666758328317
+    },
+    "pvalues": {
+      "const": NaN,
+      "delta_labor_T": NaN,
+      "delta_labor_S": NaN,
+      "delta_labor_D": 0.9999999920248559,
+      "delta_labor_W": NaN,
+      "delta_sigma_labor_market_gap_T": NaN,
+      "delta_sigma_labor_market_gap_S": NaN,
+      "delta_sigma_labor_market_gap_D": 0.9999999637874691,
+      "delta_sigma_labor_market_gap_W": NaN,
+      "delta_a": 0.24755022222335676,
+      "delta_theta": NaN
+    },
+    "conf_int": {
+      "const": [
+        NaN,
+        NaN
+      ],
+      "delta_labor_T": [
+        NaN,
+        NaN
+      ],
+      "delta_labor_S": [
+        NaN,
+        NaN
+      ],
+      "delta_labor_D": [
+        -37020044.997989945,
+        37020045.375577204
+      ],
+      "delta_labor_W": [
+        NaN,
+        NaN
+      ],
+      "delta_sigma_labor_market_gap_T": [
+        NaN,
+        NaN
+      ],
+      "delta_sigma_labor_market_gap_S": [
+        NaN,
+        NaN
+      ],
+      "delta_sigma_labor_market_gap_D": [
+        -37020044.329532735,
+        37020046.04403343
+      ],
+      "delta_sigma_labor_market_gap_W": [
+        NaN,
+        NaN
+      ],
+      "delta_a": [
+        -2.2810563202488545,
+        0.5882508523817773
+      ],
+      "delta_theta": [
+        NaN,
+        NaN
+      ]
+    },
+    "pseudo_r2": 0.911082173962226,
+    "log_likelihood": -39.20156192524801,
+    "aic": 98.40312385049602,
+    "bic": 153.35854328933857,
+    "n_obs": 1800,
+    "converged": false
+  }
+}

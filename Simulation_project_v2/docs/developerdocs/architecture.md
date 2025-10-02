@@ -476,16 +476,29 @@ def match_function(
 
 **职责**: 求解平均场博弈均衡
 
+#### ⚠️ 关键设计原则
+
+**MFG阶段不使用GS算法！而是使用匹配函数λ进行概率抽样**
+
+理由：
+1. 企业被抽象为"匹配概率场"，不需要显式建模
+2. λ(x, σ, a, θ)已经编码了企业异质性、偏好和竞争
+3. 相当于面对无穷多家企业的连续市场
+
 #### 算法框架
 
 ```
-初始化: V₀, m₀, θ₀
+初始化: V₀, m₀, θ₀, λ(已估计)
     ↓
 循环直到收敛:
     1. 贝尔曼方程 → 最优努力a*(x,t)
-    2. KFE演化 → 人口分布m(x,t+1)
-    3. 更新θ(t+1)
-    4. 检查收敛条件
+    2. 对每个劳动力i:
+       - 计算匹配概率 p_i = λ(x_i, σ_i, a_i*, θ)
+       - 随机抽样: u ~ U(0,1)
+       - 判断就业: employed = (u ≤ p_i)
+    3. KFE演化 → 人口分布m(x,t+1)
+    4. 更新θ(t+1)
+    5. 检查收敛条件
     ↓
 输出: MFE均衡 (V*, a*, m*, θ*)
 ```
@@ -502,7 +515,7 @@ class MFGSimulator(BaseSimulator):
         state_space: 离散状态空间
         bellman_solver: 贝尔曼求解器
         kfe_solver: KFE求解器
-        match_function: 匹配函数λ
+        match_function: 匹配函数λ (MatchFunction实例)
         
     Config:
         grid_size: (50, 50)  # 状态空间网格
@@ -512,11 +525,23 @@ class MFGSimulator(BaseSimulator):
     Methods:
         initialize() -> None
         solve_bellman() -> ValueFunction
+        sample_employment(labor_features, effort, theta) -> bool[]
+            # ⚠️ 使用match_function.sample_match_outcome()
+            # 不生成企业，不调用GS算法
         evolve_kfe() -> Distribution
         check_convergence() -> bool
         get_equilibrium() -> MFGEquilibrium
     """
 ```
+
+**⚠️ 与ABM的关键区别**：
+
+| 方面 | ABM数据生成 | MFG求解 |
+|------|------------|---------|
+| 劳动力 | 生成 | 生成 |
+| 企业 | 生成 | **不生成** |
+| 匹配方式 | limited_rounds_matching | **λ函数+随机抽样** |
+| 输出 | 训练数据 | 均衡策略 |
 
 **简化策略**:
 1. 状态空间离散化（连续 → 50×50网格）
