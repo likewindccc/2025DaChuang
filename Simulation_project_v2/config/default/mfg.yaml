@@ -1,27 +1,171 @@
-# Module 4: MFG Simulator 配置
+# Module 4: MFG Simulator 配置 (稀疏网格+Numba方法)
+# 更新日期: 2025-10-03
+# 所有参数已与用户确认
 
+# ============================================
+# 状态空间定义 (4维)
+# ============================================
 state_space:
-  grid_size: [50, 50]  # T和S维度的网格大小
-  T_range: [0, 168]    # 每周工作时长范围（小时）
-  S_range: [0, 100]    # 技能评分范围
+  dimension: 4
+  
+  # 原始数据范围（不扩展）
+  ranges:
+    T: [15, 70]          # 每周工作小时数
+    S: [2, 44]           # 工作能力评分（原始分数）
+    D: [0, 20]           # 数字素养评分（原始分数）
+    W: [1400, 8000]      # 每月期望收入（元）
+  
+  # 标准化设置（仅S和D）
+  standardization:
+    S:
+      method: 'minmax'   # (S - S_min) / (S_max - S_min)
+      min: 2
+      max: 44
+    D:
+      method: 'minmax'   # (D - D_min) / (D_max - D_min)
+      min: 0
+      max: 20
+  
+  # 在稀疏网格中，状态向量为: (T, S_norm, D_norm, W)
+  # 其中 S_norm, D_norm ∈ [0, 1]
 
-solver:
-  max_iterations: 500
-  tolerance: 1.0e-6
+# ============================================
+# 稀疏网格设置
+# ============================================
+sparse_grid:
+  library: 'tasmanian'   # 使用Tasmanian库（如安装失败，自动降级为pysgpp）
+  level: 5               # 精度级别5（约15,000个网格点）
+  dimension: 4           # 4维状态空间
   
-  # 贝尔曼方程参数
-  rho: 0.95          # 贴现因子
-  kappa: 1.0         # 努力成本系数
-  
-  # KFE演化参数
-  mu: 0.05           # 外生离职率
-  
-  # 收敛判断
-  convergence_criteria:
-    value_function: 1.0e-4
-    policy: 1.0e-4
-    theta: 1.0e-3
+  # Tasmanian特定参数
+  tasmanian:
+    grid_type: 'localp'  # 局部多项式网格
+    order: 2             # 2阶精度
+    depth_type: 'level'  # 层次深度
 
+# ============================================
+# 状态转移参数
+# ============================================
+state_transition:
+  # 转移速率（初值，后续可通过Module 5校准）
+  gamma_T: 0.1           # 工作时长增长率
+  gamma_S: 0.05          # 技能增长率（标准化尺度）
+  gamma_D: 0.08          # 数字素养增长率（标准化尺度）
+  gamma_W: 100.0         # 工资期望下降速率（元/月）
+  
+  # 边界约束
+  T_max: 70              # 最大工作时长（数据最大值）
+  W_min: 1400            # 最低工资期望（数据最小值）
+  
+  # 状态转移公式（研究计划第4.3节）
+  # T_{t+1} = T_t + gamma_T * a * (T_max - T_t)
+  # S_norm_{t+1} = S_norm_t + gamma_S * a * (1 - S_norm_t)
+  # D_norm_{t+1} = D_norm_t + gamma_D * a * (1 - D_norm_t)
+  # W_{t+1} = max(W_min, W_t - gamma_W * a)
+
+# ============================================
+# 效用函数参数
+# ============================================
+utility:
+  # 失业者瞬时效用: u^U = b_0 - 0.5 * kappa * a^2
+  unemployment:
+    b_0: 500.0           # 失业补助（元/月）
+    kappa: 1.0           # 努力成本系数
+  
+  # 就业者瞬时效用: u^E = W - alpha_T * T
+  employment:
+    type: 'wage_minus_disutility'  # 工资 - 工作负效用
+    alpha_T: 10.0        # 工作负效用系数（元/(小时/周)）
+
+# ============================================
+# 贝尔曼方程求解参数
+# ============================================
+bellman:
+  rho: 0.9               # 贴现因子
+  n_effort_grid: 21      # 努力水平离散点数 (a ∈ [0, 1])
+  effort_range: [0.0, 1.0]
+  
+  # 值迭代参数
+  max_iterations: 500    # 单次贝尔曼求解的最大迭代次数
+  tolerance: 1.0e-5      # 贝尔曼迭代收敛容差
+
+# ============================================
+# KFE演化参数
+# ============================================
+kfe:
+  mu: 0.05               # 外生离职率（常数）
+  n_evolution_steps: 1   # 每次MFG迭代中的KFE演化步数
+
+# ============================================
+# 匹配函数参数
+# ============================================
+matching:
+  # 使用Module 3估计的匹配函数λ(x, a, θ)
+  function_path: 'results/estimation/match_function_params.json'
+  
+  # 控制变量σ处理方式：方案C（吸收到截距）
+  control_variables: 'absorbed_in_intercept'
+
+# ============================================
+# 市场紧张度设置
+# ============================================
+market:
+  theta_mechanism: 'fixed_theta'  # 方案A：θ固定
+  theta_bar: 1.0                  # 固定市场紧张度（均衡市场）
+  # V_t = theta_bar * U_t （职位数随失业人数调整）
+
+# ============================================
+# 收敛标准
+# ============================================
+convergence:
+  # 三重收敛标准（研究计划第4.6节）
+  epsilon_V: 1.0e-4      # 价值函数收敛容差
+  epsilon_a: 1.0e-4      # 努力水平收敛容差
+  epsilon_u: 1.0e-3      # 失业率收敛容差
+  
+  max_iterations: 500    # 主MFG循环最大迭代次数
+  
+  # 提前终止（如果满足所有标准）
+  early_stopping: true
+
+# ============================================
+# 初始化设置
+# ============================================
+initialization:
+  # 初始人口分布
+  unemployment_rate: 0.2           # 初始失业率20%
+  distribution_source: 'copula'    # 使用Module 1的Copula生成
+  
+  # 初始值函数
+  V_U_init: 'zero'                 # V^U初始化为0
+  V_E_init: 'zero'                 # V^E初始化为0
+
+# ============================================
+# 优化选项
+# ============================================
 optimization:
-  use_numba: true
-  parallel: false  # 贝尔曼迭代暂不并行（可能导致数值不稳定）
+  use_numba: true        # 强制使用Numba加速
+  parallel: true         # 启用并行计算（贝尔曼迭代的网格点并行）
+  cache: true            # 缓存Numba编译结果
+  fastmath: true         # 启用快速数学优化（可能轻微损失精度）
+
+# ============================================
+# 输出设置
+# ============================================
+output:
+  save_path: 'results/mfg/'
+  save_intermediate: true         # 保存中间迭代结果
+  save_frequency: 10              # 每10轮保存一次
+  
+  # 可视化
+  plot_convergence: true          # 绘制收敛曲线
+  plot_distributions: true        # 绘制人口分布演化
+  plot_policy: true               # 绘制最优策略函数
+
+# ============================================
+# 日志设置
+# ============================================
+logging:
+  level: 'INFO'          # DEBUG | INFO | WARNING | ERROR
+  log_frequency: 1       # 每1轮输出一次日志
+  verbose: true          # 详细输出

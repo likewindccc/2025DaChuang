@@ -402,3 +402,302 @@ class MFGEquilibrium:
             就业人口总量（积分）
         """
         return float(np.sum(self.distribution_E))
+
+
+@dataclass
+class MFGEquilibriumSparseGrid:
+    """
+    MFG均衡结果（稀疏网格版本）
+    
+    存储使用Smolyak稀疏网格求解的MFG均衡状态。
+    适用于4维状态空间 (T, S, D, W)。
+    
+    Attributes:
+        grid_nodes: 稀疏网格节点，形状 (4, n_points)
+        V_U: 失业状态值函数，形状 (n_points,)
+        V_E: 就业状态值函数，形状 (n_points,)
+        a_star: 最优努力策略，形状 (n_points,)
+        m_U: 失业人口分布，形状 (n_points,)
+        m_E: 就业人口分布，形状 (n_points,)
+        unemployment_rate: 均衡失业率
+        employment_rate: 均衡就业率
+        theta: 均衡市场紧张度
+        converged: 是否收敛
+        n_iterations: 迭代次数
+        convergence_metrics: 收敛指标（diff_V, diff_a, diff_u）
+        total_time: 求解总耗时（秒）
+        config: 配置参数副本
+        history: 历史演化记录（可选）
+    
+    Examples:
+        >>> # 从MFG求解器结果构造
+        >>> result = mfg_simulator.solve()
+        >>> equilibrium = MFGEquilibriumSparseGrid.from_solver_result(result)
+        >>> 
+        >>> print(f"均衡失业率: {equilibrium.unemployment_rate:.2%}")
+        >>> print(f"是否收敛: {equilibrium.converged}")
+        >>> print(f"网格点数: {equilibrium.n_points}")
+    
+    Notes:
+        - grid_nodes存储的是标准化后的状态（S和D在[0,1]）
+        - m_U + m_E 应该归一化到1
+        - a_star的值域通常在[0, 1]之间
+    """
+    
+    grid_nodes: np.ndarray
+    V_U: np.ndarray
+    V_E: np.ndarray
+    a_star: np.ndarray
+    m_U: np.ndarray
+    m_E: np.ndarray
+    unemployment_rate: float
+    employment_rate: float
+    theta: float
+    converged: bool
+    n_iterations: int
+    convergence_metrics: Dict[str, float]
+    total_time: float
+    config: Optional[Dict[str, Any]] = None
+    history: Optional[Dict[str, Any]] = None
+    
+    def __post_init__(self):
+        """
+        数据验证
+        
+        Raises:
+            ValueError: 参数不符合验证规则
+        """
+        # 验证grid_nodes形状
+        if self.grid_nodes.shape[0] != 4:
+            raise ValueError(
+                f"grid_nodes第一维必须是4（状态空间维度），得到：{self.grid_nodes.shape[0]}"
+            )
+        
+        n_points = self.grid_nodes.shape[1]
+        
+        # 验证所有1D数组长度一致
+        arrays = {
+            'V_U': self.V_U,
+            'V_E': self.V_E,
+            'a_star': self.a_star,
+            'm_U': self.m_U,
+            'm_E': self.m_E
+        }
+        
+        for name, arr in arrays.items():
+            if len(arr) != n_points:
+                raise ValueError(
+                    f"{name}长度{len(arr)}与网格点数{n_points}不一致"
+                )
+        
+        # 验证失业率和就业率
+        if not (0 <= self.unemployment_rate <= 1):
+            raise ValueError(f"失业率应在0-1之间：{self.unemployment_rate}")
+        
+        if not (0 <= self.employment_rate <= 1):
+            raise ValueError(f"就业率应在0-1之间：{self.employment_rate}")
+        
+        # 验证失业率+就业率≈1（允许小误差）
+        total_rate = self.unemployment_rate + self.employment_rate
+        if not (0.99 <= total_rate <= 1.01):
+            raise ValueError(
+                f"失业率+就业率应≈1，得到：{total_rate}"
+            )
+        
+        # 验证theta
+        if self.theta < 0:
+            raise ValueError(f"市场紧张度不能为负：{self.theta}")
+        
+        # 验证迭代次数
+        if self.n_iterations < 0:
+            raise ValueError(f"迭代次数不能为负：{self.n_iterations}")
+    
+    @property
+    def n_points(self) -> int:
+        """获取稀疏网格点数"""
+        return self.grid_nodes.shape[1]
+    
+    @property
+    def dimension(self) -> int:
+        """获取状态空间维度（固定为4）"""
+        return 4
+    
+    @property
+    def grid_efficiency(self) -> float:
+        """
+        计算稀疏网格效率
+        
+        Returns:
+            相对于全张量网格的点数比例
+        """
+        # 假设level=5，全张量网格为6^4=1296个点
+        full_tensor_points = 1296
+        return self.n_points / full_tensor_points
+    
+    def get_value_at_state(
+        self,
+        x: np.ndarray,
+        employment_status: str = 'unemployed'
+    ) -> float:
+        """
+        查询任意状态的值函数（最近邻插值）
+        
+        Args:
+            x: 状态向量 (4,): [T, S_norm, D_norm, W]
+            employment_status: 'unemployed' 或 'employed'
+        
+        Returns:
+            插值后的值函数
+        """
+        # 找到最近的网格点
+        distances = np.sum((self.grid_nodes - x.reshape(-1, 1))**2, axis=0)
+        nearest_idx = np.argmin(distances)
+        
+        if employment_status == 'unemployed':
+            return float(self.V_U[nearest_idx])
+        else:
+            return float(self.V_E[nearest_idx])
+    
+    def get_optimal_effort(self, x: np.ndarray) -> float:
+        """
+        查询任意状态的最优努力水平（最近邻插值）
+        
+        Args:
+            x: 状态向量 (4,)
+        
+        Returns:
+            最优努力水平
+        """
+        distances = np.sum((self.grid_nodes - x.reshape(-1, 1))**2, axis=0)
+        nearest_idx = np.argmin(distances)
+        return float(self.a_star[nearest_idx])
+    
+    def summary(self) -> str:
+        """
+        生成均衡结果摘要
+        
+        Returns:
+            格式化的摘要字符串
+        """
+        summary_lines = [
+            "=" * 60,
+            "MFG均衡结果摘要（稀疏网格）",
+            "=" * 60,
+            f"状态空间维度: {self.dimension}D",
+            f"稀疏网格点数: {self.n_points}",
+            f"网格效率: {self.grid_efficiency:.2%}",
+            "",
+            f"均衡失业率: {self.unemployment_rate:.4f} ({self.unemployment_rate*100:.2f}%)",
+            f"均衡就业率: {self.employment_rate:.4f} ({self.employment_rate*100:.2f}%)",
+            f"市场紧张度θ: {self.theta:.4f}",
+            "",
+            f"价值函数统计:",
+            f"  V^U - 均值: {np.mean(self.V_U):10.2f}, 标准差: {np.std(self.V_U):8.2f}",
+            f"  V^E - 均值: {np.mean(self.V_E):10.2f}, 标准差: {np.std(self.V_E):8.2f}",
+            "",
+            f"最优努力策略:",
+            f"  a* - 均值: {np.mean(self.a_star):.4f}, 最小: {np.min(self.a_star):.4f}, 最大: {np.max(self.a_star):.4f}",
+            "",
+            f"求解状态:",
+            f"  是否收敛: {'✅ 是' if self.converged else '❌ 否'}",
+            f"  迭代次数: {self.n_iterations}",
+            f"  总耗时: {self.total_time:.2f}秒 ({self.total_time/60:.1f}分钟)",
+            f"  平均每次迭代: {self.total_time/self.n_iterations:.2f}秒",
+            "",
+            f"收敛指标:",
+            f"  diff_V: {self.convergence_metrics['diff_V']:.2e}",
+            f"  diff_a: {self.convergence_metrics['diff_a']:.2e}",
+            f"  diff_u: {self.convergence_metrics['diff_u']:.2e}",
+            "=" * 60
+        ]
+        
+        return "\n".join(summary_lines)
+    
+    @classmethod
+    def from_solver_result(
+        cls,
+        result: Dict,
+        config: Optional[Dict] = None
+    ) -> 'MFGEquilibriumSparseGrid':
+        """
+        从MFG求解器结果构造均衡对象
+        
+        Args:
+            result: MFGSimulator.solve()返回的结果字典
+            config: 配置参数（可选）
+        
+        Returns:
+            MFGEquilibriumSparseGrid实例
+        
+        Examples:
+            >>> result = mfg_simulator.solve()
+            >>> equilibrium = MFGEquilibriumSparseGrid.from_solver_result(result)
+        """
+        return cls(
+            grid_nodes=result['grid_nodes'],
+            V_U=result['V_U'],
+            V_E=result['V_E'],
+            a_star=result['a_star'],
+            m_U=result['m_U'],
+            m_E=result['m_E'],
+            unemployment_rate=result['unemployment_rate'],
+            employment_rate=result['employment_rate'],
+            theta=result.get('theta', 1.0),  # 默认值
+            converged=result['converged'],
+            n_iterations=result['n_iterations'],
+            convergence_metrics=result['final_metrics'],
+            total_time=result['total_time'],
+            config=config,
+            history=result.get('history')
+        )
+    
+    def save(self, filepath: str):
+        """
+        保存均衡结果到文件
+        
+        Args:
+            filepath: 保存路径（.npz格式）
+        """
+        np.savez(
+            filepath,
+            grid_nodes=self.grid_nodes,
+            V_U=self.V_U,
+            V_E=self.V_E,
+            a_star=self.a_star,
+            m_U=self.m_U,
+            m_E=self.m_E,
+            unemployment_rate=np.array([self.unemployment_rate]),
+            employment_rate=np.array([self.employment_rate]),
+            theta=np.array([self.theta]),
+            converged=np.array([self.converged]),
+            n_iterations=np.array([self.n_iterations])
+        )
+    
+    @classmethod
+    def load(cls, filepath: str) -> 'MFGEquilibriumSparseGrid':
+        """
+        从文件加载均衡结果
+        
+        Args:
+            filepath: 文件路径（.npz格式）
+        
+        Returns:
+            MFGEquilibriumSparseGrid实例
+        """
+        data = np.load(filepath)
+        
+        return cls(
+            grid_nodes=data['grid_nodes'],
+            V_U=data['V_U'],
+            V_E=data['V_E'],
+            a_star=data['a_star'],
+            m_U=data['m_U'],
+            m_E=data['m_E'],
+            unemployment_rate=float(data['unemployment_rate'][0]),
+            employment_rate=float(data['employment_rate'][0]),
+            theta=float(data['theta'][0]),
+            converged=bool(data['converged'][0]),
+            n_iterations=int(data['n_iterations'][0]),
+            convergence_metrics={'diff_V': 0.0, 'diff_a': 0.0, 'diff_u': 0.0},  # 默认值
+            total_time=0.0  # 默认值
+        )
