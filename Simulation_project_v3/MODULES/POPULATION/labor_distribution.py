@@ -98,7 +98,7 @@ class LaborDistribution:
         保存参数到文件（硬编码路径）
         
         保存内容:
-            - 连续变量的Copula参数
+            - 连续变量的Copula模型对象
             - 离散变量的经验分布
         """
         # 硬编码保存路径
@@ -107,9 +107,9 @@ class LaborDistribution:
         # 确保目录存在
         Path(filepath).parent.mkdir(parents=True, exist_ok=True)
         
-        # 打包所有参数
+        # 打包所有参数（直接保存模型对象）
         params = {
-            'copula_params': self.copula_model.to_dict(),
+            'copula_model': self.copula_model,
             'discrete_dist': self.discrete_dist
         }
         
