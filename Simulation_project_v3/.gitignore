@@ -1,0 +1,79 @@
+# Python相关
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# 虚拟环境
+venv/
+ENV/
+env/
+.venv
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# PyCharm
+.idea/
+
+# VSCode
+.vscode/
+
+# 数据文件（大文件不提交）
+*.csv
+*.xlsx
+*.xls
+DATA/raw/*.csv
+DATA/processed/*.csv
+
+# 输出结果（不提交）
+OUTPUT/**/*.csv
+OUTPUT/**/*.npz
+OUTPUT/**/*.pkl
+OUTPUT/**/*.png
+OUTPUT/**/*.pdf
+
+# 但保留目录结构
+!OUTPUT/.gitkeep
+!DATA/raw/.gitkeep
+!DATA/processed/.gitkeep
+
+# 临时文件
+*.tmp
+*.log
+*.bak
+*.swp
+*.swo
+*~
+
+# 操作系统
+.DS_Store
+Thumbs.db
+
+# 测试覆盖率
+.coverage
+htmlcov/
+.pytest_cache/
+
+# 文档生成
+docs/_build/
+
+# 其他
+*.orig
+

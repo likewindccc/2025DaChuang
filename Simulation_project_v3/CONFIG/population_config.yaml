@@ -1,0 +1,41 @@
+# POPULATION模块配置文件
+
+# 随机种子
+random_seed: 42
+
+# ==================== 劳动力分布配置 ====================
+labor_distribution:
+  # 数据路径
+  data_path: "DATA/processed/cleaned_data.csv"
+  
+  # 核心变量列名
+  variables:
+    T:
+      - "每周期望工作天数"
+      - "每天期望工作时数"
+    S: "工作能力评分"
+    D: "数字素养评分"
+    W: "每月期望收入"
+
+# ==================== 企业分布配置 ====================
+enterprise_distribution:
+  # 初始参数
+  mean:
+    T_req: 45.0
+    S_req: 25.0
+    D_req: 10.0
+    W_offer: 4500.0
+  
+  std:
+    T_req: 8.0
+    S_req: 8.0
+    D_req: 5.0
+    W_offer: 1500.0
+  
+  correlation:
+    T_S: 0.3
+    T_D: 0.2
+    T_W: 0.4
+    S_D: 0.5
+    S_W: 0.6
+    D_W: 0.4
