@@ -21,14 +21,9 @@ from typing import Dict, Tuple, Optional
 import warnings
 
 from ...core import BaseGenerator, DataValidationError, CopulaFittingError
+from copulas.multivariate import GaussianMultivariate
 
-# 尝试导入copulas库，如果失败则使用手动实现
-try:
-    from copulas.multivariate import GaussianMultivariate
-    COPULAS_AVAILABLE = True
-except ImportError:
-    COPULAS_AVAILABLE = False
-    warnings.warn("copulas库未安装，将使用简化实现")
+COPULAS_AVAILABLE = True
 
 
 class LaborGenerator(BaseGenerator):
@@ -106,29 +101,20 @@ class LaborGenerator(BaseGenerator):
             DataValidationError: 数据验证失败
             CopulaFittingError: Copula拟合失败
         """
-        print("\n" + "=" * 70)
-        print("[LaborGenerator] 开始拟合模型")
-        print("=" * 70)
-        
         # Step 1: 数据验证
         self._validate_data(data)
-        print(f"[OK] 数据验证通过，样本量: {len(data)}")
         
-        # Step 2: 拟合连续变量的边际分布
+        # Step 2: 拟合连续变量的边际分布（6个Beta分布）
         self._fit_continuous_marginals(data)
-        print(f"[OK] 连续变量边际分布拟合完成（6个Beta分布）")
         
         # Step 3: 归一化 + CDF变换 + 拟合6维Gaussian Copula
         self._fit_copula(data)
-        print(f"[OK] 6维Gaussian Copula拟合完成")
         
-        # Step 4: 拟合离散变量的经验分布
+        # Step 4: 拟合离散变量的经验分布（孩子数量、学历）
         self._fit_discrete_marginals(data)
-        print(f"[OK] 离散变量经验分布拟合完成（2个离散分布）")
         
-        # Step 5: 估计条件概率表
+        # Step 5: 估计条件概率表（年龄→孩子数量、学历）
         self.conditional_probs = self._estimate_conditional_probs(data)
-        print(f"[OK] 条件概率表估计完成（年龄→孩子数量、学历）")
         
         # Step 6: 保存原始数据统计信息（只包含连续变量）
         self.data_stats = {
@@ -154,8 +140,6 @@ class LaborGenerator(BaseGenerator):
         }
         
         self.is_fitted = True
-        print("[OK] 模型拟合完成！")
-        print("=" * 70 + "\n")
     
     def generate(self, n_agents: int) -> pd.DataFrame:
         """
@@ -173,26 +157,22 @@ class LaborGenerator(BaseGenerator):
         if not self.is_fitted:
             raise RuntimeError("必须先调用fit()方法拟合模型")
         
-        print(f"\n[LaborGenerator] 生成 {n_agents} 个虚拟劳动力...")
-        
-        # Step 1: 从6维Copula采样
+        # Step 1: 从6维Copula采样，生成均匀分布[0,1]的样本
         uniform_samples = self._sample_from_copula(n_agents)
         
-        # Step 2: 逆CDF变换 -> Beta分布（6个连续变量）
+        # Step 2: 逆CDF变换 -> Beta分布 -> 原始尺度（6个连续变量）
         agents_data = self._inverse_transform(uniform_samples)
         
-        # Step 3: 基于年龄条件抽样离散变量
+        # Step 3: 基于年龄条件抽样离散变量（孩子数量、学历）
         self._sample_discrete_variables(agents_data, n_agents)
         
-        # Step 4: 构造完整DataFrame
+        # Step 4: 构造完整DataFrame，添加agent_id和agent_type
         df = pd.DataFrame(agents_data)
         df['agent_id'] = range(1, n_agents + 1)
         df['agent_type'] = 'labor'
         
-        # 重新排序列
+        # Step 5: 重新排序列，确保顺序一致
         df = df[['agent_id', 'agent_type'] + self.ALL_COLS]
-        
-        print(f"[OK] 生成完成！")
         
         return df
     
@@ -211,14 +191,9 @@ class LaborGenerator(BaseGenerator):
         if not self.is_fitted:
             raise RuntimeError("必须先调用fit()方法")
         
-        print("\n" + "=" * 70)
-        print("[LaborGenerator] 数据验证")
-        print("=" * 70)
-        
         all_passed = True
         
         # 验证连续变量（KS检验）
-        print("\n[连续变量 - KS检验]")
         for col in self.CONTINUOUS_COLS:
             # 归一化到[0,1]
             data_min, data_max = self.marginals_continuous[col]['scale']
@@ -232,94 +207,60 @@ class LaborGenerator(BaseGenerator):
             normalized_clean = normalized.dropna()
             
             if len(normalized_clean) == 0:
-                print(f"  {col:15s}: 错误 - 无有效数据")
                 all_passed = False
                 continue
             
-            # KS检验：使用kstest与理论分布比较
+            # KS检验：比较生成数据与理论Beta分布
             params = self.marginals_continuous[col]['params']
+            from scipy.stats import beta as beta_dist
+            ks_stat, p_value = kstest(normalized_clean, beta_dist(*params).cdf)
             
-            try:
-                # 方法1：直接与Beta分布比较
-                from scipy.stats import beta as beta_dist
-                ks_stat, p_value = kstest(
-                    normalized_clean, 
-                    beta_dist(*params).cdf
-                )
-                
-                # 检查是否有效
-                if np.isnan(ks_stat) or np.isnan(p_value):
-                    # 方法2：使用两样本KS检验（更稳健）
-                    reference_sample = beta_dist(*params).rvs(size=len(normalized_clean))
-                    from scipy.stats import ks_2samp
-                    ks_stat, p_value = ks_2samp(normalized_clean, reference_sample)
-                
-                passed = p_value > 0.01  # 降低阈值，考虑样本量
-                status = "✓ PASS" if passed else "✗ FAIL"
-                print(f"  {col:15s}: KS={ks_stat:.4f}, p={p_value:.4f} {status}")
-                
-                if not passed:
-                    all_passed = False
-                    
-            except Exception as e:
-                print(f"  {col:15s}: 检验失败 - {str(e)}")
+            # 如果结果无效，使用两样本KS检验（更稳健）
+            if np.isnan(ks_stat) or np.isnan(p_value):
+                reference_sample = beta_dist(*params).rvs(size=len(normalized_clean))
+                from scipy.stats import ks_2samp
+                ks_stat, p_value = ks_2samp(normalized_clean, reference_sample)
+            
+            # 判断是否通过检验（显著性水平0.01）
+            if p_value <= 0.01:
                 all_passed = False
         
         # 验证离散变量（卡方检验）
-        print("\n[离散变量 - 卡方检验]")
         for col in self.DISCRETE_COLS:
-            try:
-                # 观测频数
-                observed_counts = agents[col].value_counts().sort_index()
-                
-                # 期望概率和期望频数
-                values = np.array(self.marginals_discrete[col]['values'])
-                probs = np.array(self.marginals_discrete[col]['probs'])
-                
-                # 确保观测值和期望值的顺序一致
-                observed = np.zeros(len(values))
-                for i, val in enumerate(values):
-                    observed[i] = observed_counts.get(val, 0)
-                
-                # 计算期望频数
-                expected = probs * len(agents)
-                
-                # 卡方检验前的条件检查
-                # 1. 过滤掉期望频数<5的类别
-                valid_mask = expected >= 5
-                
-                if valid_mask.sum() < 2:
-                    print(f"  {col:15s}: 跳过 - 有效类别<2")
-                    continue
-                
-                # 使用有效的类别进行检验
-                observed_valid = observed[valid_mask]
-                expected_valid = expected[valid_mask]
-                
-                # 确保总和相等（归一化）
-                observed_valid = observed_valid * expected_valid.sum() / observed_valid.sum()
-                
-                # 卡方检验
-                chi2_stat, p_value = chisquare(observed_valid, expected_valid)
-                
-                passed = p_value > 0.05
-                status = "✓ PASS" if passed else "✗ FAIL"
-                print(f"  {col:15s}: χ²={chi2_stat:.4f}, p={p_value:.4f} {status}")
-                
-                if not passed:
-                    all_passed = False
-                    
-            except Exception as e:
-                print(f"  {col:15s}: 检验失败 - {str(e)[:50]}")
+            # 获取观测频数
+            observed_counts = agents[col].value_counts().sort_index()
+            
+            # 获取期望概率和期望频数
+            values = np.array(self.marginals_discrete[col]['values'])
+            probs = np.array(self.marginals_discrete[col]['probs'])
+            
+            # 确保观测值和期望值的顺序一致
+            observed = np.zeros(len(values))
+            for i, val in enumerate(values):
+                observed[i] = observed_counts.get(val, 0)
+            
+            # 计算期望频数
+            expected = probs * len(agents)
+            
+            # 卡方检验前的条件检查：过滤掉期望频数<5的类别
+            valid_mask = expected >= 5
+            
+            if valid_mask.sum() < 2:
+                continue
+            
+            # 使用有效的类别进行检验
+            observed_valid = observed[valid_mask]
+            expected_valid = expected[valid_mask]
+            
+            # 确保总和相等（归一化）
+            observed_valid = observed_valid * expected_valid.sum() / observed_valid.sum()
+            
+            # 执行卡方检验
+            chi2_stat, p_value = chisquare(observed_valid, expected_valid)
+            
+            # 判断是否通过检验（显著性水平0.05）
+            if p_value <= 0.05:
                 all_passed = False
-        
-        # 总结
-        print("\n" + "=" * 70)
-        if all_passed:
-            print("[验证结果] ✓ 所有检验通过")
-        else:
-            print("[验证结果] ✗ 部分检验未通过（可能是样本量不足）")
-        print("=" * 70 + "\n")
         
         return all_passed
     
@@ -401,33 +342,18 @@ class LaborGenerator(BaseGenerator):
             # CDF变换到均匀分布
             uniform_data[col] = beta(*params).cdf(normalized)
         
-        # 拟合Gaussian Copula
-        if COPULAS_AVAILABLE:
-            try:
-                # 使用copulas库的标准实现
-                self.copula = GaussianMultivariate()
-                self.copula.fit(uniform_data)
-                
-                # 提取相关矩阵：copulas库在fit后存储在correlation属性中
-                if hasattr(self.copula, 'correlation') and self.copula.correlation is not None:
-                    self.correlation_matrix = self.copula.correlation
-                    if isinstance(self.correlation_matrix, pd.DataFrame):
-                        self.correlation_matrix = self.correlation_matrix.values
-                else:
-                    # 备用：从数据计算
-                    self.correlation_matrix = uniform_data.corr(method='spearman').values
-                
-                print(f"[OK] 成功提取相关矩阵，形状: {self.correlation_matrix.shape}")
-                
-            except Exception as e:
-                warnings.warn(f"Copula拟合失败，使用备用方案: {e}")
-                self.correlation_matrix = uniform_data.corr(method='spearman').values
-                self.copula = None
+        # 使用copulas库的标准实现拟合Gaussian Copula
+        self.copula = GaussianMultivariate()
+        self.copula.fit(uniform_data)
+        
+        # 提取相关矩阵：copulas库在fit后存储在correlation属性中
+        if hasattr(self.copula, 'correlation') and self.copula.correlation is not None:
+            self.correlation_matrix = self.copula.correlation
+            if isinstance(self.correlation_matrix, pd.DataFrame):
+                self.correlation_matrix = self.correlation_matrix.values
         else:
-            # 备用方案：手动实现Gaussian Copula
+            # 备用：从数据计算
             self.correlation_matrix = uniform_data.corr(method='spearman').values
-            self.copula = None
-            print("[提示] 未安装copulas库，使用手动实现的Gaussian Copula")
     
     def _fit_discrete_marginals(self, data: pd.DataFrame) -> None:
         """拟合离散变量的经验分布"""
@@ -461,9 +387,8 @@ class LaborGenerator(BaseGenerator):
             
             subset = data[mask]
             
+            # 如果该年龄段无数据，使用全局分布
             if len(subset) == 0:
-                # 如果该年龄段无数据，使用全局分布
-                print(f"  [警告] 年龄段 {age_bin} 无数据，使用全局分布")
                 for col in self.DISCRETE_COLS:
                     conditional_probs[col][age_bin] = self.marginals_discrete[col]['probs']
                 continue
@@ -494,39 +419,12 @@ class LaborGenerator(BaseGenerator):
     
     def _sample_from_copula(self, n_agents: int) -> pd.DataFrame:
         """从6维Copula采样"""
-        if COPULAS_AVAILABLE and self.copula is not None:
-            try:
-                # 使用copulas库采样（最佳实践）
-                uniform_samples = self.copula.sample(n_agents)
-                
-                # 确保列名正确
-                if not all(col in uniform_samples.columns for col in self.CONTINUOUS_COLS):
-                    uniform_samples.columns = self.CONTINUOUS_COLS
-                    
-                return uniform_samples
-                
-            except Exception as e:
-                warnings.warn(f"Copula采样失败，使用备用方案: {e}")
+        # 使用copulas库采样
+        uniform_samples = self.copula.sample(n_agents)
         
-        # 备用方案：手动实现Gaussian Copula采样
-        # 数学原理：Gaussian Copula = 多元正态 + 正态CDF变换
-        mean = np.zeros(len(self.CONTINUOUS_COLS))
-        
-        # 确保相关矩阵是正定的
-        cov = self.correlation_matrix.copy()
-        
-        # 添加小扰动确保正定性
-        epsilon = 1e-6
-        cov = cov + epsilon * np.eye(len(self.CONTINUOUS_COLS))
-        
-        # 生成多元正态样本
-        normal_samples = np.random.multivariate_normal(mean, cov, size=n_agents)
-        
-        # 转换为均匀分布 U = Φ(Z)
-        uniform_samples = pd.DataFrame(
-            stats.norm.cdf(normal_samples),
-            columns=self.CONTINUOUS_COLS
-        )
+        # 确保列名正确
+        if not all(col in uniform_samples.columns for col in self.CONTINUOUS_COLS):
+            uniform_samples.columns = self.CONTINUOUS_COLS
         
         return uniform_samples
     

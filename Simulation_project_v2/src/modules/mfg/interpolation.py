@@ -358,7 +358,6 @@ class SparseGridInterpolator:
             f"k_neighbors={self.k_neighbors})"
         )
 
-
 # 预编译和测试
 if __name__ == "__main__":
     import time
@@ -465,4 +464,5 @@ if __name__ == "__main__":
     print("\n" + "=" * 60)
     print("✅ 所有测试通过！插值模块工作正常。")
     print("=" * 60)
+
 

@@ -560,7 +560,6 @@ class BellmanSolver:
             f"rho={self.rho}, tolerance={self.tolerance:.2e})"
         )
 
-
 # 简单测试
 if __name__ == "__main__":
     # 当作为脚本运行时，需要添加路径
@@ -631,4 +630,5 @@ if __name__ == "__main__":
     print("\n" + "=" * 60)
     print("✅ 贝尔曼求解器模块测试完成！")
     print("=" * 60)
+
 

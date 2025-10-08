@@ -394,7 +394,6 @@ class KFESolver:
             f"employment_rate={e_rate:.2%})"
         )
 
-
 # 测试
 if __name__ == "__main__":
     import sys
@@ -460,4 +459,5 @@ if __name__ == "__main__":
     print("\n" + "=" * 60)
     print("✅ KFE求解器测试完成！")
     print("=" * 60)
+
 
