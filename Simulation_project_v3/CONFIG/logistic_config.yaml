@@ -5,13 +5,13 @@ random_seed: 42
 
 # ==================== 虚拟市场规模 ====================
 market_size:
-  n_laborers: 10000      # 每轮生成的劳动力数量（固定）
+  n_laborers: 10000      # 每轮生成的劳动力数量
   # 企业数量由市场紧张度theta动态计算：n_enterprises = n_laborers × theta
 
 # ==================== Logit回归训练数据生成配置 ====================
 # 为了回归出可靠的匹配函数λ(x,σ,θ)，需要在不同市场紧张度下生成多批数据
 data_generation:
-  n_rounds: 150          # 数据生成轮数（不同theta场景）
+  n_rounds: 10          # 数据生成轮数（不同theta场景）
   
   # 市场紧张度扰动（覆盖不同theta以识别市场结构影响）
   theta_scenarios:
@@ -30,15 +30,15 @@ data_generation:
 
 # ==================== GS匹配算法配置 ====================
 gs_matching:
-  max_rounds: 32         # 最大匹配轮数（调优后使均衡市场匹配率接近50%）
+  max_rounds: 1000       # 最大匹配轮数
   
   # 劳动力偏好函数参数（MinMax标准化后，所有变量∈[0,1]）
   # P_ij^jobseeker = γ_0 - γ_1*T_j_norm - γ_2*max(0,S_j_norm-S_i_norm) - γ_3*max(0,D_j_norm-D_i_norm) + γ_4*W_j_norm
   laborer_preference:
     gamma_0: 0.0         # 截距
     gamma_1: 1.0         # T_req_norm系数（偏好工作时间短）
-    gamma_2: 5.0         # max(0, S_req_norm - S_norm)系数（规避能力不足）
-    gamma_3: 3.0         # max(0, D_req_norm - D_norm)系数（规避数字素养不足）
+    gamma_2: 10.0        # max(0, S_req_norm - S_norm)系数（规避能力不足）
+    gamma_3: 2.0         # max(0, D_req_norm - D_norm)系数（规避数字素养不足）
     gamma_4: 1.0         # W_offer_norm系数（偏好高薪）
   
   # 企业偏好函数参数（MinMax标准化后，所有变量∈[0,1]）

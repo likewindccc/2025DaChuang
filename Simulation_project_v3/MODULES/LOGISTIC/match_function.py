@@ -106,6 +106,12 @@ class MatchFunction:
         # 收集所有轮次的数据
         all_data = []
         
+        print(f"\n   开始生成{n_rounds}轮数据...")
+        print(f"   - 岗位紧张型: {n_tight}轮 (theta∈[{theta_scenarios['tight']['min']}, {theta_scenarios['tight']['max']}])")
+        print(f"   - 均衡市场: {n_balanced}轮 (theta∈[{theta_scenarios['balanced']['min']}, {theta_scenarios['balanced']['max']}])")
+        print(f"   - 岗位富余型: {n_surplus}轮 (theta∈[{theta_scenarios['surplus']['min']}, {theta_scenarios['surplus']['max']}])")
+        print()
+        
         for round_idx, theta in enumerate(theta_list):
             # 生成虚拟市场
             laborers, enterprises = self.market_generator.generate_market(
@@ -115,6 +121,10 @@ class MatchFunction:
             
             # 执行GS匹配（已集成numba加速）
             match_result = perform_matching(laborers, enterprises, self.config)
+            
+            # 每轮显示进度
+            match_rate = match_result['matched'].mean() * 100
+            print(f"   [{round_idx + 1}/{n_rounds}] theta={theta:.3f}, 匹配率={match_rate:.1f}%")
             
             # 提取回归所需变量
             # x: 劳动力特征 (T, S, D, W)
@@ -155,16 +165,22 @@ class MatchFunction:
             all_data.append(round_data)
         
         # 合并所有轮次数据
+        print(f"\n   合并数据...")
         self.regression_data = pd.concat(all_data, ignore_index=True)
+        
+        # 显示数据生成完成信息
+        total_matched = self.regression_data['matched'].sum()
+        total_samples = len(self.regression_data)
+        overall_match_rate = total_matched / total_samples * 100
+        print(f"   [完成] 总样本: {total_samples}, 总匹配: {total_matched}, 总体匹配率: {overall_match_rate:.2f}%\n")
         
         return self.regression_data
     
-    def fit(self, data: pd.DataFrame = None) -> None:
+    def fit(self) -> None:
         """
         拟合Logit回归模型
         
-        Args:
-            data: 可选的外部数据。如果为None，则使用generate_training_data生成
+        使用已生成的训练数据（self.regression_data）进行拟合。
         
         回归方程:
             logit(P(matched=1)) = β_0 + β_1*T + β_2*S + β_3*D + β_4*W 
@@ -175,9 +191,8 @@ class MatchFunction:
             - 自变量: 劳动力核心特征(T,S,D,W) + 控制变量(σ) + 市场紧张度(θ)
             - σ: 劳动力控制变量综合指标（age, edu, children的二次标准化）
         """
-        # 如果没有提供数据，则生成训练数据
-        if data is None:
-            data = self.generate_training_data()
+        # 直接使用已生成的训练数据
+        data = self.regression_data
         
         # 构建回归变量
         # 因变量
@@ -190,11 +205,33 @@ class MatchFunction:
             'theta'   # 市场紧张度
         ]]
         
-        # 添加常数项
-        X = sm.add_constant(X)
+        # 数据清洗：处理NaN和inf
+        # 统计原始样本数
+        n_original = len(data)
         
-        # 拟合Logit模型
-        self.model = sm.Logit(y, X).fit(disp=0)  # disp=0关闭优化输出
+        # 将inf替换为nan，然后统一删除
+        X_clean = X.replace([np.inf, -np.inf], np.nan)
+        y_clean = y.copy()
+        
+        # 找出包含nan的行
+        mask = X_clean.isnull().any(axis=1)
+        n_invalid = mask.sum()
+        
+        if n_invalid > 0:
+            print(f"\n警告：发现{n_invalid}个异常样本（包含NaN或inf），已删除")
+            print(f"  删除前样本数: {n_original}")
+            print(f"  删除后样本数: {n_original - n_invalid}")
+            print(f"  删除比例: {n_invalid/n_original*100:.2f}%")
+            
+            # 删除异常样本
+            X_clean = X_clean[~mask]
+            y_clean = y_clean[~mask]
+        
+        # 添加常数项
+        X = sm.add_constant(X_clean)
+        
+        # 拟合Logit模型（使用清洗后的y）
+        self.model = sm.Logit(y_clean, X).fit(disp=0)  # disp=0关闭优化输出
         self.params = self.model.params
     
     def save_results(self) -> None:
