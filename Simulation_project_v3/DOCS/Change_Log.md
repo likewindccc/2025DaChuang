@@ -12,6 +12,200 @@
 
 ---
 
+## 修改 14 - 北京时间 2025/10/09 23:58
+
+### Commit: (待提交)
+
+**变更类型**: fix
+
+**变更内容**: 修正bellman_solver.py中的关键错误
+
+**受影响文件**:
+- 修改: `MODULES/MFG/bellman_solver.py` - 修正状态更新、就业效用、sigma计算
+
+**变更动机**:
+1. **修正状态更新公式的边界定义**：T_max和W_min应使用群体统计边界而非个体计算
+2. **修正就业者效用**：应使用个体当前工资而非平均工资
+3. **修正sigma计算**：应与match_function.py保持一致的双重MinMax标准化
+4. **代码清理**：删除调试注释标记
+
+**技术细节**:
+
+1. **状态更新函数修正** (`update_state_numba`):
+   ```python
+   # 修正前：个体自己计算T_max
+   T_max = 168.0 - 56.0 - 8.0 * children  ❌
+   
+   # 修正后：使用群体统计边界
+   def update_state_numba(
+       ...,
+       T_max_population: float,  # 当前群体中所有失业者的T的最大值 ✅
+       W_min_population: float,  # 当前群体中所有失业者的W的最小值 ✅
+       ...
+   )
+   ```
+
+2. **就业者效用修正** (`solve_employed_bellman_numba`):
+   ```python
+   # 修正前
+   omega = mean_wage  # 平均工资 ❌
+   
+   # 修正后
+   omega = current_wage_E[i]  # 个体当前的工资收入 ✅
+   ```
+   - 新增参数：`current_wage_E` 数组（就业者当前工资）
+   - 要求调用时 individuals DataFrame 包含 `current_wage` 列
+
+3. **sigma计算修正** (`compute_match_probabilities_batch`):
+   ```python
+   # 修正为与match_function.py一致的双重MinMax标准化
+   # σ = MinMax(MinMax(age) + MinMax(edu) + MinMax(children))
+   
+   # 第一次MinMax
+   age_norm = (age - age_min) / (age_max - age_min + 1e-10)
+   edu_norm = (edu - edu_min) / (edu_max - edu_min + 1e-10)
+   children_norm = (children - children_min) / (children_max - children_min + 1e-10)
+   
+   # 求和
+   sigma_sum = age_norm + edu_norm + children_norm
+   
+   # 第二次MinMax
+   sigma = (sigma_sum - sigma_min) / (sigma_max - sigma_min + 1e-10)
+   ```
+
+4. **函数签名更新**：
+   - `value_iteration_numba()`: 新增 `current_wage_E` 参数，移除 `mean_wage` 参数
+   - `solve()`: 文档字符串更新，明确要求 `current_wage` 列
+
+5. **设计确认**：
+   - ✅ 失业者：有努力决策（max_a），需付出努力成本
+   - ✅ 就业者：无努力决策，只有就业效用和离职风险
+   - ✅ 符合研究计划4.1.1节的贝尔曼方程定义
+
+**影响范围**:
+- KFE模块调用 BellmanSolver 时需确保 individuals DataFrame 包含 `current_wage` 列
+- 就业者的 current_wage 应在匹配成功时记录企业的 W_offer
+- 失业者的 current_wage 设为 NaN 或 0
+
+---
+
+## 修改 13 - 北京时间 2025/10/09 15:37
+
+### Commit: (待提交)
+
+**变更类型**: feat + refactor
+
+**变更内容**: MFG模块开发 - 完成Numba加速的贝尔曼方程求解器
+
+**受影响文件**:
+- 修改: `CONFIG/mfg_config.yaml` - 简化配置，删除state_bounds
+- 新增: `MODULES/MFG/bellman_solver.py` - 贝尔曼方程求解器
+
+**变更动机**:
+1. **明确状态空间处理**：使用基于个体的蒙特卡洛方法，状态保持连续
+2. **实现值迭代算法**：求解失业者和就业者的值函数及最优努力策略
+
+**技术细节**:
+
+1. **核心设计决策**：
+   - 状态x=(T,S,D,W)保持连续，不离散化
+   - 仅离散化时间t和努力a（11个点）
+   - 用N=10000个具体个体代表人口
+
+2. **Numba加速架构（重大性能优化）**：
+   - **问题识别**：10000个体 × 11努力 × 500迭代 = 5500万次计算
+   - **解决方案**：双层架构设计
+     - **底层**：Numba @njit装饰的核心计算函数（纯NumPy数组）
+     - **上层**：Python包装类（数据准备、模型调用、结果整理）
+   
+3. **Numba核心函数**（@njit + @prange并行）：
+   - `update_state_numba()`: 状态更新（无Python对象）
+   - `compute_separation_rate_numba()`: 离职率计算
+   - `solve_unemployed_bellman_numba()`: 失业者贝尔曼求解（prange并行）
+   - `solve_employed_bellman_numba()`: 就业者贝尔曼求解（prange并行）
+   - `value_iteration_numba()`: 完整值迭代主循环
+   
+4. **Python包装层（BellmanSolver类）**：
+   - `compute_match_probabilities_batch()`: 批量计算λ（无法numba化）
+   - `solve()`: 主接口，数据准备 → 调用numba → 整理结果
+   - 处理DataFrame/Series与NumPy数组转换
+   - 调用statsmodels模型（Python对象）
+
+5. **性能优化策略**：
+   - 匹配概率λ**预先批量计算**（N_U × n_effort矩阵）
+   - 核心双层循环使用`@njit(parallel=True)`自动并行
+   - 值迭代主循环完全在numba内部，避免Python开销
+   - 预期加速比：**10x-50x**（取决于CPU核数）
+
+6. **研究计划公式实现**：
+   - 失业者：V^U_t = max_a {[b - 0.5*κ*a²] + ρ[λ*V^E_{t+1} + (1-λ)*V^U_{t+1}]}
+   - 就业者：V^E_t = ω + ρ[μ*V^U_{t+1} + (1-μ)*V^E_{t+1}]
+   - 状态更新：T+=γ_T*a*(T_max-T), S+=γ_S*a*(1-S), 等
+
+7. **配置文件简化**：
+   - 删除state_bounds（不需要边界检查）
+   - 状态更新公式本身保证物理意义
+   - T_max和W_min动态计算
+
+**影响范围**:
+- 为KFE求解器提供最优策略a*和值函数V
+- 为均衡迭代提供贝尔曼求解功能
+
+**下一步**:
+- 开发 `MODULES/MFG/kfe_solver.py` - KFE演化求解器
+
+---
+
+## 修改 12 - 北京时间 2025/10/09 15:19
+
+### Commit: (待提交)
+
+**变更类型**: feat
+
+**变更内容**: 开始开发MFG模块 - 创建配置文件
+
+**受影响文件**:
+- 新增: `CONFIG/mfg_config.yaml` - MFG模块配置文件
+
+**变更动机**:
+1. **启动MFG开发**: 根据研究计划开始平均场博弈模块开发
+2. **参数配置**: 定义状态空间、努力水平、经济参数、收敛标准
+
+**技术细节**:
+
+1. **状态空间离散化**:
+   - 完整四维状态空间 (T, S, D, W)
+   - 每维默认10个网格点（可调整）
+   - T: [20, 70]小时，S/D: [0, 1]标准化，W: [2000, 8000]元
+
+2. **努力水平**:
+   - a ∈ [0, 1]，离散化为11个点 [0, 0.1, ..., 1.0]
+
+3. **核心经济参数**:
+   - 贴现因子 ρ = 0.95
+   - 努力成本系数 κ = 1.0
+   - 失业收益函数 b(x) = b0 + b1*T + b2*S + b3*D + b4*W
+   - 就业效用函数 ω(x, σ_i) = w0 + w1*T + w2*S + w3*D + w4*W
+   - 外生离职率 μ(x, σ_i) = 1/(1+exp(-η'Z))，目标离职率5%
+
+4. **市场参数**:
+   - 岗位空缺数 V = 10000（外生固定）
+   - 初始总人口 10000，初始失业率 10%
+
+5. **算法参数**:
+   - 值迭代最大轮数: 500
+   - 贝尔曼+KFE交替迭代最大轮数: 100
+   - 收敛阈值: ε_V=1e-4, ε_a=1e-3, ε_u=1e-4
+
+**影响范围**:
+- 为后续开发bellman_solver, kfe_solver, equilibrium_solver提供配置基础
+- 所有参数值基于研究计划，可通过配置文件灵活调整
+
+**下一步**:
+- 开发 `MODULES/MFG/bellman_solver.py` - 贝尔曼方程求解器
+
+---
+
 ## 修改 11 - 北京时间 2025/10/09 15:04
 
 ### Commit: (待提交)

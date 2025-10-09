@@ -1,0 +1,102 @@
+# MFG模块配置文件
+# 平均场博弈均衡求解参数
+# 核心思想：融合MFG理论与ABM方法，使用基于个体的蒙特卡洛模拟
+
+# 个体模拟参数
+population:
+  # 模拟的个体数量（用N个个体代表整个人口）
+  n_individuals: 10000
+
+# 努力水平离散化（用于贝尔曼方程中枚举搜索最优解）
+effort:
+  a_min: 0.0
+  a_max: 1.0
+  a_points: 11  # 离散化为11个点：[0, 0.1, 0.2, ..., 1.0]
+
+# 核心经济参数
+economics:
+  # 贴现因子 (未来收益偏好)
+  rho: 0.95
+  
+  # 努力成本系数
+  kappa: 1.0
+  
+  # 失业收益函数 b(x) = b0（固定失业救济金）
+  unemployment_benefit:
+    b0: 500.0      # 失业救济金（元/月）
+  
+  # 就业效用函数 ω(x, σ_i) = 匹配企业的工资W_offer
+  # 注：匹配成功后，从企业分布中获取W_offer作为就业收入
+  employment_utility:
+    # 企业工资分布参数（用于计算期望工资）
+    # 假设企业W_offer服从正态分布 N(mean, std)
+    mean_wage: 4500.0   # 企业平均工资（元/月）
+    std_wage: 1500.0    # 企业工资标准差
+  
+  # 状态更新系数（研究计划4.3节）
+  # 描述个体通过努力a改变状态的动态机制
+  # 注：更新公式本身保证了物理意义，不需要额外边界检查
+  state_update:
+    # T_{t+1} = T_t + γ_T*a_t*(T_max - T_t)
+    # 其中T_max为个体当期的最大可工作时长（动态计算）
+    gamma_T: 0.1   
+    
+    # W_{t+1} = max(W_min, W_t - γ_W*a_t)
+    # 其中W_min为个体当期的最低期望工资（动态计算）
+    gamma_W: 0.05  
+    
+    # S_{t+1} = S_t + γ_S*a_t*(1 - S_t)，自动保证S ∈ [0,1]
+    gamma_S: 0.1   
+    
+    # D_{t+1} = D_t + γ_D*a_t*(1 - D_t)，自动保证D ∈ [0,1]
+    gamma_D: 0.1
+  
+  # 外生离职率函数 μ(x, σ_i) = 1/(1+exp(-η'Z))
+  # Z包含：截距、T、S、D、W、age、education、children
+  separation_rate:
+    eta0: 0.0      # 截距项（通过校准确定）
+    eta_T: -0.02   # T的系数（工作时间越长越稳定）
+    eta_S: -2.0    # S的系数（能力越强越稳定）
+    eta_D: -1.0    # D的系数（数字素养越高越稳定）
+    eta_W: 0.0001  # W的系数（期望越高离职风险可能略高）
+    eta_age: -0.05 # 年龄系数（年龄越大越稳定）
+    eta_edu: -0.1  # 教育年限系数
+    eta_children: 0.1  # 孩子数量系数
+    target_rate: 0.05  # 目标平均离职率（5%）
+
+# 市场参数
+market:
+  # 岗位空缺数V（外生固定，用于计算市场紧张度 θ_t = V / U_t）
+  # 注：V的具体值通过后续校准模块确定
+  vacancy: 10000
+  
+  # 初始化方式
+  initialization:
+    # 初始时所有个体都处于失业状态
+    # 然后运行一次随机匹配（基于匹配函数λ），判断每个人是否就业
+    # 从而得到初始的失业/就业分布
+    initial_effort: 0.0  # 初始努力水平设为0
+
+# 值迭代算法参数
+value_iteration:
+  max_iter: 500      # 最大迭代次数
+  tol: 1.0e-4        # 收敛阈值
+
+# 均衡求解参数
+equilibrium:
+  max_outer_iter: 100    # 贝尔曼+KFE交替迭代最大轮数
+  
+  # 收敛标准
+  convergence:
+    epsilon_V: 1.0e-4    # 价值函数收敛阈值
+    epsilon_a: 1.0e-3    # 努力水平收敛阈值
+    epsilon_u: 1.0e-4    # 失业率收敛阈值
+
+# 输入输出路径（硬编码）
+paths:
+  # 输入：匹配函数模型
+  match_function_model: "OUTPUT/logistic/match_function_model.pkl"
+  
+  # 输出目录
+  output_dir: "OUTPUT/mfg"
+
