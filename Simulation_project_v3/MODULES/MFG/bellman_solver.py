@@ -65,17 +65,46 @@ def update_state_numba(
 def compute_separation_rate_numba(
     T: float, S: float, D: float, W: float,
     age: float, education: float, children: float,
+    # 群体统计量（用于标准化）
+    T_mean: float, T_std: float,
+    S_mean: float, S_std: float,
+    D_mean: float, D_std: float,
+    W_mean: float, W_std: float,
+    age_mean: float, age_std: float,
+    edu_mean: float, edu_std: float,
+    children_mean: float, children_std: float,
+    # 系数
     eta0: float, eta_T: float, eta_S: float, eta_D: float, eta_W: float,
     eta_age: float, eta_edu: float, eta_children: float
 ) -> float:
     """
-    计算外生离职率 μ(x, σ_i)（Numba加速）
+    计算外生离职率 μ(x, σ_i)（Numba加速，基于标准化变量）
     
-    公式：μ = 1 / (1 + exp(-η'Z))
+    步骤：
+    1. 先对所有变量进行标准化：x_std = (x - mean) / std
+    2. 计算线性组合：z = η'Z_std
+    3. 应用logistic函数：μ = 1 / (1 + exp(-z))
     """
-    z = (eta0 + eta_T * T + eta_S * S + eta_D * D + eta_W * W +
-         eta_age * age + eta_edu * education + eta_children * children)
+    # 标准化
+    T_std_val = (T - T_mean) / (T_std + 1e-10)
+    S_std_val = (S - S_mean) / (S_std + 1e-10)
+    D_std_val = (D - D_mean) / (D_std + 1e-10)
+    W_std_val = (W - W_mean) / (W_std + 1e-10)
+    age_std_val = (age - age_mean) / (age_std + 1e-10)
+    edu_std_val = (education - edu_mean) / (edu_std + 1e-10)
+    children_std_val = (children - children_mean) / (children_std + 1e-10)
     
+    # 计算线性组合
+    z = (eta0 + 
+         eta_T * T_std_val + 
+         eta_S * S_std_val + 
+         eta_D * D_std_val + 
+         eta_W * W_std_val +
+         eta_age * age_std_val + 
+         eta_edu * edu_std_val + 
+         eta_children * children_std_val)
+    
+    # Logistic函数
     mu = 1.0 / (1.0 + np.exp(-z))
     return mu
 
@@ -93,9 +122,11 @@ def solve_unemployed_bellman_numba(
     children_U: np.ndarray,
     # 匹配概率（预计算）shape: (N_U, n_effort)
     lambda_probs: np.ndarray,
-    # 下期值函数
-    V_U_next: np.ndarray,  # shape: (N_U,)
-    V_E_next: np.ndarray,
+    # 下期值函数（上一轮迭代的近似值）
+    # 注：值迭代算法的核心思想是用"上一轮的值函数"作为"下期值函数"的近似
+    # 通过不断迭代，这个近似会逐渐收敛到真实的均衡值函数
+    V_U_next: np.ndarray,  # shape: (N_U,) 上一轮迭代的失业值函数
+    V_E_next: np.ndarray,  # shape: (N_U,) 上一轮迭代的就业值函数
     # 努力水平网格
     a_grid: np.ndarray,  # shape: (n_effort,)
     # 参数
@@ -105,10 +136,15 @@ def solve_unemployed_bellman_numba(
     """
     求解失业者贝尔曼方程（Numba并行加速）
     
+    值迭代逻辑：
+    1. 输入的V_U_next和V_E_next是上一轮迭代的值函数（初始为全零）
+    2. 基于这个"下期值函数的近似"，求解当前期的最优决策和值函数
+    3. 在外层循环中不断迭代，直到值函数收敛
+    
     对每个失业个体，枚举努力水平，找最优a*和V^U
     
     返回:
-        (V_U_t, a_optimal): shape均为(N_U,)
+        (V_U_t, a_optimal): shape均为(N_U,) - 本轮迭代计算出的值函数和最优努力
     """
     N_U = len(T_U)
     n_effort = len(a_grid)
@@ -170,6 +206,14 @@ def solve_employed_bellman_numba(
     age_E: np.ndarray,
     edu_E: np.ndarray,
     children_E: np.ndarray,
+    # 群体统计量（用于标准化）
+    T_mean: float, T_std: float,
+    S_mean: float, S_std: float,
+    D_mean: float, D_std: float,
+    W_mean: float, W_std: float,
+    age_mean: float, age_std: float,
+    edu_mean: float, edu_std: float,
+    children_mean: float, children_std: float,
     # 下期值函数
     V_U_next: np.ndarray,  # shape: (N_E,)
     V_E_next: np.ndarray,
@@ -195,10 +239,12 @@ def solve_employed_bellman_numba(
         # 就业效用 = 个体当前的工资收入
         omega = current_wage_E[i]
         
-        # 计算离职率
+        # 计算离职率（需要传入标准化所需的统计量）
         mu = compute_separation_rate_numba(
             T_E[i], S_E[i], D_E[i], W_E[i],
             age_E[i], edu_E[i], children_E[i],
+            T_mean, T_std, S_mean, S_std, D_mean, D_std, W_mean, W_std,
+            age_mean, age_std, edu_mean, edu_std, children_mean, children_std,
             eta0, eta_T, eta_S, eta_D, eta_W,
             eta_age, eta_edu, eta_children
         )
@@ -238,6 +284,17 @@ def value_iteration_numba(
     """
     值迭代主循环（Numba加速）
     
+    算法逻辑：
+    1. 初始化：V_U = V_E = 0（第0轮的"下期值函数"猜测）
+    2. 第k轮迭代：
+       a) 保存第k-1轮的值函数为V_old（作为"下期值函数"的近似）
+       b) 基于V_old，求解贝尔曼方程，得到第k轮的新值函数V_new
+       c) 检查收敛：max|V_new - V_old| < tol
+    3. 重复迭代，直到收敛或达到最大迭代次数
+    
+    这是一个不动点迭代过程：V = T(V)，其中T是贝尔曼算子
+    理论保证：在满足压缩映射条件下，该迭代必收敛到唯一不动点
+    
     返回:
         (V_U, V_E, a_optimal, iterations, max_diff)
     """
@@ -245,16 +302,35 @@ def value_iteration_numba(
     N_U = len(T_U)
     N_E = len(T_E)
     
-    # 初始化（全零）
+    # 初始化（全零）- 第0轮的"下期值函数"猜测
     V_U = np.zeros(N_U)
     V_E = np.zeros(N_E)
     a_optimal = np.zeros(N_U)
     
+    # 计算群体统计量（用于标准化）
+    # 合并所有个体的数据来计算统计量
+    all_T = np.concatenate((T_U, T_E)) if N_U > 0 and N_E > 0 else (T_U if N_U > 0 else T_E)
+    all_S = np.concatenate((S_U, S_E)) if N_U > 0 and N_E > 0 else (S_U if N_U > 0 else S_E)
+    all_D = np.concatenate((D_U, D_E)) if N_U > 0 and N_E > 0 else (D_U if N_U > 0 else D_E)
+    all_W = np.concatenate((W_U, W_E)) if N_U > 0 and N_E > 0 else (W_U if N_U > 0 else W_E)
+    all_age = np.concatenate((age_U, age_E)) if N_U > 0 and N_E > 0 else (age_U if N_U > 0 else age_E)
+    all_edu = np.concatenate((edu_U, edu_E)) if N_U > 0 and N_E > 0 else (edu_U if N_U > 0 else edu_E)
+    all_children = np.concatenate((children_U, children_E)) if N_U > 0 and N_E > 0 else (children_U if N_U > 0 else children_E)
+    
+    T_mean, T_std = all_T.mean(), all_T.std()
+    S_mean, S_std = all_S.mean(), all_S.std()
+    D_mean, D_std = all_D.mean(), all_D.std()
+    W_mean, W_std = all_W.mean(), all_W.std()
+    age_mean, age_std = all_age.mean(), all_age.std()
+    edu_mean, edu_std = all_edu.mean(), all_edu.std()
+    children_mean, children_std = all_children.mean(), all_children.std()
+    
     for iteration in range(max_iter):
+        # 保存上一轮的值函数（作为"下期值函数"的近似）
         V_U_old = V_U.copy()
         V_E_old = V_E.copy()
         
-        # 求解失业者贝尔曼方程
+        # 基于V_old，求解失业者贝尔曼方程，得到本轮新的V_U
         if N_U > 0:
             V_U, a_optimal = solve_unemployed_bellman_numba(
                 T_U, S_U, D_U, W_U, age_U, edu_U, children_U,
@@ -262,17 +338,19 @@ def value_iteration_numba(
                 rho, kappa, b0, gamma_T, gamma_W, gamma_S, gamma_D
             )
         
-        # 求解就业者贝尔曼方程
+        # 基于V_old，求解就业者贝尔曼方程，得到本轮新的V_E
         if N_E > 0:
             V_E = solve_employed_bellman_numba(
                 T_E, S_E, D_E, W_E, current_wage_E,
                 age_E, edu_E, children_E,
+                T_mean, T_std, S_mean, S_std, D_mean, D_std, W_mean, W_std,
+                age_mean, age_std, edu_mean, edu_std, children_mean, children_std,
                 V_U_old, V_E_old, rho,
                 eta0, eta_T, eta_S, eta_D, eta_W,
                 eta_age, eta_edu, eta_children
             )
         
-        # 检查收敛
+        # 检查收敛性：max|V_new - V_old|
         diff_U = np.max(np.abs(V_U - V_U_old)) if N_U > 0 else 0.0
         diff_E = np.max(np.abs(V_E - V_E_old)) if N_E > 0 else 0.0
         max_diff = max(diff_U, diff_E)

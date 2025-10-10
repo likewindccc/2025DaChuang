@@ -12,6 +12,192 @@
 
 ---
 
+## 修改 16 - 北京时间 2025/10/10 12:48
+
+### Commit: (待提交)
+
+**变更类型**: fix + refactor
+
+**变更内容**: 离职率函数系数校准 - 基于变量标准化解决两极分化问题
+
+**受影响文件**:
+- 修改: `CONFIG/mfg_config.yaml` - 更新离职率系数（使用标准化版本）
+- 修改: `MODULES/MFG/bellman_solver.py` - 离职率计算函数增加变量标准化
+- 修改: `MODULES/MFG/kfe_solver.py` - 离职率计算方法增加变量标准化
+- 新增: `TESTS/analyze_separation_rate_components.py` - 离职率各项贡献分析工具
+- 新增: `TESTS/calibrate_separation_rate_standardized.py` - 基于标准化的校准脚本
+- 新增: `TESTS/fine_tune_separation_rate_standardized.py` - 精细调整标准化校准脚本
+
+**问题诊断**:
+
+用户发现原始离职率校准存在严重的**两极分化**问题：
+- 平均离职率达到目标5.02%
+- 但75%以上的个体离职率为0%
+- 最大值为100%
+- 中位数为0%
+
+**根本原因**:
+1. **变量尺度不匹配**：
+   - S项（eta_S=-2.0 * S）贡献了60.4%
+   - 截距eta0=20.70贡献了24.9%
+   - 其他项加起来才14.7%
+
+2. **z值范围过大**：
+   - z ∈ [-90.65, 22.94]
+   - 当z < -5时，μ ≈ 0%
+   - 当z > 5时，μ ≈ 100%
+   - Logistic函数在极端z值时趋于饱和
+
+**解决方案**:
+
+采用**变量标准化**：`x_std = (x - mean) / std`
+
+1. 对所有变量（T, S, D, W, age, education, children）进行群体层面标准化
+2. 标准化后所有变量都在同一尺度（均值0，标准差1）
+3. 系数的大小直接反映变量的影响力
+4. 重新校准所有eta系数
+
+**最终参数**（基于标准化变量，目标平均离职率5%）:
+```yaml
+eta0: -3.46
+eta_T: -0.50      # 工作时间长→稳定
+eta_S: -0.80      # 技能高→稳定
+eta_D: -0.50      # 数字素养高→稳定
+eta_W: 0.05       # 期望工资高→略不稳定
+eta_age: -0.60    # 年龄大→稳定
+eta_edu: -0.30    # 教育高→稳定
+eta_children: 0.15  # 孩子多→不稳定
+```
+
+**校准结果对比**:
+
+| 指标 | 未标准化（原始） | **标准化版本（最终）** |
+|-----|-----------------|---------------------|
+| 平均值 | 5.02% | **5.01%** ✓ |
+| 中位数 | 0.00% ❌ | **2.94%** ✓ |
+| 25分位 | 0.00% ❌ | **1.40%** ✓ |
+| 75分位 | 0.00% ❌ | **5.89%** ✓ |
+| 最大值 | 100.00% ❌ | **60.81%** ✓ |
+
+**技术实现**:
+
+1. **bellman_solver.py**:
+   - 修改`compute_separation_rate_numba()`，增加群体统计量参数
+   - 在函数内先对变量进行标准化，再计算z和μ
+   - 在`value_iteration_numba()`中预计算群体统计量
+
+2. **kfe_solver.py**:
+   - 修改`compute_separation_rates()`方法
+   - 先计算群体层面的均值和标准差
+   - 对每个个体的变量进行标准化后计算离职率
+
+3. **关键改进**:
+   ```python
+   # 标准化
+   T_std_val = (T - T_mean) / (T_std + 1e-10)
+   S_std_val = (S - S_mean) / (S_std + 1e-10)
+   # ... 其他变量
+   
+   # 计算线性组合（使用标准化后的值）
+   z = eta0 + eta_T * T_std_val + eta_S * S_std_val + ...
+   
+   # Logistic函数
+   mu = 1.0 / (1.0 + np.exp(-z))
+   ```
+
+**影响范围**:
+- ✅ 消除了离职率的两极分化现象
+- ✅ 分布更加连续和合理（中位数2.94%，25-75分位[1.40%, 5.89%]）
+- ✅ 所有变量的贡献更加平衡
+- ✅ 保证MFG模拟的合理性和可信度
+- ⚠️ 后续所有使用离职率的代码都必须使用标准化变量
+
+**重要提示**:
+所有离职率计算必须使用标准化后的变量！这是一个**全局约束**，未来任何修改都必须遵守。
+
+---
+
+## 修改 15 - 北京时间 2025/10/10 00:04
+
+### Commit: (待提交)
+
+**变更类型**: feat
+
+**变更内容**: MFG模块开发 - 完成Numba加速的KFE演化求解器
+
+**受影响文件**:
+- 新增: `MODULES/MFG/kfe_solver.py` - KFE演化求解器
+- 修改: `MODULES/MFG/__init__.py` - 导出KFESolver
+
+**变更动机**:
+1. **实现人口分布演化**：基于个体的蒙特卡洛模拟，而非离散网格
+2. **Numba加速核心循环**：并行处理N个个体的状态转换和更新
+3. **集成匹配函数和离职率**：使用训练好的Logit模型和离职率公式
+
+**技术细节**:
+
+1. **核心设计决策**：
+   - **基于个体的蒙特卡洛模拟**：不显式计算密度函数m(x,t)，而是模拟N个个体
+   - **双层架构**：Numba核心函数 + Python包装类（同bellman_solver）
+   - **随机转换**：失业/就业状态根据概率λ和μ随机转换
+
+2. **Numba核心函数**（@njit + @prange并行）：
+   ```python
+   @njit
+   def simulate_employment_transition(is_unemployed, lambda_prob, mu_prob):
+       # 随机状态转换
+       
+   @njit(parallel=True)
+   def simulate_population_evolution(...):
+       # 对N个个体并行演化
+       for i in prange(N):
+           # 1. 更新就业状态（失业/就业转换）
+           # 2. 更新状态变量 (T, S, D, W)
+           # 3. 更新当前工资
+   ```
+
+3. **人口演化逻辑**（研究计划4.1.2节）：
+   - **失业者**：
+     - 以概率λ匹配成功 → 转为就业，从企业工资分布抽样current_wage
+     - 以概率(1-λ)匹配失败 → 保持失业，根据a*更新状态(T,S,D,W)
+   
+   - **就业者**：
+     - 以概率μ离职 → 转为失业，current_wage设为0
+     - 以概率(1-μ)保持就业 → 状态不变（不付出努力）
+
+4. **Python包装层（KFESolver类）**：
+   - `compute_separation_rates()`: 计算就业者离职率μ
+   - `compute_match_probabilities()`: 计算失业者匹配概率λ
+   - `evolve()`: 主接口，执行一期演化并返回统计信息
+
+5. **宏观统计量计算**：
+   ```python
+   statistics = {
+       'n_unemployed': n_unemployed,
+       'n_employed': n_employed,
+       'unemployment_rate': n_unemployed / N,
+       'theta': V / n_unemployed,  # 市场紧张度
+       'mean_T', 'mean_S', 'mean_D', 'mean_W',  # 平均状态
+       'mean_wage_employed': 就业者平均工资
+   }
+   ```
+
+6. **性能优化**：
+   - 核心演化循环使用`@njit(parallel=True)`自动并行
+   - 预期加速比：10x-30x（取决于CPU核数）
+   - 避免Python循环开销
+
+7. **接口一致性**：
+   - 输入：individuals DataFrame（与BellmanSolver一致）
+   - 输出：individuals_next DataFrame + statistics字典
+   - 确保KFE和Bellman之间数据流畅
+
+**影响范围**:
+- 为均衡求解器提供人口演化功能
+- 与BellmanSolver配合实现完整的MFG迭代循环
+
+---
+
 ## 修改 14 - 北京时间 2025/10/09 23:58
 
 ### Commit: (待提交)

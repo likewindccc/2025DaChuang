@@ -52,17 +52,20 @@ economics:
     gamma_D: 0.1
   
   # 外生离职率函数 μ(x, σ_i) = 1/(1+exp(-η'Z))
-  # Z包含：截距、T、S、D、W、age、education、children
+  # Z包含：截距、T_std、S_std、D_std、W_std、age_std、edu_std、children_std
+  # 【重要】所有变量必须先标准化：x_std = (x - mean) / std（群体层面）
+  # 校准方法：基于1000个虚拟个体，目标平均离职率5%
   separation_rate:
-    eta0: 0.0      # 截距项（通过校准确定）
-    eta_T: -0.02   # T的系数（工作时间越长越稳定）
-    eta_S: -2.0    # S的系数（能力越强越稳定）
-    eta_D: -1.0    # D的系数（数字素养越高越稳定）
-    eta_W: 0.0001  # W的系数（期望越高离职风险可能略高）
-    eta_age: -0.05 # 年龄系数（年龄越大越稳定）
-    eta_edu: -0.1  # 教育年限系数
-    eta_children: 0.1  # 孩子数量系数
+    eta0: -3.46    # 截距项（已校准）
+    eta_T: -0.50   # T_std的系数（工作时间长→稳定）
+    eta_S: -0.80   # S_std的系数（技能高→稳定）
+    eta_D: -0.50   # D_std的系数（数字素养高→稳定）
+    eta_W: 0.05    # W_std的系数（期望工资高→略不稳定）
+    eta_age: -0.60 # age_std的系数（年龄大→稳定）
+    eta_edu: -0.30 # edu_std的系数（教育高→稳定）
+    eta_children: 0.15  # children_std的系数（孩子多→不稳定）
     target_rate: 0.05  # 目标平均离职率（5%）
+    # 校准结果：平均5.01%，中位数2.94%，25-75分位[1.40%, 5.89%]
 
 # 市场参数
 market:
