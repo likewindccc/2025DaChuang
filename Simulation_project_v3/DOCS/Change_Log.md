@@ -12,6 +12,150 @@
 
 ---
 
+## 修改 17 - 北京时间 2025/10/10 12:55
+
+### Commit: (待提交)
+
+**变更类型**: feat
+
+**变更内容**: MFG模块开发 - 完成均衡求解器（MFG核心模块全部完成）
+
+**受影响文件**:
+- 新增: `MODULES/MFG/equilibrium_solver.py` - MFG均衡求解器主控制器
+- 修改: `MODULES/MFG/__init__.py` - 导出EquilibriumSolver和solve_equilibrium
+- 新增: `TESTS/test_equilibrium_solver.py` - 均衡求解器测试脚本
+
+**变更动机**:
+
+完成MFG模块的最后核心组件，实现Bellman方程和KFE的交替迭代，求解平均场博弈的稳态均衡（MFE）。
+
+这是整个MFG模块的**顶层控制器**，协调各子模块完成均衡求解。
+
+**核心功能**:
+
+1. **人口初始化**（`initialize_population()`）:
+   ```python
+   # 研究计划市场初始化方法
+   步骤1: 从POPULATION模块的分布中采样N个个体
+   步骤2: 所有个体初始为失业状态
+   步骤3: 运行一次随机匹配（effort=0，基于匹配函数λ）
+   步骤4: 根据匹配结果确定初始就业/失业分布
+   ```
+
+2. **MFG均衡迭代**（`solve()`）:
+   ```python
+   for outer_iteration in range(max_outer_iter):
+       # 步骤1: 计算市场紧张度
+       theta_t = V / U_t
+       
+       # 步骤2: 求解Bellman方程
+       V_U, V_E, a* = BellmanSolver.solve(individuals, theta_t)
+       
+       # 步骤3: 求解KFE（人口演化）
+       individuals_next = KFESolver.evolve(individuals, a*, theta_t)
+       
+       # 步骤4: 检查收敛
+       if |V_new - V_old| < ε_V and |a_new - a_old| < ε_a and |u_new - u_old| < ε_u:
+           return 均衡状态
+   ```
+
+3. **收敛检查**（研究计划4.6节）:
+   - **价值函数收敛**: `|ΔV| < ε_V = 1e-4`
+   - **努力水平收敛**: `|Δa| < ε_a = 1e-3`
+   - **失业率收敛**: `|Δu| < ε_u = 1e-4`
+
+4. **历史记录**:
+   跟踪每轮迭代的：
+   - 市场紧张度 θ
+   - 失业率
+   - 平均状态变量 (T, S, D, W)
+   - 平均价值函数 (V_U, V_E)
+   - 平均努力水平
+   - 收敛指标
+
+5. **结果保存**:
+   - `equilibrium_individuals.csv` - 均衡时个体状态
+   - `equilibrium_policy.csv` - 价值函数和最优策略
+   - `equilibrium_history.csv` - 迭代历史
+   - `equilibrium_summary.pkl` - 汇总信息
+
+**类设计**:
+
+```python
+class EquilibriumSolver:
+    def __init__(self, config_path: str):
+        # 加载配置和匹配函数模型
+        # 初始化BellmanSolver和KFESolver
+    
+    def initialize_population(self) -> pd.DataFrame:
+        # 初始化N个个体，随机匹配一次
+    
+    def solve(self, individuals=None, verbose=True):
+        # 主迭代循环：Bellman + KFE 交替迭代
+        # 返回：(individuals_equilibrium, equilibrium_info)
+    
+    def _save_equilibrium(...):
+        # 保存均衡结果到文件
+```
+
+**便捷函数**:
+```python
+# 一行代码求解均衡
+from MODULES.MFG import solve_equilibrium
+individuals_eq, eq_info = solve_equilibrium()
+```
+
+**测试结果**（小规模测试：1000个体，10轮迭代）:
+
+```
+测试配置:
+  个体数量: 1000
+  最大外层迭代: 10
+  岗位空缺数: 10000
+
+初始化:
+  初始匹配: 998/1000 人匹配成功
+  初始失业率: 0.20%
+
+迭代过程:
+  第1轮: 失业率 0.20% → 5.70%
+  第2轮: 失业率 5.70% → 3.10%
+  ...
+  第10轮: 失业率 3.50% → 4.00%
+
+最终结果:
+  失业率: 4.00%
+  市场紧张度: 250.0
+  状态: 未完全收敛（限制了迭代次数）
+```
+
+**性能估计**（完整规模：10000个体，100轮迭代）:
+- 计算时间: 几分钟到几十分钟（取决于CPU性能）
+- 内存占用: 几GB
+- 加速措施: 
+  - Bellman和KFE核心函数均使用Numba并行加速
+  - 预期整体加速比10x-30x
+
+**影响范围**:
+- ✅ **MFG模块全部完成**：`bellman_solver` + `kfe_solver` + `equilibrium_solver`
+- ✅ 可以进行完整的MFG均衡求解
+- ✅ 为后续的CALIBRATION和SIMULATOR模块提供基础
+- ✅ 实现了研究计划中的核心算法框架
+
+**下一步**:
+1. CALIBRATION模块 - 校准外生参数（V, ρ, κ等）
+2. SIMULATOR模块 - 政策模拟和反事实分析
+3. 整合所有模块，进行完整的端到端测试
+
+**重要提示**:
+本求解器已经与bellman_solver和kfe_solver完全整合，包括：
+- ✓ 离职率使用标准化变量（修改16）
+- ✓ 状态更新使用群体统计边界
+- ✓ 就业收入使用个体期望工资W
+- ✓ Numba加速已全面应用
+
+---
+
 ## 修改 16 - 北京时间 2025/10/10 12:48
 
 ### Commit: (待提交)

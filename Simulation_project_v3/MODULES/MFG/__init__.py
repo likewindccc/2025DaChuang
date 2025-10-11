@@ -9,10 +9,13 @@ MFG模块 - 平均场博弈均衡求解
 
 from .bellman_solver import BellmanSolver, load_match_function_model
 from .kfe_solver import KFESolver
+from .equilibrium_solver import EquilibriumSolver, solve_equilibrium
 
 __all__ = [
     'BellmanSolver',
     'KFESolver',
-    'load_match_function_model'
+    'EquilibriumSolver',
+    'load_match_function_model',
+    'solve_equilibrium'
 ]
 

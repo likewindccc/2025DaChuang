@@ -95,6 +95,8 @@ def simulate_population_evolution(
     mu_probs: np.ndarray,        # shape: (N,), 就业者的离职率
     # 状态更新参数
     T_max_population: float, W_min_population: float,
+    S_min_population: float, S_max_population: float,
+    D_min_population: float, D_max_population: float,
     gamma_T: float, gamma_W: float, gamma_S: float, gamma_D: float
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray,
            np.ndarray, np.ndarray]:
@@ -137,8 +139,24 @@ def simulate_population_evolution(
             a_opt = optimal_effort[i]
             T_new[i] = T[i] + gamma_T * a_opt * (T_max_population - T[i])
             W_new[i] = max(W_min_population, W[i] - gamma_W * a_opt)
-            S_new[i] = S[i] + gamma_S * a_opt * (1.0 - S[i])
-            D_new[i] = D[i] + gamma_D * a_opt * (1.0 - D[i])
+            
+            # S: MinMax标准化 -> 更新 -> 反标准化
+            S_range = S_max_population - S_min_population
+            if S_range > 1e-10:
+                S_norm = (S[i] - S_min_population) / S_range
+                S_norm_new = S_norm + gamma_S * a_opt * (1.0 - S_norm)
+                S_new[i] = S_norm_new * S_range + S_min_population
+            else:
+                S_new[i] = S[i]
+            
+            # D: MinMax标准化 -> 更新 -> 反标准化
+            D_range = D_max_population - D_min_population
+            if D_range > 1e-10:
+                D_norm = (D[i] - D_min_population) / D_range
+                D_norm_new = D_norm + gamma_D * a_opt * (1.0 - D_norm)
+                D_new[i] = D_norm_new * D_range + D_min_population
+            else:
+                D_new[i] = D[i]
             
             # 3. 更新当前工资
             if not employment_status_new[i]:
@@ -216,7 +234,7 @@ class KFESolver:
         self.eta_children = sep['eta_children']
         
         # 市场参数
-        self.vacancy = config['market']['vacancy']
+        self.target_theta = config['market']['target_theta']  # 【修改】使用外生市场紧张度
     
     def compute_separation_rates(
         self,
@@ -414,9 +432,13 @@ class KFESolver:
         edu = individuals['education'].values
         children = individuals['children'].values
         
-        # 群体统计边界
+        # 群体统计边界（用于状态更新）
         T_max_population = T.max()
         W_min_population = W.min()
+        S_min = S.min()
+        S_max = S.max()
+        D_min = D.min()
+        D_max = D.max()
         
         # 3. 调用Numba加速的演化函数
         print("开始人口演化（Numba加速）...")
@@ -426,6 +448,7 @@ class KFESolver:
             age, edu, children,
             optimal_effort.values, lambda_probs, mu_probs,
             T_max_population, W_min_population,
+            S_min, S_max, D_min, D_max,
             self.gamma_T, self.gamma_W, self.gamma_S, self.gamma_D
         )
         
@@ -444,7 +467,7 @@ class KFESolver:
         n_unemployed = employment_status_new.sum()
         n_employed = N - n_unemployed
         unemployment_rate = n_unemployed / N
-        theta_next = self.vacancy / n_unemployed if n_unemployed > 0 else np.inf
+        theta_next = self.target_theta  # 【修改】使用外生市场紧张度（不变）
         
         statistics = {
             'n_unemployed': n_unemployed,
