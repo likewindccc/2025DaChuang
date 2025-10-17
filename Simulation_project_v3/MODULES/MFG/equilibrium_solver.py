@@ -61,9 +61,11 @@ class EquilibriumSolver:
         self.n_individuals = self.config['population']['n_individuals']
         self.target_theta = self.config['market']['target_theta']  # 【修改】使用外生市场紧张度
         self.max_outer_iter = self.config['equilibrium']['max_outer_iter']
+        self.damping_factor = self.config['equilibrium']['damping_factor']  # 【新增】阻尼因子
         self.epsilon_V = self.config['equilibrium']['convergence']['epsilon_V']
         self.epsilon_a = self.config['equilibrium']['convergence']['epsilon_a']
         self.epsilon_u = self.config['equilibrium']['convergence']['epsilon_u']
+        self.use_relative_tol = self.config['equilibrium']['convergence']['use_relative_tol']  # 【新增】相对阈值标志
         
         # 输出目录
         self.output_dir = Path(self.config['paths']['output_dir'])
@@ -202,7 +204,11 @@ class EquilibriumSolver:
         print("开始MFG均衡求解")
         print("=" * 80)
         print(f"最大迭代轮数: {self.max_outer_iter}")
-        print(f"收敛阈值: ε_V={self.epsilon_V}, ε_a={self.epsilon_a}, ε_u={self.epsilon_u}")
+        print(f"阻尼因子: {self.damping_factor} (V_new = {self.damping_factor}*V_computed + {1-self.damping_factor}*V_old)")
+        if self.use_relative_tol:
+            print(f"收敛阈值: ε_V={self.epsilon_V} (相对), ε_a={self.epsilon_a}, ε_u={self.epsilon_u}")
+        else:
+            print(f"收敛阈值: ε_V={self.epsilon_V}, ε_a={self.epsilon_a}, ε_u={self.epsilon_u}")
         print()
         
         # 初始化上一轮的值（用于收敛判断）
@@ -236,9 +242,19 @@ class EquilibriumSolver:
             if verbose:
                 print("步骤1: 求解Bellman方程...")
             
-            V_U, V_E, a_optimal = self.bellman_solver.solve(
+            V_U_computed, V_E_computed, a_optimal = self.bellman_solver.solve(
                 individuals, theta
             )
+            
+            # 【新增】阻尼更新机制：平滑价值函数变化
+            if outer_iter > 0 and prev_V_U is not None:
+                V_U = self.damping_factor * V_U_computed + (1 - self.damping_factor) * prev_V_U
+                V_E = self.damping_factor * V_E_computed + (1 - self.damping_factor) * prev_V_E
+                if verbose:
+                    print(f"  应用阻尼更新（α={self.damping_factor}）")
+            else:
+                V_U = V_U_computed.copy()
+                V_E = V_E_computed.copy()
             
             if verbose:
                 mean_V_U = V_U[individuals['employment_status'] == 'unemployed'].mean()
@@ -268,14 +284,25 @@ class EquilibriumSolver:
             # 步骤3: 检查收敛（先计算指标）
             if outer_iter > 0:
                 # 计算价值函数变化
-                diff_V_U = np.abs(V_U - prev_V_U).max()
-                diff_V_E = np.abs(V_E - prev_V_E).max()
-                diff_V = max(diff_V_U, diff_V_E)
+                diff_V_U_abs = np.abs(V_U - prev_V_U).max()
+                diff_V_E_abs = np.abs(V_E - prev_V_E).max()
                 
-                # 计算努力水平变化
+                # 【修改】使用相对阈值判断价值函数收敛
+                if self.use_relative_tol:
+                    # 相对变化：|ΔV| / (|V| + 1e-10)
+                    V_U_magnitude = np.abs(V_U).mean() + 1e-10
+                    V_E_magnitude = np.abs(V_E).mean() + 1e-10
+                    diff_V_U_rel = diff_V_U_abs / V_U_magnitude
+                    diff_V_E_rel = diff_V_E_abs / V_E_magnitude
+                    diff_V = max(diff_V_U_rel, diff_V_E_rel)
+                else:
+                    # 绝对变化
+                    diff_V = max(diff_V_U_abs, diff_V_E_abs)
+                
+                # 计算努力水平变化（绝对值）
                 diff_a = np.abs(a_optimal - prev_a_optimal).max()
                 
-                # 计算失业率变化
+                # 计算失业率变化（绝对值）
                 diff_u = abs(u_rate - prev_u_rate)
             else:
                 # 第一轮没有前置
@@ -292,7 +319,10 @@ class EquilibriumSolver:
             if outer_iter > 0:
                 if verbose:
                     print(f"收敛检查:")
-                    print(f"  |ΔV| = {diff_V:.6f} (阈值: {self.epsilon_V})")
+                    if self.use_relative_tol:
+                        print(f"  |ΔV|/|V| = {diff_V:.6f} (阈值: {self.epsilon_V}, 相对)")
+                    else:
+                        print(f"  |ΔV| = {diff_V:.6f} (阈值: {self.epsilon_V})")
                     print(f"  |Δa| = {diff_a:.6f} (阈值: {self.epsilon_a})")
                     print(f"  |Δu| = {diff_u:.6f} (阈值: {self.epsilon_u})")
                     print()
