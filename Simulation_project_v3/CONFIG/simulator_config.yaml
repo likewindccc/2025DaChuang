@@ -1,0 +1,60 @@
+# SIMULATOR模块配置文件
+# 场景模拟与政策分析参数
+
+# 场景定义
+scenarios:
+  # 基准场景（无政策干预）
+  baseline:
+    name: "基准场景"
+    description: "不实施任何政策，使用默认参数"
+    policy_type: null
+    population_adjustment: null
+    state_update_adjustment: null
+  
+  # 低强度培训政策
+  training_low:
+    name: "低强度培训政策"
+    description: "提升初始技能水平S和数字素养D各10%"
+    policy_type: "training"
+    population_adjustment:
+      mean_S_multiplier: 1.1  # 技能水平提升10%
+      mean_D_multiplier: 1.1  # 数字素养提升10%
+    state_update_adjustment:
+      gamma_S_multiplier: 1.0  # 状态更新系数不变
+      gamma_D_multiplier: 1.0
+  
+  # 高强度培训政策
+  training_high:
+    name: "高强度培训政策"
+    description: "提升初始技能水平S和数字素养D各20%，并加速状态更新50%"
+    policy_type: "training"
+    population_adjustment:
+      mean_S_multiplier: 1.2  # 技能水平提升20%
+      mean_D_multiplier: 1.2  # 数字素养提升20%
+    state_update_adjustment:
+      gamma_S_multiplier: 1.5  # 状态更新系数提升50%
+      gamma_D_multiplier: 1.5
+
+# 模拟控制参数
+simulation:
+  # 最大迭代轮数
+  max_iterations: 100
+  
+  # 收敛判断标准（与MFG模块保持一致）
+  convergence_criteria:
+    # 使用实用收敛标准（宏观稳定即可）
+    use_practical_convergence: true
+    # 最后20轮失业率标准差阈值
+    unemployment_rate_std_threshold: 0.005
+    # 最后20轮相对价值函数变化阈值
+    relative_V_change_threshold: 0.10
+
+# 输出控制
+output:
+  # 是否保存各场景的详细结果
+  save_detailed_results: true
+  # 是否保存场景对比汇总表
+  save_comparison_table: true
+  # 输出目录
+  output_dir: "OUTPUT/simulation"
+

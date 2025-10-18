@@ -38,12 +38,13 @@ class EquilibriumSolver:
     4. 保存均衡结果
     """
     
-    def __init__(self, config_path: str):
+    def __init__(self, config_path: str, population_adjustment: Optional[Dict] = None):
         """
         初始化均衡求解器
         
         参数:
             config_path: MFG配置文件路径
+            population_adjustment: 人口分布调整参数（可选）
         """
         # 加载配置
         with open(config_path, 'r', encoding='utf-8') as f:
@@ -66,6 +67,9 @@ class EquilibriumSolver:
         self.epsilon_a = self.config['equilibrium']['convergence']['epsilon_a']
         self.epsilon_u = self.config['equilibrium']['convergence']['epsilon_u']
         self.use_relative_tol = self.config['equilibrium']['convergence']['use_relative_tol']  # 【新增】相对阈值标志
+        
+        # 【新增】人口分布调整参数
+        self.population_adjustment = population_adjustment
         
         # 输出目录
         self.output_dir = Path(self.config['paths']['output_dir'])
@@ -138,6 +142,20 @@ class EquilibriumSolver:
         individuals = continuous_samples.copy()
         individuals['education'] = edu_samples
         individuals['children'] = children_samples
+        
+        # 【新增】应用人口分布调整（如果有）
+        if self.population_adjustment is not None:
+            print("应用人口分布调整（培训政策）...")
+            if 'mean_S_multiplier' in self.population_adjustment:
+                multiplier = self.population_adjustment['mean_S_multiplier']
+                individuals['S'] = individuals['S'] * multiplier
+                print(f"  技能水平S × {multiplier}")
+            
+            if 'mean_D_multiplier' in self.population_adjustment:
+                multiplier = self.population_adjustment['mean_D_multiplier']
+                individuals['D'] = individuals['D'] * multiplier
+                print(f"  数字素养D × {multiplier}")
+            print()
         
         # 初始化就业状态（所有人失业）
         individuals['employment_status'] = 'unemployed'
@@ -464,16 +482,22 @@ class EquilibriumSolver:
         print()
 
 
-def solve_equilibrium(config_path: str = "CONFIG/mfg_config.yaml") -> Tuple[pd.DataFrame, Dict]:
+def solve_equilibrium(
+    config_path: str = "CONFIG/mfg_config.yaml",
+    population_adjustment: Optional[Dict] = None
+) -> Tuple[pd.DataFrame, Dict]:
     """
     求解MFG均衡的便捷函数
     
     参数:
         config_path: MFG配置文件路径
+        population_adjustment: 人口分布调整参数（可选）
+            - mean_S_multiplier: 技能水平S的倍数调整
+            - mean_D_multiplier: 数字素养D的倍数调整
         
     返回:
         (individuals_equilibrium, equilibrium_info): 均衡状态和统计信息
     """
-    solver = EquilibriumSolver(config_path)
+    solver = EquilibriumSolver(config_path, population_adjustment)
     return solver.solve()
 
