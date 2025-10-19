@@ -2,8 +2,8 @@ economics:
   employment_utility:
     mean_wage: 4500.0
     std_wage: 1500.0
-  kappa: 1.0
-  rho: 0.75
+  kappa: 4.0
+  rho: 0.40
   separation_rate:
     eta0: -3.46
     eta_D: -0.5

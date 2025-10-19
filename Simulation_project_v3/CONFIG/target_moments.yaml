@@ -1,0 +1,56 @@
+# 目标矩数据（文献典型值）
+
+# 数据来源说明
+source:
+  description: 中国劳动力市场典型值
+  references:
+    - 中国统计年鉴2020-2024
+    - 中国劳动力动态调查（CLDS）
+    - 相关学术文献
+  notes: |
+    失业率参考城镇调查失业率（2020-2024年平均）
+    工资数据参考城镇单位就业人员平均工资（月度）
+    标准差根据CLDS数据估算
+
+# 目标矩定义
+moments:
+  unemployment_rate:
+    value: 0.048
+    unit: 比例
+    source: 国家统计局
+    confidence_interval: [0.042, 0.055]
+    description: |
+      城镇调查失业率典型值
+      2020-2024年平均约4.8%
+      
+  mean_wage:
+    value: 4500.0
+    unit: 元
+    source: 统计年鉴（调整为月度）
+    confidence_interval: [4000.0, 5000.0]
+    description: |
+      城镇单位就业人员月平均工资
+      根据年度数据调整为月度
+      
+  std_wage:
+    value: 1500.0
+    unit: 元
+    source: CLDS数据估算
+    confidence_interval: [1200.0, 1800.0]
+    description: |
+      工资标准差
+      根据劳动力调查数据估算
+
+# 可选的分组矩（暂不使用）
+optional_moments:
+  unemployment_rate_by_education:
+    low: 0.065
+    medium: 0.045
+    high: 0.030
+    
+  unemployment_rate_by_age:
+    age_20_30: 0.082
+    age_30_40: 0.040
+    age_40_50: 0.035
+    age_50_60: 0.045
+

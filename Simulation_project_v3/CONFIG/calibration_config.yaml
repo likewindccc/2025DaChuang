@@ -1,0 +1,127 @@
+# 校准配置文件
+
+# 校准参数定义
+parameters:
+  - name: rho
+    display_name: 贴现因子
+    config_path: economics.rho
+    bounds: [0.60, 0.95]
+    initial_value: 0.75
+    transform: null
+    description: 个体对未来的贴现率，越大越重视未来
+    
+  - name: kappa
+    display_name: 努力成本系数
+    config_path: economics.kappa
+    bounds: [0.30, 3.00]
+    initial_value: 1.00
+    transform: null
+    description: 努力的边际成本，越大个体越不愿意努力
+    
+  - name: gamma_T
+    display_name: T状态更新系数
+    config_path: economics.state_update.gamma_T
+    bounds: [0.10, 1.00]
+    initial_value: 0.30
+    transform: null
+    description: 努力对可工作时间T的影响系数
+    
+  - name: gamma_S
+    display_name: S状态更新系数
+    config_path: economics.state_update.gamma_S
+    bounds: [0.10, 1.50]
+    initial_value: 0.45
+    transform: null
+    description: 努力对技能水平S的影响系数
+    
+  - name: gamma_D
+    display_name: D状态更新系数
+    config_path: economics.state_update.gamma_D
+    bounds: [0.10, 1.50]
+    initial_value: 0.45
+    transform: null
+    description: 努力对数字素养D的影响系数
+    
+  - name: gamma_W
+    display_name: W状态更新系数
+    config_path: economics.state_update.gamma_W
+    bounds: [0.05, 0.50]
+    initial_value: 0.15
+    transform: null
+    description: 努力对期望工资W的影响系数（负向）
+
+# 目标矩定义
+target_moments:
+  config_file: CONFIG/target_moments.yaml
+  weight_type: identity
+  moments:
+    - name: unemployment_rate
+      display_name: 失业率
+      weight: 1.0
+      
+    - name: mean_wage
+      display_name: 平均工资
+      weight: 1.0
+      
+    - name: std_wage
+      display_name: 工资标准差
+      weight: 1.0
+
+# 优化算法设置
+optimization:
+  method: Nelder-Mead
+  options:
+    maxiter: 200
+    maxfev: 1000
+    xatol: 1.0e-4
+    fatol: 1.0e-4
+    adaptive: true
+  alternative_methods:
+    - L-BFGS-B
+    - Powell
+    - TNC
+
+# 断点续跑设置
+checkpoint:
+  enabled: true
+  save_frequency: 10
+  keep_last_n: 3
+  auto_resume: true
+  checkpoint_dir: OUTPUT/calibration
+
+# MFG求解设置
+mfg_solver:
+  config_path: CONFIG/mfg_config.yaml
+  max_iterations: 100
+  convergence_check: true
+  population_adjustment: null
+
+# 输出设置
+output:
+  output_dir: OUTPUT/calibration
+  save_history: true
+  save_plots: true
+  save_checkpoint: true
+  verbose: 2
+  log_file: OUTPUT/calibration/calibration.log
+
+# 两阶段校准设置
+two_stage_calibration:
+  enabled: true
+  stage1:
+    name: 敏感性分析引导
+    use_sensitivity_results: true
+    sensitivity_results_dir: OUTPUT/sensitivity_analysis
+    adjust_bounds: true
+    adjust_initial_values: true
+  stage2:
+    name: SMM精确校准
+    use_adjusted_config: true
+
+# 调试与测试设置
+debug:
+  quick_test: false
+  quick_test_iterations: 5
+  save_intermediate_results: true
+  print_detailed_log: true
+
