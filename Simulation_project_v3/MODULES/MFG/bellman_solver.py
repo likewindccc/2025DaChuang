@@ -95,10 +95,10 @@ def compute_separation_rate_numba(
     z = (eta0 + 
          eta_T * T_std_val + 
          eta_S * S_std_val + 
-         eta_D * D_std_val +
+         eta_D * D_std_val + 
          eta_W * W_std_val +
-         eta_age * age_std_val +
-         eta_edu * edu_std_val +
+         eta_age * age_std_val + 
+         eta_edu * edu_std_val + 
          eta_children * children_std_val)
     
     # Logistic函数
@@ -136,6 +136,9 @@ def solve_bellman_unified_numba(
     a_grid: np.ndarray,
     # 参数
     rho: float, kappa: float, b0: float,
+    # T的负效用参数
+    initial_T: np.ndarray, disutility_T_enabled: bool, alpha_T: float,
+    # 离职率参数
     eta0: float, eta_T: float, eta_S: float, eta_D: float, eta_W: float,
     eta_age: float, eta_edu: float, eta_children: float
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -165,11 +168,18 @@ def solve_bellman_unified_numba(
         for j in range(n_effort):
             a = a_grid[j]
             
-            # 努力成本
+            # 努力成本（二次函数）
             effort_cost = 0.5 * kappa * a * a
             
-            # 即时效用
-            instant_utility = b - effort_cost
+            # T的负效用（work-leisure tradeoff）
+            # 当T偏离个体的初始T值（理想工作时间）时产生负效用
+            if disutility_T_enabled:
+                disutility_T = alpha_T * (T[i] - initial_T[i]) ** 2
+            else:
+                disutility_T = 0.0
+            
+            # 即时效用 = 失业救济金 - 努力成本 - T的负效用
+            instant_utility = b - effort_cost - disutility_T
             
             # 匹配概率
             lambda_prob = lambda_probs[i, j]
@@ -189,7 +199,7 @@ def solve_bellman_unified_numba(
         
         V_U[i] = max_value_U
         a_optimal[i] = best_a
-        
+    
         # =====================================
         # 2. 计算V_E[i]（就业状态价值）
         # =====================================
@@ -232,6 +242,9 @@ def value_iteration_unified_numba(
     a_grid: np.ndarray,
     # 参数
     rho: float, kappa: float, b0: float,
+    # T的负效用参数
+    initial_T: np.ndarray, disutility_T_enabled: bool, alpha_T: float,
+    # 离职率参数
     eta0: float, eta_T: float, eta_S: float, eta_D: float, eta_W: float,
     eta_age: float, eta_edu: float, eta_children: float,
     # 迭代参数
@@ -286,9 +299,10 @@ def value_iteration_unified_numba(
             T, S, D, W, age, edu, children,
             is_unemployed, current_wage,
             lambda_probs, V_U_old, V_E_old,
-            T_mean, T_std, S_mean, S_std, D_mean, D_std, W_mean, W_std,
-            age_mean, age_std, edu_mean, edu_std, children_mean, children_std,
+                T_mean, T_std, S_mean, S_std, D_mean, D_std, W_mean, W_std,
+                age_mean, age_std, edu_mean, edu_std, children_mean, children_std,
             a_grid, rho, kappa, b0,
+            initial_T, disutility_T_enabled, alpha_T,
             eta0, eta_T, eta_S, eta_D, eta_W, eta_age, eta_edu, eta_children
         )
         
@@ -351,6 +365,11 @@ class BellmanSolver:
         
         # 失业救济金（固定收益）
         self.b0 = econ['unemployment_benefit']['b0']  # b0 >= 0
+        
+        # T的负效用函数参数（work-leisure tradeoff）
+        disutility_T_cfg = econ.get('disutility_T', {'enabled': False, 'alpha': 0.0})
+        self.disutility_T_enabled = disutility_T_cfg.get('enabled', False)
+        self.alpha_T = disutility_T_cfg.get('alpha', 0.0)  # α > 0，负效用系数
         
         # ==================================================
         # 3. 状态更新系数（研究计划4.3节）
@@ -501,7 +520,8 @@ class BellmanSolver:
     def solve(
         self,
         individuals: pd.DataFrame,
-        theta: float
+        theta: float,
+        initial_T: np.ndarray
     ) -> Tuple[pd.Series, pd.Series, pd.Series]:
         """
         求解贝尔曼方程，得到价值函数和最优策略
@@ -509,13 +529,14 @@ class BellmanSolver:
         算法流程（研究计划4.4节）：
         1. 批量计算所有个体在所有努力水平下的匹配概率 λ(x', σ, θ)
         2. 使用值迭代算法求解贝尔曼方程：
-           - 失业者：V_U(x) = max_a { b - c(a) + ρ*[λ*V_E(x') + (1-λ)*V_U(x')] }
+           - 失业者：V_U(x) = max_a { b - c(a) - disutility_T(T, T_ideal) + ρ*[λ*V_E(x') + (1-λ)*V_U(x')] }
            - 就业者：V_E(x) = ω + ρ*[μ*V_U(x') + (1-μ)*V_E(x')]
         3. 返回收敛的价值函数和最优策略
         
         参数:
             individuals: 当前个体状态DataFrame（包含T,S,D,W等）
             theta: 市场紧张度（V/U）
+            initial_T: 每个个体的初始T值（作为理想工作时间）
             
         返回:
             V_U: 失业状态价值函数（每个个体的失业价值）
@@ -576,6 +597,8 @@ class BellmanSolver:
                 lambda_probs, self.a_grid,
                 # 经济参数
                 self.rho, self.kappa, self.b0,
+                # T的负效用参数
+                initial_T, self.disutility_T_enabled, self.alpha_T,
                 # 离职率参数
                 self.eta0, self.eta_T, self.eta_S, self.eta_D, self.eta_W,
                 self.eta_age, self.eta_edu, self.eta_children,

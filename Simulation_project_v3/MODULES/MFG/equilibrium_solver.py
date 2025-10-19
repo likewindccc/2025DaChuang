@@ -143,6 +143,11 @@ class EquilibriumSolver:
         individuals['education'] = edu_samples
         individuals['children'] = children_samples
         
+        # 【新增】记录每个个体的初始T值（作为其理想工作时间）
+        self.initial_T = individuals['T'].values.copy()
+        print(f"记录初始T值：均值 = {self.initial_T.mean():.2f} 小时/周")
+        print()
+        
         # 【新增】应用人口分布调整（如果有）
         if self.population_adjustment is not None:
             print("应用人口分布调整（培训政策）...")
@@ -261,7 +266,7 @@ class EquilibriumSolver:
                 print("步骤1: 求解Bellman方程...")
             
             V_U_computed, V_E_computed, a_optimal = self.bellman_solver.solve(
-                individuals, theta
+                individuals, theta, self.initial_T
             )
             
             # 【新增】阻尼更新机制：平滑价值函数变化
