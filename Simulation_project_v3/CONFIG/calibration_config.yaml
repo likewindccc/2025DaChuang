@@ -1,54 +1,63 @@
 # 校准配置文件
 
 # 校准参数定义
+# 注：参数范围和初始值已根据MFG模块调优结果更新（2025年版本）
 parameters:
   - name: rho
     display_name: 贴现因子
     config_path: economics.rho
-    bounds: [0.60, 0.95]
-    initial_value: 0.75
+    bounds: [0.30, 0.60]
+    initial_value: 0.40
     transform: null
-    description: 个体对未来的贴现率，越大越重视未来
+    description: 个体对未来的贴现率，越大越重视未来（当前最优值0.40）
     
   - name: kappa
     display_name: 努力成本系数
     config_path: economics.kappa
-    bounds: [0.30, 3.00]
-    initial_value: 1.00
+    bounds: [1000.0, 4000.0]
+    initial_value: 2000.0
     transform: null
-    description: 努力的边际成本，越大个体越不愿意努力
+    description: 努力的边际成本，越大个体越不愿意努力（当前最优值2000.0）
+    
+  - name: alpha_T
+    display_name: T负效用系数
+    config_path: economics.disutility_T.alpha
+    bounds: [0.10, 0.60]
+    initial_value: 0.30
+    transform: null
+    description: T偏离理想工作时间的负效用系数（当前最优值0.30）
     
   - name: gamma_T
     display_name: T状态更新系数
     config_path: economics.state_update.gamma_T
-    bounds: [0.10, 1.00]
+    bounds: [0.20, 0.50]
     initial_value: 0.30
     transform: null
-    description: 努力对可工作时间T的影响系数
+    description: 努力对可工作时间T的影响系数（当前值0.30）
     
   - name: gamma_S
     display_name: S状态更新系数
     config_path: economics.state_update.gamma_S
-    bounds: [0.10, 1.50]
+    bounds: [0.30, 0.70]
     initial_value: 0.45
     transform: null
-    description: 努力对技能水平S的影响系数
+    description: 努力对技能水平S的影响系数（当前值0.45）
     
   - name: gamma_D
     display_name: D状态更新系数
     config_path: economics.state_update.gamma_D
-    bounds: [0.10, 1.50]
+    bounds: [0.30, 0.70]
     initial_value: 0.45
     transform: null
-    description: 努力对数字素养D的影响系数
+    description: 努力对数字素养D的影响系数（当前值0.45）
     
   - name: gamma_W
     display_name: W状态更新系数
     config_path: economics.state_update.gamma_W
-    bounds: [0.05, 0.50]
+    bounds: [0.10, 0.30]
     initial_value: 0.15
     transform: null
-    description: 努力对期望工资W的影响系数（负向）
+    description: 努力对期望工资W的影响系数，负向（当前值0.15）
 
 # 目标矩定义
 target_moments:

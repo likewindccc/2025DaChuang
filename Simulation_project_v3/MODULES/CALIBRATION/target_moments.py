@@ -115,13 +115,13 @@ class TargetMoments:
         
         # 计算平均工资（仅就业者）
         if 'mean_wage' in self.moment_names:
-            employed_individuals = individuals[individuals['employed'] == 1]
+            employed_individuals = individuals[individuals['employment_status'] == 'employed']
             mean_wage = employed_individuals['W'].mean()
             simulated_moments['mean_wage'] = mean_wage
         
         # 计算工资标准差（仅就业者）
         if 'std_wage' in self.moment_names:
-            employed_individuals = individuals[individuals['employed'] == 1]
+            employed_individuals = individuals[individuals['employment_status'] == 'employed']
             std_wage = employed_individuals['W'].std()
             simulated_moments['std_wage'] = std_wage
         
