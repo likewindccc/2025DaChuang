@@ -5,7 +5,8 @@ import pandas as pd
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, Optional, Tuple
-from scipy.optimize import minimize, OptimizeResult
+from scipy.optimize import minimize, differential_evolution, OptimizeResult
+from pathos.multiprocessing import ProcessingPool as PathosPool
 
 from .target_moments import TargetMoments
 from .objective_function import ObjectiveFunction, create_weight_matrix
@@ -227,14 +228,66 @@ class SMMCalibrator:
         print("开始优化迭代...")
         print("="*80)
         
-        result = minimize(
-            fun=self.obj_function,
-            x0=initial_values,
-            method=method,
-            bounds=bounds,
-            options=options,
-            callback=callback
-        )
+        # 根据方法选择优化器
+        if method == 'differential_evolution':
+            print(f"使用并行差分进化算法")
+            print(f"种群大小: {options.get('popsize', 15)}")
+            n_workers = options.get('workers', 1)
+            print(f"并行进程数: {n_workers}")
+            
+            # differential_evolution的callback接口与minimize不同
+            # 它接收 (xk, convergence) 而不是 (xk)
+            def de_callback(xk, convergence=0):
+                """差分进化算法的回调函数"""
+                if self.checkpoint_enabled:
+                    n_eval = self.obj_function.get_evaluation_count()
+                    save_freq = self.config['checkpoint']['save_frequency']
+                    if n_eval % save_freq == 0:
+                        self._save_checkpoint(xk, None)
+                return False  # 返回True会提前终止优化
+            
+            # differential_evolution支持的参数（过滤掉不兼容的参数）
+            de_valid_params = {
+                'maxiter', 'popsize', 'atol', 'tol', 'workers', 
+                'updating', 'polish', 'strategy', 'recombination', 
+                'mutation', 'seed', 'init', 'disp'
+            }
+            de_options = {k: v for k, v in options.items() if k in de_valid_params}
+            
+            # 使用pathos进程池（支持序列化闭包）
+            if n_workers > 1:
+                print(f"使用pathos进程池（支持闭包序列化）")
+                pool = PathosPool(nodes=n_workers)
+                de_options['workers'] = pool.map
+                
+                try:
+                    result = differential_evolution(
+                        func=self.obj_function,
+                        bounds=bounds,
+                        callback=de_callback,
+                        **de_options
+                    )
+                finally:
+                    pool.close()
+                    pool.join()
+            else:
+                # 单进程模式，直接使用
+                result = differential_evolution(
+                    func=self.obj_function,
+                    bounds=bounds,
+                    callback=de_callback,
+                    **de_options
+                )
+        else:
+            print(f"使用{method}算法（串行）")
+            result = minimize(
+                fun=self.obj_function,
+                x0=initial_values,
+                method=method,
+                bounds=bounds,
+                options=options,
+                callback=callback
+            )
         
         self.result = result
         

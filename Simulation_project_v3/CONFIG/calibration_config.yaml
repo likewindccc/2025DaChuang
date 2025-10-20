@@ -78,17 +78,19 @@ target_moments:
 
 # 优化算法设置
 optimization:
-  method: Nelder-Mead
+  method: differential_evolution  # 并行优化算法
   options:
-    maxiter: 200
-    maxfev: 1000
-    xatol: 1.0e-4
-    fatol: 1.0e-4
-    adaptive: true
+    maxiter: 100  # 减少迭代次数（因为每代会评估多个点）
+    popsize: 32   # 种群大小：每代评估32个参数组合（并行）
+    workers: 32   # 使用32个进程并行评估
+    updating: deferred  # 延迟更新，允许并行
+    atol: 1.0e-4
+    tol: 1.0e-4
+    polish: false  # 不做局部优化（太慢）
   alternative_methods:
+    - Nelder-Mead  # 备用方案
     - L-BFGS-B
     - Powell
-    - TNC
 
 # 断点续跑设置
 checkpoint:
@@ -101,7 +103,7 @@ checkpoint:
 # MFG求解设置
 mfg_solver:
   config_path: CONFIG/mfg_config.yaml
-  max_iterations: 100
+  max_iterations: 150
   convergence_check: true
   population_adjustment: null
 

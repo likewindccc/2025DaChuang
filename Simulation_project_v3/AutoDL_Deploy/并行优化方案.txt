@@ -1,0 +1,47 @@
+╔═══════════════════════════════════════════════════════════════╗
+║              并行优化算法 - 终极解决方案                     ║
+╚═══════════════════════════════════════════════════════════════╝
+
+【问题】
+- Nelder-Mead算法是串行的，每次只评估1个参数点
+- 即使单次MFG求解用了Numba并行，128核心大部分时间在等待
+
+【解决方案】
+换成差分进化算法（differential_evolution）：
+✓ 每代同时评估32个参数组合
+✓ 使用32个进程并行运行
+✓ 理论加速：32倍
+
+【已修改的文件】
+1. CONFIG/calibration_config.yaml
+   - method: differential_evolution
+   - popsize: 32（每代32个个体）
+   - workers: 32（32进程并行）
+
+2. MODULES/CALIBRATION/smm_calibrator.py
+   - 添加了differential_evolution支持
+   - 自动识别并行/串行算法
+
+【运行步骤】
+1. 上传3个文件（WinSCP）：
+   - TESTS/test_calibration.py
+   - CONFIG/calibration_config.yaml
+   - MODULES/CALIBRATION/smm_calibrator.py
+
+2. SSH运行：
+   cd ~/Simulation_project_v3
+   bash AutoDL_Deploy/force_parallel_run.sh
+
+3. 监控：
+   htop
+   # 应该看到32个python进程在运行！
+
+【预期效果】
+- htop中看到多个python进程（不是单个）
+- Load average应该在50-100之间
+- 总运行时间：从7天降低到0.5-1天
+
+【算法对比】
+- Nelder-Mead：串行，1个参数点/次，7天
+- Differential Evolution：并行，32个参数点/次，~0.5天
+

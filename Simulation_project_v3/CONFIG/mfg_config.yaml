@@ -32,7 +32,7 @@ equilibrium:
   convergence:
     epsilon_V: 0.01
     epsilon_a: 0.01
-    epsilon_u: 0.0001
+    epsilon_u: 0.001
     use_relative_tol: true
   damping_factor: 0.3
   max_outer_iter: 100

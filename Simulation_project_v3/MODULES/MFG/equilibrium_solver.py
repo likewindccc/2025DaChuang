@@ -11,7 +11,10 @@ MFG均衡求解器（主控制器）
    a) 计算市场紧张度 θ_t = V / U_t
    b) 求解Bellman方程 → 得到最优策略 a*(x) 和价值函数 V(x)
    c) 用a*求解KFE → 更新人口分布 m_{t+1}
-   d) 检查收敛：|V_{t+1} - V_t| < ε_V, |a_{t+1} - a_t| < ε_a, |u_{t+1} - u_t| < ε_u
+   d) 检查收敛：
+      - 价值函数相对变化：|ΔV|/|V| < ε_V (0.01)
+      - 平均努力水平变化：|mean(a_{t+1}) - mean(a_t)| < ε_a (0.01)
+      - 失业率变化：|u_{t+1} - u_t| < ε_u (0.001)
 
 收敛后得到平均场均衡（MFE）：个体策略与市场状态自洽。
 """
@@ -322,8 +325,11 @@ class EquilibriumSolver:
                     # 绝对变化
                     diff_V = max(diff_V_U_abs, diff_V_E_abs)
                 
-                # 计算努力水平变化（绝对值）
-                diff_a = np.abs(a_optimal - prev_a_optimal).max()
+                # 【修改】计算平均努力水平变化（而非最大值变化）
+                # 原因：a是离散化的（步长0.1），单个体变化至少0.1，但平均值是连续的
+                mean_a_current = a_optimal.mean()
+                mean_a_prev = prev_a_optimal.mean()
+                diff_a = abs(mean_a_current - mean_a_prev)
                 
                 # 计算失业率变化（绝对值）
                 diff_u = abs(u_rate - prev_u_rate)
@@ -346,7 +352,7 @@ class EquilibriumSolver:
                         print(f"  |ΔV|/|V| = {diff_V:.6f} (阈值: {self.epsilon_V}, 相对)")
                     else:
                         print(f"  |ΔV| = {diff_V:.6f} (阈值: {self.epsilon_V})")
-                    print(f"  |Δa| = {diff_a:.6f} (阈值: {self.epsilon_a})")
+                    print(f"  |Δmean(a)| = {diff_a:.6f} (阈值: {self.epsilon_a})")
                     print(f"  |Δu| = {diff_u:.6f} (阈值: {self.epsilon_u})")
                     print()
                 
@@ -359,6 +365,32 @@ class EquilibriumSolver:
                     print(f"最终失业率: {u_rate*100:.2f}%")
                     print(f"最终市场紧张度: {theta:.4f}")
                     print()
+                    
+                    # 【修复】收敛时也要记录最后一次历史
+                    self.history['iteration'].append(outer_iter + 1)
+                    self.history['theta'].append(theta)
+                    self.history['unemployment_rate'].append(u_rate)
+                    self.history['mean_T'].append(stats['mean_T'])
+                    self.history['mean_S'].append(stats['mean_S'])
+                    self.history['mean_D'].append(stats['mean_D'])
+                    self.history['mean_W'].append(stats['mean_W'])
+                    self.history['mean_wage_employed'].append(stats.get('mean_wage_employed', 0))
+                    
+                    if n_unemployed > 0:
+                        mean_V_U = V_U[individuals['employment_status'] == 'unemployed'].mean()
+                        mean_a = a_optimal[individuals['employment_status'] == 'unemployed'].mean()
+                    else:
+                        mean_V_U = 0
+                        mean_a = 0
+                    
+                    if n_employed > 0:
+                        mean_V_E = V_E[individuals['employment_status'] == 'employed'].mean()
+                    else:
+                        mean_V_E = 0
+                    
+                    self.history['mean_value_U'].append(mean_V_U)
+                    self.history['mean_value_E'].append(mean_V_E)
+                    self.history['mean_effort'].append(mean_a)
                     
                     # 保存均衡状态
                     self._save_equilibrium(

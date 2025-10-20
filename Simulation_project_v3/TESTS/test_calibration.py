@@ -1,10 +1,22 @@
 import sys
 from pathlib import Path
+import os
+
+# 【重要】禁用Numba并行，配合DE的32进程并行（避免过度订阅）
+os.environ['NUMBA_NUM_THREADS'] = '1'
+os.environ['NUMBA_THREADING_LAYER'] = 'omp'
+os.environ['OMP_NUM_THREADS'] = '1'
 
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 from MODULES.CALIBRATION import SMMCalibrator
+
+# 验证Numba配置
+import numba
+print(f"[配置检查] Numba版本: {numba.__version__}")
+print(f"[配置检查] 线程数: {numba.config.NUMBA_NUM_THREADS}")
+print(f"[配置检查] 并行层: {numba.config.THREADING_LAYER}")
 
 
 def test_calibration_quick():
