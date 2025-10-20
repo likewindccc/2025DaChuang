@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MFG 平均场博弈 - 农村女性就业市场研究</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;600;700;900&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --bg-primary: #f8f9ff;
+            --accent-purple: #8b5cf6;
+            --accent-blue: #3b82f6;
+            --accent-pink: #ec4899;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f8f9ff 0%, #fff5f7 100%);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            padding: 100px 80px 80px 200px;
+        }
+        
+        .back-home {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            z-index: 1000;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 25px;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(139, 92, 246, 0.2);
+            border-radius: 50px;
+            color: var(--accent-purple);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .back-home:hover {
+            background: var(--accent-purple);
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .page-header {
+            margin-bottom: 60px;
+            animation: fadeInUp 1s ease;
+        }
+        
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .module-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1));
+            border: 2px solid rgba(139, 92, 246, 0.2);
+            border-radius: 50px;
+            font-weight: 600;
+            color: var(--accent-purple);
+            margin-bottom: 20px;
+        }
+        
+        .page-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 4.5rem;
+            font-weight: 900;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, var(--text-primary), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .page-description {
+            font-size: 1.3rem;
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+        
+        .content-section {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(139, 92, 246, 0.15);
+            border-radius: 32px;
+            padding: 50px;
+            margin-bottom: 40px;
+            transition: all 0.5s ease;
+        }
+        
+        .content-section:hover {
+            background: rgba(255, 255, 255, 0.8);
+            border-color: rgba(139, 92, 246, 0.3);
+            transform: translateY(-5px);
+            box-shadow: 0 20px 50px rgba(139, 92, 246, 0.15);
+        }
+        
+        .section-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: var(--accent-purple);
+        }
+        
+        .section-title i {
+            font-size: 2.5rem;
+        }
+        
+        .formula-box {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(59, 130, 246, 0.05));
+            border: 2px solid rgba(139, 92, 246, 0.2);
+            border-radius: 16px;
+            padding: 30px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1rem;
+            color: var(--text-primary);
+        }
+        
+        .chart-placeholder {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(59, 130, 246, 0.05));
+            border: 2px dashed rgba(139, 92, 246, 0.3);
+            border-radius: 24px;
+            padding: 80px 40px;
+            text-align: center;
+            margin: 30px 0;
+            transition: all 0.3s ease;
+        }
+        
+        .chart-placeholder:hover {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1));
+            border-color: var(--accent-purple);
+        }
+        
+        .placeholder-icon {
+            font-size: 4rem;
+            color: var(--accent-purple);
+            margin-bottom: 20px;
+            opacity: 0.6;
+        }
+        
+        .placeholder-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 15px;
+        }
+        
+        .placeholder-text {
+            font-size: 1rem;
+            color: var(--text-secondary);
+        }
+        
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            margin: 30px 0;
+        }
+        
+        .algorithm-steps {
+            counter-reset: step-counter;
+            padding-left: 0;
+            list-style: none;
+        }
+        
+        .algorithm-steps li {
+            counter-increment: step-counter;
+            position: relative;
+            padding: 20px 20px 20px 80px;
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.5);
+            border: 2px solid rgba(139, 92, 246, 0.1);
+            border-radius: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .algorithm-steps li:hover {
+            background: white;
+            border-color: var(--accent-purple);
+            transform: translateX(10px);
+        }
+        
+        .algorithm-steps li::before {
+            content: counter(step-counter);
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+        
+        @media (max-width: 1024px) {
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 80px 20px 60px 20px;
+            }
+            
+            .page-title {
+                font-size: 2.5rem;
+            }
+            
+            .content-section {
+                padding: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-home">
+        <i class="fas fa-home"></i>
+        <span>返回首页</span>
+    </a>
+    
+    <div class="container">
+        <div class="page-header">
+            <div class="module-badge">
+                <i class="fas fa-chess"></i>
+                <span>MFG 模块</span>
+            </div>
+            <h1 class="page-title">平均场博弈</h1>
+            <p class="page-description">
+                基于平均场博弈理论，构建大规模异质性个体动态博弈均衡模型，
+                刻画劳动者的最优努力策略和就业市场的长期稳态分布。
+                采用Bellman方程求解个体最优策略，通过Monte Carlo仿真演化人口分布。
+            </p>
+        </div>
+        
+        <div class="content-section">
+            <h2 class="section-title">
+                <i class="fas fa-info-circle"></i>
+                理论基础
+            </h2>
+            <div style="font-size: 1.1rem; line-height: 2; color: var(--text-secondary);">
+                <p style="margin-bottom: 20px;">
+                    <strong style="color: var(--accent-purple);">平均场博弈（MFG）：</strong>
+                    一种分析大规模主体交互系统的理论框架，由Lasry-Lions (2006)和Huang-Caines-Malhamé (2006)独立提出。
+                    核心思想是用平均场分布代替所有其他个体的影响，将多主体博弈简化为单个代表性主体对平均场的优化问题。
+                </p>
+                <p style="margin-bottom: 20px;">
+                    <strong style="color: var(--accent-purple);">求解策略：</strong>
+                    采用不动点迭代法求解MFG均衡，交替求解Bellman方程（个体最优策略）和
+                    Kolmogorov Forward方程（人口分布演化），直至收敛。
+                </p>
+                <p>
+                    <strong style="color: var(--accent-purple);">适用场景：</strong>
+                    大规模异质性劳动力市场、交通流量、能源市场、金融市场等需要刻画大量主体交互的复杂系统。
+                </p>
+            </div>
+        </div>
+        
+        <div class="content-section">
+            <h2 class="section-title">
+                <i class="fas fa-function"></i>
+                核心方程
+            </h2>
+            <div class="formula-box">
+                <strong>Bellman方程（个体最优策略）：</strong><br><br>
+                V<sub>U</sub>(x) = max<sub>a</sub> { b<sub>0</sub> - κ·a² - α<sub>T</sub>·(T-T<sub>ideal</sub>)² + ρ·[λ(x')·V<sub>E</sub>(x') + (1-λ(x'))·V<sub>U</sub>(x')] }
+            </div>
+            <div class="formula-box">
+                <strong>状态转移方程：</strong><br><br>
+                x' = x + γ·a·(x<sub>bound</sub> - x)
+            </div>
+            <div class="formula-box">
+                <strong>人口分布演化（Monte Carlo仿真）：</strong><br><br>
+                根据最优策略a*和转移概率，模拟10000个个体的状态演化
+            </div>
+        </div>
+        
+        <div class="content-section">
+            <h2 class="section-title">
+                <i class="fas fa-cogs"></i>
+                求解算法
+            </h2>
+            <ol class="algorithm-steps">
+                <li>
+                    <strong>初始化人口分布</strong><br>
+                    从Population模块获取10000个异质性个体，初始化失业率u<sub>0</sub>
+                </li>
+                <li>
+                    <strong>求解Bellman方程</strong><br>
+                    使用值迭代算法计算失业价值V<sub>U</sub>、就业价值V<sub>E</sub>和最优努力策略a*
+                </li>
+                <li>
+                    <strong>演化人口分布</strong><br>
+                    根据a*和转移概率λ、μ，Monte Carlo仿真个体状态演化，更新人口分布
+                </li>
+                <li>
+                    <strong>计算新失业率</strong><br>
+                    统计新分布下的失业人数，计算u<sub>t+1</sub>
+                </li>
+                <li>
+                    <strong>检查收敛</strong><br>
+                    判断|ΔV|/|V| < ε<sub>V</sub>、|Δmean(a)| < ε<sub>a</sub>、|Δu| < ε<sub>u</sub>
+                </li>
+                <li>
+                    <strong>输出均衡结果</strong><br>
+                    保存最优策略、价值函数、人口分布、失业率等关键指标
+                </li>
+            </ol>
+        </div>
+        
+        <div class="content-section">
+            <h2 class="section-title">
+                <i class="fas fa-chart-line"></i>
+                价值函数演化
+            </h2>
+            <div class="chart-placeholder">
+                <div class="placeholder-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="placeholder-title">V<sub>U</sub>和V<sub>E</sub>随迭代次数的变化</div>
+                <div class="placeholder-text">
+                    展示失业价值和就业价值的收敛过程<br>
+                    横轴：迭代次数，纵轴：价值函数值
+                </div>
+            </div>
+        </div>
+        
+        <div class="content-section">
+            <h2 class="section-title">
+                <i class="fas fa-users"></i>
+                最优策略分布
+            </h2>
+            <div class="chart-grid">
+                <div class="chart-placeholder">
+                    <div class="placeholder-icon">
+                        <i class="fas fa-chart-histogram"></i>
+                    </div>
+                    <div class="placeholder-title">最优努力水平a*分布</div>
+                    <div class="placeholder-text">
+                        不同个体的最优努力选择<br>
+                        横轴：努力水平，纵轴：频数
+                    </div>
+                </div>
+                
+                <div class="chart-placeholder">
+                    <div class="placeholder-icon">
+                        <i class="fas fa-chart-scatter"></i>
+                    </div>
+                    <div class="placeholder-title">a*与状态变量的关系</div>
+                    <div class="placeholder-text">
+                        分析T、S、D、W如何影响最优策略<br>
+                        散点图 + 趋势线
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="content-section">
+            <h2 class="section-title">
+                <i class="fas fa-chart-area"></i>
+                人口分布演化
+            </h2>
+            <div class="chart-placeholder">
+                <div class="placeholder-icon">
+                    <i class="fas fa-film"></i>
+                </div>
+                <div class="placeholder-title">T、S、D、W分布的动态演化动画</div>
+                <div class="placeholder-text">
+                    展示从初始分布到均衡分布的演化过程<br>
+                    支持播放/暂停，拖动时间轴
+                </div>
+            </div>
+        </div>
+        
+        <div class="content-section">
+            <h2 class="section-title">
+                <i class="fas fa-crosshairs"></i>
+                收敛性诊断
+            </h2>
+            <div class="chart-grid">
+                <div class="chart-placeholder">
+                    <div class="placeholder-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="placeholder-title">价值函数变化率</div>
+                    <div class="placeholder-text">
+                        |ΔV|/|V| 随迭代次数的变化<br>
+                        对比收敛阈值ε<sub>V</sub>=0.01
+                    </div>
+                </div>
+                
+                <div class="chart-placeholder">
+                    <div class="placeholder-icon">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <div class="placeholder-title">失业率演化</div>
+                    <div class="placeholder-text">
+                        u<sub>t</sub>随迭代次数的变化<br>
+                        对比收敛阈值ε<sub>u</sub>=0.001
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="content-section">
+            <h2 class="section-title">
+                <i class="fas fa-balance-scale"></i>
+                市场匹配度分析
+            </h2>
+            <div class="chart-placeholder">
+                <div class="placeholder-icon">
+                    <i class="fas fa-chart-radar"></i>
+                </div>
+                <div class="placeholder-title">劳动者 vs 企业特征对比雷达图</div>
+                <div class="placeholder-text">
+                    均衡状态下的供需匹配度<br>
+                    评估结构性失业风险
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.querySelectorAll('.content-section').forEach((section, index) => {
+            section.style.animation = 'fadeInUp 1s ease';
+            section.style.animationDelay = `${index * 0.1}s`;
+            section.style.animationFillMode = 'backwards';
+        });
+    </script>
+</body>
+</html>
+

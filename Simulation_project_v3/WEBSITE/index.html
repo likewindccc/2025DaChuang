@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>农村女性就业市场动态演化研究 - 可视化系统</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;600;700;900&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            /* 亮色系配色 */
+            --bg-primary: #f8f9ff;
+            --bg-secondary: #ffffff;
+            --accent-purple: #8b5cf6;
+            --accent-blue: #3b82f6;
+            --accent-pink: #ec4899;
+            --accent-cyan: #06b6d4;
+            --accent-yellow: #fbbf24;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-color: rgba(139, 92, 246, 0.1);
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f8f9ff 0%, #fff5f7 100%);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            position: relative;
+        }
+        
+        /* 动画背景装饰 */
+        .bg-decoration {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+        
+        .floating-shape {
+            position: absolute;
+            opacity: 0.4;
+            animation: float 20s ease-in-out infinite;
+        }
+        
+        .shape-1 {
+            width: 300px;
+            height: 300px;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
+            border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
+            top: 10%;
+            left: 5%;
+            filter: blur(60px);
+            animation-delay: 0s;
+        }
+        
+        .shape-2 {
+            width: 250px;
+            height: 250px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+            border-radius: 70% 30% 50% 50% / 30% 60% 70% 40%;
+            top: 60%;
+            right: 10%;
+            filter: blur(60px);
+            animation-delay: -5s;
+        }
+        
+        .shape-3 {
+            width: 200px;
+            height: 200px;
+            background: linear-gradient(135deg, var(--accent-pink), var(--accent-yellow));
+            border-radius: 50% 50% 30% 70% / 60% 40% 60% 40%;
+            bottom: 20%;
+            left: 15%;
+            filter: blur(60px);
+            animation-delay: -10s;
+        }
+        
+        @keyframes float {
+            0%, 100% {
+                transform: translate(0, 0) rotate(0deg) scale(1);
+            }
+            33% {
+                transform: translate(50px, -50px) rotate(120deg) scale(1.1);
+            }
+            66% {
+                transform: translate(-30px, 30px) rotate(240deg) scale(0.9);
+            }
+        }
+        
+        /* 粒子装饰 */
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--accent-purple);
+            border-radius: 50%;
+            opacity: 0.6;
+            animation: particle-float 15s linear infinite;
+        }
+        
+        @keyframes particle-float {
+            0% {
+                transform: translateY(100vh) translateX(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.6;
+            }
+            90% {
+                opacity: 0.6;
+            }
+            100% {
+                transform: translateY(-100px) translateX(100px);
+                opacity: 0;
+            }
+        }
+        
+        /* 左侧导航 - 玻璃拟态 */
+        .sidebar {
+            position: fixed;
+            left: 40px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px) saturate(180%);
+            border: 2px solid rgba(139, 92, 246, 0.2);
+            border-radius: 30px;
+            padding: 30px 20px;
+            box-shadow: 0 20px 60px rgba(139, 92, 246, 0.15);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: slideInLeft 1s ease;
+        }
+        
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateY(-50%) translateX(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(-50%) translateX(0);
+            }
+        }
+        
+        .sidebar:hover {
+            background: rgba(255, 255, 255, 0.9);
+            border-color: rgba(139, 92, 246, 0.4);
+            transform: translateY(-50%) translateX(5px) scale(1.05);
+            box-shadow: 0 25px 80px rgba(139, 92, 246, 0.25);
+        }
+        
+        .nav-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #e0e7ff, #ddd6fe);
+            margin: 30px auto;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 8px rgba(139, 92, 246, 0.2);
+        }
+        
+        .nav-dot::before {
+            content: '';
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .nav-dot::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
+            top: 0;
+            left: 0;
+            transform: scale(0);
+            transition: all 0.4s ease;
+        }
+        
+        .nav-dot:hover::after,
+        .nav-dot.active::after {
+            transform: scale(1);
+            box-shadow: 0 0 20px var(--accent-purple);
+            animation: pulse-ring 2s ease-out infinite;
+        }
+        
+        @keyframes pulse-ring {
+            0% {
+                box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.7);
+            }
+            100% {
+                box-shadow: 0 0 0 20px rgba(139, 92, 246, 0);
+            }
+        }
+        
+        .nav-dot:hover::before,
+        .nav-dot.active::before {
+            border-color: var(--accent-purple);
+            transform: translate(-50%, -50%) scale(1);
+        }
+        
+        .nav-label {
+            position: absolute;
+            left: 50px;
+            white-space: nowrap;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+            background: white;
+            padding: 8px 16px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .nav-dot:hover .nav-label {
+            opacity: 1;
+            left: 60px;
+        }
+        
+        /* Section通用样式 */
+        section {
+            min-height: 100vh;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        
+        .section-content {
+            position: relative;
+            z-index: 2;
+            max-width: 1200px;
+            padding: 0 80px 0 200px;
+            width: 100%;
+            animation: fadeInUp 1s ease;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Hero Section */
+        .hero {
+            height: 100vh;
+            background: linear-gradient(135deg, #f0f4ff 0%, #fef3f8 100%);
+        }
+        
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(236, 72, 153, 0.1));
+            border: 2px solid rgba(139, 92, 246, 0.2);
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--accent-purple);
+            margin-bottom: 30px;
+            animation: slideDown 1s ease, float-badge 3s ease-in-out infinite;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes float-badge {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+        
+        .hero-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 6rem;
+            font-weight: 900;
+            line-height: 1.1;
+            letter-spacing: -3px;
+            margin-bottom: 40px;
+            background: linear-gradient(135deg, 
+                var(--text-primary) 0%, 
+                var(--accent-purple) 50%,
+                var(--accent-pink) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            background-size: 200% auto;
+            animation: gradient-flow 5s linear infinite, scaleIn 1s ease 0.2s backwards;
+        }
+        
+        @keyframes gradient-flow {
+            0% {
+                background-position: 0% center;
+            }
+            100% {
+                background-position: 200% center;
+            }
+        }
+        
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        .hero-subtitle {
+            font-size: 1.4rem;
+            color: var(--text-secondary);
+            font-weight: 400;
+            line-height: 2;
+            margin-bottom: 50px;
+            animation: fadeInUp 1s ease 0.4s backwards;
+        }
+        
+        .cta-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 15px;
+            padding: 18px 45px;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
+            border: none;
+            border-radius: 50px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 10px 30px rgba(139, 92, 246, 0.3);
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 1s ease 0.6s backwards;
+        }
+        
+        .cta-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.6s;
+        }
+        
+        .cta-btn:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 15px 50px rgba(139, 92, 246, 0.4);
+        }
+        
+        .cta-btn:hover::before {
+            left: 100%;
+        }
+        
+        .cta-btn i {
+            transition: transform 0.3s ease;
+        }
+        
+        .cta-btn:hover i {
+            transform: translateX(5px);
+        }
+        
+        /* 玻璃卡片 */
+        .glass-container {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(20px) saturate(180%);
+            border: 2px solid rgba(139, 92, 246, 0.15);
+            border-radius: 32px;
+            padding: 70px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.08);
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: scaleIn 1s ease;
+        }
+        
+        .glass-container:hover {
+            background: rgba(255, 255, 255, 0.8);
+            border-color: rgba(139, 92, 246, 0.3);
+            transform: translateY(-8px);
+            box-shadow: 0 35px 80px rgba(139, 92, 246, 0.15);
+        }
+        
+        .section-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 40px;
+            letter-spacing: -2px;
+            background: linear-gradient(135deg, var(--text-primary), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .section-desc {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            line-height: 2;
+            margin-bottom: 50px;
+        }
+        
+        /* 模块卡片 */
+        .module-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+        }
+        
+        .module-link {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        
+        .module-item {
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(139, 92, 246, 0.1);
+            border-radius: 24px;
+            padding: 45px;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            animation: slideInRight 1s ease;
+            cursor: pointer;
+        }
+        
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .module-item:nth-child(2) {
+            animation-delay: 0.15s;
+        }
+        
+        .module-item:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+        
+        .module-item:nth-child(4) {
+            animation-delay: 0.45s;
+        }
+        
+        .module-item:nth-child(5) {
+            animation-delay: 0.6s;
+        }
+        
+        .module-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                transparent, 
+                rgba(139, 92, 246, 0.1), 
+                transparent);
+            transition: left 0.8s;
+        }
+        
+        .module-item:hover {
+            background: rgba(255, 255, 255, 0.8);
+            border-color: rgba(139, 92, 246, 0.3);
+            transform: translateX(15px) scale(1.02);
+            box-shadow: 0 20px 50px rgba(139, 92, 246, 0.15);
+        }
+        
+        .module-item:hover::before {
+            left: 100%;
+        }
+        
+        .module-header {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+        
+        .module-icon {
+            width: 75px;
+            height: 75px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 20px;
+            font-size: 2.2rem;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+            color: white;
+            box-shadow: 0 10px 30px rgba(139, 92, 246, 0.3);
+            transition: all 0.4s ease;
+            animation: rotate-icon 10s linear infinite;
+        }
+        
+        @keyframes rotate-icon {
+            0%, 100% {
+                transform: rotate(0deg);
+            }
+            25% {
+                transform: rotate(-5deg);
+            }
+            75% {
+                transform: rotate(5deg);
+            }
+        }
+        
+        .module-item:hover .module-icon {
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 15px 40px rgba(139, 92, 246, 0.4);
+        }
+        
+        .module-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: -1px;
+            background: linear-gradient(135deg, var(--text-primary), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .module-desc {
+            font-size: 1.05rem;
+            color: var(--text-secondary);
+            line-height: 1.8;
+            margin-bottom: 25px;
+        }
+        
+        .feature-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        
+        .tag {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1));
+            border: 2px solid rgba(139, 92, 246, 0.2);
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--accent-purple);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+        
+        .tag:hover {
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+            color: white;
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 10px 25px rgba(139, 92, 246, 0.3);
+            border-color: transparent;
+        }
+        
+        /* 特性网格 */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 35px;
+        }
+        
+        .feature-card {
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(139, 92, 246, 0.1);
+            border-radius: 24px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: zoomIn 1s ease;
+        }
+        
+        @keyframes zoomIn {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        .feature-card:nth-child(1) { animation-delay: 0s; }
+        .feature-card:nth-child(2) { animation-delay: 0.15s; }
+        .feature-card:nth-child(3) { animation-delay: 0.3s; }
+        .feature-card:nth-child(4) { animation-delay: 0.45s; }
+        
+        .feature-card:hover {
+            background: rgba(255, 255, 255, 0.8);
+            border-color: rgba(139, 92, 246, 0.4);
+            transform: translateY(-10px) rotate(2deg);
+            box-shadow: 0 25px 60px rgba(139, 92, 246, 0.2);
+        }
+        
+        .feature-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 20px;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(59, 130, 246, 0.15));
+            font-size: 2.2rem;
+            color: var(--accent-purple);
+            transition: all 0.4s ease;
+        }
+        
+        .feature-card:hover .feature-icon {
+            transform: scale(1.15) rotate(-10deg);
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+            color: white;
+            box-shadow: 0 15px 40px rgba(139, 92, 246, 0.3);
+        }
+        
+        .feature-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: var(--text-primary);
+        }
+        
+        .feature-text {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+        
+        /* 页脚 */
+        .footer {
+            padding: 80px 0;
+            text-align: center;
+            background: linear-gradient(135deg, #faf5ff 0%, #fef2f4 100%);
+            border-top: 2px solid rgba(139, 92, 246, 0.1);
+        }
+        
+        .footer-content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 80px 0 200px;
+        }
+        
+        .footer-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, var(--text-primary), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .footer-text {
+            color: var(--text-secondary);
+            line-height: 1.8;
+            margin-bottom: 40px;
+        }
+        
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+        
+        .social-link {
+            width: 55px;
+            height: 55px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 16px;
+            background: white;
+            border: 2px solid rgba(139, 92, 246, 0.2);
+            color: var(--accent-purple);
+            text-decoration: none;
+            font-size: 1.4rem;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .social-link:hover {
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+            color: white;
+            border-color: transparent;
+            transform: translateY(-5px) rotate(10deg);
+            box-shadow: 0 15px 35px rgba(139, 92, 246, 0.3);
+        }
+        
+        /* 滚动指示器 */
+        .scroll-indicator {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 600;
+            animation: bounce 2s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateX(-50%) translateY(0);
+            }
+            40% {
+                transform: translateX(-50%) translateY(-15px);
+            }
+            60% {
+                transform: translateX(-50%) translateY(-8px);
+            }
+        }
+        
+        .scroll-indicator i {
+            font-size: 1.5rem;
+            color: var(--accent-purple);
+            animation: arrow-bounce 2s infinite;
+        }
+        
+        @keyframes arrow-bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(10px);
+            }
+        }
+        
+        /* 响应式 */
+        @media (max-width: 1024px) {
+            .sidebar {
+                left: 20px;
+            }
+            
+            .section-content {
+                padding: 0 40px 0 100px;
+            }
+            
+            .hero-title {
+                font-size: 4rem;
+            }
+            
+            .section-title {
+                font-size: 2.5rem;
+            }
+            
+            .glass-container {
+                padding: 45px;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+            
+            .section-content {
+                padding: 0 30px;
+            }
+            
+            .hero-title {
+                font-size: 2.5rem;
+                letter-spacing: -2px;
+            }
+            
+            .hero-subtitle {
+                font-size: 1.1rem;
+            }
+            
+            .section-title {
+                font-size: 2rem;
+            }
+            
+            .glass-container {
+                padding: 30px;
+            }
+            
+            .module-item {
+                padding: 30px;
+            }
+        }
+        
+        /* 滚动条 */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(139, 92, 246, 0.05);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--accent-purple), var(--accent-blue));
+            border-radius: 5px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, var(--accent-pink), var(--accent-purple));
+        }
+    </style>
+</head>
+<body>
+    <!-- 背景装饰 -->
+    <div class="bg-decoration">
+        <div class="floating-shape shape-1"></div>
+        <div class="floating-shape shape-2"></div>
+        <div class="floating-shape shape-3"></div>
+    </div>
+    
+    <!-- 左侧导航 -->
+    <nav class="sidebar">
+        <div class="nav-dot active" data-section="hero">
+            <span class="nav-label">首页</span>
+        </div>
+        <div class="nav-dot" data-section="about">
+            <span class="nav-label">简介</span>
+        </div>
+        <div class="nav-dot" data-section="modules">
+            <span class="nav-label">模块</span>
+        </div>
+        <div class="nav-dot" data-section="features">
+            <span class="nav-label">特点</span>
+        </div>
+        <div class="nav-dot" data-section="footer">
+            <span class="nav-label">联系</span>
+        </div>
+    </nav>
+    
+    <!-- Hero Section -->
+    <section id="hero" class="hero">
+        <div class="section-content">
+            <div class="hero-badge">
+                <i class="fas fa-sparkles"></i>
+                <span>2025 数据驱动研究</span>
+            </div>
+            <h1 class="hero-title">
+                农村女性就业<br>
+                市场动态演化
+            </h1>
+            <p class="hero-subtitle">
+                基于平均场博弈理论与主体建模方法<br>
+                构建智能化数据分析系统，为政策制定提供精准的量化依据
+            </p>
+            <div style="display: flex; gap: 20px; align-items: center; animation: fadeInUp 1.2s ease 0.8s backwards;">
+                <a href="#modules" class="cta-btn">
+                    <span>探索系统</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+                <a href="about.html" class="cta-btn" style="background: rgba(255, 255, 255, 0.15); border: 2px solid rgba(139, 92, 246, 0.4);">
+                    <span>关于项目</span>
+                    <i class="fas fa-info-circle"></i>
+                </a>
+            </div>
+        </div>
+        <div class="scroll-indicator">
+            <span>向下滚动探索</span>
+            <i class="fas fa-chevron-down"></i>
+        </div>
+    </section>
+    
+    <!-- 项目简介 -->
+    <section id="about">
+        <div class="section-content">
+            <div class="glass-container">
+                <h2 class="section-title">项目简介</h2>
+                <p class="section-desc">
+                    运用<strong style="color: var(--accent-purple);">平均场博弈理论</strong>和
+                    <strong style="color: var(--accent-blue);">主体建模方法</strong>，
+                    通过大规模数值仿真和参数校准，深入分析就业市场的均衡机制，
+                    为不同政策干预方案提供科学的量化评估。
+                </p>
+                <p class="section-desc" style="margin-bottom: 0;">
+                    本系统采用 <strong style="color: var(--accent-purple);">Numba JIT</strong> 加速技术，支持百万级主体仿真，
+                    结合 <strong style="color: var(--accent-blue);">Plotly</strong> 交互式可视化，实现复杂模型的直观呈现。
+                </p>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 核心模块 -->
+    <section id="modules">
+        <div class="section-content">
+            <h2 class="section-title" style="margin-bottom: 50px;">核心模块</h2>
+            <div class="module-grid">
+                <!-- Population模块 -->
+                <a href="population.html" class="module-link">
+                    <div class="module-item">
+                        <div class="module-header">
+                            <div class="module-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <h3 class="module-title">Population 人口初始化</h3>
+                        </div>
+                        <p class="module-desc">
+                            基于真实数据生成异质性个体分布，初始化劳动者和企业的状态变量（T、S、D、W），
+                            支持多种分布类型和参数设定，为后续模型提供真实的初始人口。
+                        </p>
+                        <div class="feature-tags">
+                            <span class="tag">异质性建模</span>
+                            <span class="tag">分布拟合</span>
+                            <span class="tag">统计检验</span>
+                            <span class="tag">数据可视化</span>
+                        </div>
+                    </div>
+                </a>
+                
+                <!-- Logistic模块 -->
+                <a href="logistic.html" class="module-link">
+                    <div class="module-item">
+                        <div class="module-header">
+                            <div class="module-icon">
+                                <i class="fas fa-project-diagram"></i>
+                            </div>
+                            <h3 class="module-title">Logistic 匹配函数估计</h3>
+                        </div>
+                        <p class="module-desc">
+                            采用逻辑回归估计劳动力市场的匹配函数和分离率函数，
+                            量化个体特征（技能、数字素养等）对就业匹配概率的影响。
+                        </p>
+                        <div class="feature-tags">
+                            <span class="tag">匹配函数</span>
+                            <span class="tag">分离率</span>
+                            <span class="tag">系数估计</span>
+                            <span class="tag">拟合优度</span>
+                        </div>
+                    </div>
+                </a>
+                
+                <!-- MFG模块 -->
+                <a href="mfg.html" class="module-link">
+                    <div class="module-item">
+                        <div class="module-header">
+                            <div class="module-icon">
+                                <i class="fas fa-chart-network"></i>
+                            </div>
+                            <h3 class="module-title">MFG 均衡求解</h3>
+                        </div>
+                        <p class="module-desc">
+                            基于 Bellman 方程和蒙特卡洛方法，求解大规模异质性个体的动态博弈均衡，
+                            实时监控收敛过程，并通过3D交互式图表展示价值函数和最优策略。
+                        </p>
+                        <div class="feature-tags">
+                            <span class="tag">3D价值函数</span>
+                            <span class="tag">策略热力图</span>
+                            <span class="tag">人口演化</span>
+                            <span class="tag">收敛监控</span>
+                        </div>
+                    </div>
+                </a>
+                
+                <!-- Calibration模块 -->
+                <a href="calibration.html" class="module-link">
+                    <div class="module-item">
+                        <div class="module-header">
+                            <div class="module-icon">
+                                <i class="fas fa-sliders-h"></i>
+                            </div>
+                            <h3 class="module-title">Calibration 参数校准</h3>
+                        </div>
+                        <p class="module-desc">
+                            采用模拟矩匹配方法，通过差分进化算法实现模型参数的全局优化，
+                            提供参数空间探索、目标函数轨迹和矩拟合质量诊断等功能。
+                        </p>
+                        <div class="feature-tags">
+                            <span class="tag">SMM方法</span>
+                            <span class="tag">全局优化</span>
+                            <span class="tag">质量诊断</span>
+                            <span class="tag">敏感性分析</span>
+                        </div>
+                    </div>
+                </a>
+                
+                <!-- Simulation模块 -->
+                <a href="simulation.html" class="module-link">
+                    <div class="module-item">
+                        <div class="module-header">
+                            <div class="module-icon">
+                                <i class="fas fa-rocket"></i>
+                            </div>
+                            <h3 class="module-title">Simulation 政策仿真</h3>
+                        </div>
+                        <p class="module-desc">
+                            模拟不同政策组合下的市场演化路径，量化评估政策效果与成本收益，
+                            支持多场景对比、时间序列预测和异质性效应分解。
+                        </p>
+                        <div class="feature-tags">
+                            <span class="tag">多场景对比</span>
+                            <span class="tag">时序预测</span>
+                            <span class="tag">效应分解</span>
+                            <span class="tag">成本收益</span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 技术特点 -->
+    <section id="features">
+        <div class="section-content">
+            <h2 class="section-title" style="margin-bottom: 50px; text-align: center;">技术特点</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <h3 class="feature-title">高性能计算</h3>
+                    <p class="feature-text">
+                        Numba JIT编译加速<br>
+                        支持百万级主体仿真
+                    </p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <h3 class="feature-title">交互式可视化</h3>
+                    <p class="feature-text">
+                        Plotly 3D图表<br>
+                        直观呈现复杂模型
+                    </p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h3 class="feature-title">理论严谨性</h3>
+                    <p class="feature-text">
+                        平均场博弈理论<br>
+                        数学证明完备
+                    </p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-briefcase"></i>
+                    </div>
+                    <h3 class="feature-title">政策应用</h3>
+                    <p class="feature-text">
+                        为决策提供<br>
+                        量化科学依据
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 页脚 -->
+    <footer id="footer" class="footer">
+        <div class="footer-content">
+            <h3 class="footer-title">农村女性就业市场动态演化机制研究</h3>
+            <p class="footer-text">
+                中国人民大学统计学院<br>
+                © 2025 版权所有 · Python · Numba · Plotly
+            </p>
+            <div class="social-links">
+                <a href="#" class="social-link">
+                    <i class="fab fa-github"></i>
+                </a>
+                <a href="#" class="social-link">
+                    <i class="fas fa-envelope"></i>
+                </a>
+                <a href="#" class="social-link">
+                    <i class="fas fa-file-alt"></i>
+                </a>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        // 生成随机粒子
+        function createParticles() {
+            const decoration = document.querySelector('.bg-decoration');
+            for (let i = 0; i < 15; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 15 + 's';
+                particle.style.animationDuration = (15 + Math.random() * 10) + 's';
+                decoration.appendChild(particle);
+            }
+        }
+        
+        createParticles();
+        
+        // 导航点击滚动
+        document.querySelectorAll('.nav-dot').forEach(dot => {
+            dot.addEventListener('click', function() {
+                const section = this.getAttribute('data-section');
+                const target = document.getElementById(section);
+                
+                target.scrollIntoView({ behavior: 'smooth' });
+                
+                document.querySelectorAll('.nav-dot').forEach(d => d.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+        
+        // 滚动监听
+        const sections = document.querySelectorAll('section, footer');
+        const navDots = document.querySelectorAll('.nav-dot');
+        
+        window.addEventListener('scroll', () => {
+            let current = '';
+            
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                
+                if (window.pageYOffset >= sectionTop - sectionHeight / 3) {
+                    current = section.getAttribute('id');
+                }
+            });
+            
+            navDots.forEach(dot => {
+                dot.classList.remove('active');
+                if (dot.getAttribute('data-section') === current) {
+                    dot.classList.add('active');
+                }
+            });
+            
+            // 隐藏滚动指示器
+            const indicator = document.querySelector('.scroll-indicator');
+            if (window.pageYOffset > 100) {
+                indicator.style.opacity = '0';
+            } else {
+                indicator.style.opacity = '1';
+            }
+        });
+    </script>
+</body>
+</html>

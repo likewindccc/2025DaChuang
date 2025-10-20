@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Population 人口初始化 - 农村女性就业市场研究</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;600;700;900&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --bg-primary: #f8f9ff;
+            --accent-purple: #8b5cf6;
+            --accent-blue: #3b82f6;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f8f9ff 0%, #fff5f7 100%);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            padding: 100px 80px 80px 200px;
+        }
+        
+        .back-home {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            z-index: 1000;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 25px;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(139, 92, 246, 0.2);
+            border-radius: 50px;
+            color: var(--accent-purple);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .back-home:hover {
+            background: var(--accent-purple);
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .page-header {
+            margin-bottom: 60px;
+            animation: fadeInUp 1s ease;
+        }
+        
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .module-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1));
+            border: 2px solid rgba(139, 92, 246, 0.2);
+            border-radius: 50px;
+            font-weight: 600;
+            color: var(--accent-purple);
+            margin-bottom: 20px;
+        }
+        
+        .page-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 4.5rem;
+            font-weight: 900;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, var(--text-primary), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .page-description {
+            font-size: 1.3rem;
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+        
+        .content-section {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(139, 92, 246, 0.15);
+            border-radius: 32px;
+            padding: 50px;
+            margin-bottom: 40px;
+            transition: all 0.5s ease;
+        }
+        
+        .content-section:hover {
+            background: rgba(255, 255, 255, 0.8);
+            border-color: rgba(139, 92, 246, 0.3);
+            transform: translateY(-5px);
+            box-shadow: 0 20px 50px rgba(139, 92, 246, 0.15);
+        }
+        
+        .section-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: var(--accent-purple);
+        }
+        
+        .section-title i {
+            font-size: 2.5rem;
+        }
+        
+        .chart-placeholder {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(59, 130, 246, 0.05));
+            border: 2px dashed rgba(139, 92, 246, 0.3);
+            border-radius: 24px;
+            padding: 80px 40px;
+            text-align: center;
+            margin: 30px 0;
+            transition: all 0.3s ease;
+        }
+        
+        .chart-placeholder:hover {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1));
+            border-color: var(--accent-purple);
+        }
+        
+        .placeholder-icon {
+            font-size: 4rem;
+            color: var(--accent-purple);
+            margin-bottom: 20px;
+            opacity: 0.6;
+        }
+        
+        .placeholder-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 15px;
+        }
+        
+        .placeholder-text {
+            font-size: 1rem;
+            color: var(--text-secondary);
+        }
+        
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            margin: 30px 0;
+        }
+        
+        .param-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .param-item {
+            background: rgba(255, 255, 255, 0.5);
+            border: 2px solid rgba(139, 92, 246, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .param-item:hover {
+            background: white;
+            border-color: var(--accent-purple);
+            transform: translateX(5px);
+        }
+        
+        .param-name {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--accent-purple);
+            margin-bottom: 8px;
+        }
+        
+        .param-value {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+        
+        @media (max-width: 1024px) {
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 80px 20px 60px 20px;
+            }
+            
+            .page-title {
+                font-size: 2.5rem;
+            }
+            
+            .content-section {
+                padding: 30px;
+            }
+            
+            .param-list {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 返回首页 -->
+    <a href="index.html" class="back-home">
+        <i class="fas fa-home"></i>
+        <span>返回首页</span>
+    </a>
+    
+    <div class="container">
+        <!-- 页面标题 -->
+        <div class="page-header">
+            <div class="module-badge">
+                <i class="fas fa-users"></i>
+                <span>Population 模块</span>
+            </div>
+            <h1 class="page-title">人口初始化</h1>
+            <p class="page-description">
+                基于真实数据生成异质性个体分布，为后续模型提供真实的初始人口。
+                本模块初始化劳动者和企业的状态变量（T、S、D、W），
+                支持多种分布类型和参数设定，确保模型的现实性和可信度。
+            </p>
+        </div>
+        
+        <!-- 模块说明 -->
+        <div class="content-section">
+            <h2 class="section-title">
+                <i class="fas fa-info-circle"></i>
+                模块说明
+            </h2>
+            <div style="font-size: 1.1rem; line-height: 2; color: var(--text-secondary);">
+                <p style="margin-bottom: 20px;">
+                    <strong style="color: var(--accent-purple);">核心功能：</strong>
+                    人口初始化模块负责生成模型所需的异质性个体分布。
+                    通过对真实数据的统计分析，拟合劳动者和企业的状态变量分布，
+                    为MFG模型提供符合现实的初始条件。
+                </p>
+                <p style="margin-bottom: 20px;">
+                    <strong style="color: var(--accent-purple);">状态变量：</strong>
+                </p>
+                <ul style="padding-left: 30px; margin-bottom: 20px;">
+                    <li><strong>T（劳动供给时间）</strong>：个体愿意提供的工作时间，单位为小时/周</li>
+                    <li><strong>S（技能水平）</strong>：个体的职业技能熟练程度，标准化得分</li>
+                    <li><strong>D（数字素养）</strong>：个体的数字技能和信息化应用能力</li>
+                    <li><strong>W（工资期望/岗位工资）</strong>：劳动者的期望工资或企业提供的岗位工资</li>
+                </ul>
+                <p>
+                    <strong style="color: var(--accent-purple);">技术方法：</strong>
+                    采用正态分布、对数正态分布、Beta分布等多种概率分布拟合真实数据，
+                    通过K-S检验、Chi-Square检验等统计检验方法验证拟合优度。
+                </p>
+            </div>
+        </div>
+        
+        <!-- 参数配置 -->
+        <div class="content-section">
+            <h2 class="section-title">
+                <i class="fas fa-sliders-h"></i>
+                参数配置
+            </h2>
+            <div class="param-list">
+                <div class="param-item">
+                    <div class="param-name">样本量</div>
+                    <div class="param-value">劳动者：10,000人<br>企业：2,000家</div>
+                </div>
+                <div class="param-item">
+                    <div class="param-name">T 分布类型</div>
+                    <div class="param-value">正态分布 (μ=45, σ=8)</div>
+                </div>
+                <div class="param-item">
+                    <div class="param-name">S 分布类型</div>
+                    <div class="param-value">Beta分布 (α=2, β=5)</div>
+                </div>
+                <div class="param-item">
+                    <div class="param-name">D 分布类型</div>
+                    <div class="param-value">Beta分布 (α=2, β=5)</div>
+                </div>
+                <div class="param-item">
+                    <div class="param-name">W 分布类型</div>
+                    <div class="param-value">对数正态分布 (μ=8.4, σ=0.3)</div>
+                </div>
+                <div class="param-item">
+                    <div class="param-name">随机种子</div>
+                    <div class="param-value">42（确保可重复性）</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 可视化：状态变量分布 -->
+        <div class="content-section">
+            <h2 class="section-title">
+                <i class="fas fa-chart-bar"></i>
+                状态变量分布
+            </h2>
+            <div class="chart-grid">
+                <div class="chart-placeholder">
+                    <div class="placeholder-icon">
+                        <i class="fas fa-chart-histogram"></i>
+                    </div>
+                    <div class="placeholder-title">T - 劳动供给时间分布</div>
+                    <div class="placeholder-text">
+                        展示劳动者愿意提供的工作时间分布<br>
+                        横轴：小时/周，纵轴：频数
+                    </div>
+                </div>
+                
+                <div class="chart-placeholder">
+                    <div class="placeholder-icon">
+                        <i class="fas fa-chart-area"></i>
+                    </div>
+                    <div class="placeholder-title">S - 技能水平分布</div>
+                    <div class="placeholder-text">
+                        展示劳动者技能水平的分布特征<br>
+                        横轴：技能得分（0-1），纵轴：频数
+                    </div>
+                </div>
+                
+                <div class="chart-placeholder">
+                    <div class="placeholder-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="placeholder-title">D - 数字素养分布</div>
+                    <div class="placeholder-text">
+                        展示数字技能水平的分布情况<br>
+                        横轴：数字素养得分（0-1），纵轴：频数
+                    </div>
+                </div>
+                
+                <div class="chart-placeholder">
+                    <div class="placeholder-icon">
+                        <i class="fas fa-chart-pie"></i>
+                    </div>
+                    <div class="placeholder-title">W - 工资期望分布</div>
+                    <div class="placeholder-text">
+                        展示工资期望/岗位工资的分布<br>
+                        横轴：工资（元/月），纵轴：频数
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 劳动者vs企业对比 -->
+        <div class="content-section">
+            <h2 class="section-title">
+                <i class="fas fa-balance-scale"></i>
+                劳动者 vs 企业对比
+            </h2>
+            <div class="chart-placeholder">
+                <div class="placeholder-icon">
+                    <i class="fas fa-chart-scatter"></i>
+                </div>
+                <div class="placeholder-title">供需匹配度对比图</div>
+                <div class="placeholder-text">
+                    对比劳动者特征分布与企业需求分布<br>
+                    可视化供需结构性错配问题
+                </div>
+            </div>
+        </div>
+        
+        <!-- 统计检验结果 -->
+        <div class="content-section">
+            <h2 class="section-title">
+                <i class="fas fa-check-circle"></i>
+                统计检验结果
+            </h2>
+            <div class="chart-placeholder">
+                <div class="placeholder-icon">
+                    <i class="fas fa-table"></i>
+                </div>
+                <div class="placeholder-title">拟合优度检验表</div>
+                <div class="placeholder-text">
+                    K-S检验、Chi-Square检验结果<br>
+                    验证分布拟合的有效性
+                </div>
+            </div>
+        </div>
+        
+        <!-- 分布拟合QQ图 -->
+        <div class="content-section">
+            <h2 class="section-title">
+                <i class="fas fa-project-diagram"></i>
+                分布拟合诊断
+            </h2>
+            <div class="chart-grid">
+                <div class="chart-placeholder">
+                    <div class="placeholder-icon">
+                        <i class="fas fa-chart-scatter"></i>
+                    </div>
+                    <div class="placeholder-title">QQ Plot - 正态性检验</div>
+                    <div class="placeholder-text">
+                        分位数-分位数图<br>
+                        诊断数据与理论分布的偏离程度
+                    </div>
+                </div>
+                
+                <div class="chart-placeholder">
+                    <div class="placeholder-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="placeholder-title">PP Plot - 概率图</div>
+                    <div class="placeholder-text">
+                        累积概率图<br>
+                        评估分布拟合质量
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.querySelectorAll('.content-section').forEach((section, index) => {
+            section.style.animation = 'fadeInUp 1s ease';
+            section.style.animationDelay = `${index * 0.1}s`;
+            section.style.animationFillMode = 'backwards';
+        });
+    </script>
+</body>
+</html>
+

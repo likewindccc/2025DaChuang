@@ -160,15 +160,25 @@ class ObjectiveFunction:
         # 添加到历史记录
         self.evaluation_history.append(record)
         
-        # 每10次评估保存一次历史
+        # 每10次评估保存一次历史（使用进程ID避免并发写入冲突）
         if self.n_evaluations % 10 == 0:
-            self._save_history()
+            self._save_history(use_pid=True)
     
-    def _save_history(self) -> None:
+    def _save_history(self, use_pid: bool = False) -> None:
         """
         保存评估历史到CSV文件
+        
+        参数:
+            use_pid: 是否在文件名中使用进程ID（并行模式下避免冲突）
         """
-        history_file = self.output_dir / 'calibration_history.csv'
+        import os
+        
+        if use_pid:
+            # 并行模式：每个进程写入自己的文件
+            history_file = self.output_dir / f'calibration_history_{os.getpid()}.csv'
+        else:
+            # 串行模式：写入同一个文件
+            history_file = self.output_dir / 'calibration_history.csv'
         
         # 将历史记录转换为DataFrame
         history_data = []
@@ -196,7 +206,8 @@ class ObjectiveFunction:
         df = pd.DataFrame(history_data)
         df.to_csv(history_file, index=False, encoding='utf-8-sig')
         
-        print(f"\n评估历史已保存至: {history_file}")
+        if not use_pid:
+            print(f"\n评估历史已保存至: {history_file}")
     
     def get_moment_difference(
         self, 

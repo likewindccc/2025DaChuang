@@ -1,3 +1,4 @@
+import os
 import yaml
 import pickle
 import numpy as np
@@ -6,7 +7,6 @@ from pathlib import Path
 from datetime import datetime
 from typing import Dict, Optional, Tuple
 from scipy.optimize import minimize, differential_evolution, OptimizeResult
-from pathos.multiprocessing import ProcessingPool as PathosPool
 
 from .target_moments import TargetMoments
 from .objective_function import ObjectiveFunction, create_weight_matrix
@@ -121,23 +121,29 @@ class SMMCalibrator:
             # 转换为参数字典
             params_dict = param_utils.vector_to_dict(params_vector)
             
-            # 创建临时MFG配置文件
-            temp_config_path = output_dir / 'mfg_config_temp.yaml'
-            update_mfg_config_with_params(
-                mfg_config_path,
-                params_dict,
-                param_utils,
-                temp_config_path
-            )
+            # 创建临时MFG配置文件（使用进程ID确保并行安全）
+            temp_config_path = output_dir / f'mfg_config_temp_{os.getpid()}.yaml'
             
-            # 运行MFG求解
-            individuals, eq_info = solve_equilibrium(str(temp_config_path))
-            
-            # 删除临时配置文件
-            if temp_config_path.exists():
-                temp_config_path.unlink()
-            
-            return individuals, eq_info
+            try:
+                update_mfg_config_with_params(
+                    mfg_config_path,
+                    params_dict,
+                    param_utils,
+                    temp_config_path
+                )
+                
+                # 运行MFG求解（禁用文件保存以避免并发冲突）
+                individuals, eq_info = solve_equilibrium(
+                    str(temp_config_path),
+                    save_results=False
+                )
+                
+                return individuals, eq_info
+                
+            finally:
+                # 确保删除临时配置文件（即使出错也要删除）
+                if temp_config_path.exists():
+                    temp_config_path.unlink()
         
         return mfg_solver
     
@@ -254,24 +260,30 @@ class SMMCalibrator:
             }
             de_options = {k: v for k, v in options.items() if k in de_valid_params}
             
-            # 使用pathos进程池（支持序列化闭包）
+            # 直接传递workers整数，scipy会自动处理并行
+            # 注意：需要使用支持闭包序列化的loky库
             if n_workers > 1:
-                print(f"使用pathos进程池（支持闭包序列化）")
-                pool = PathosPool(nodes=n_workers)
-                de_options['workers'] = pool.map
+                print(f"警告：并行模式下禁用checkpoint回调（避免进程冲突）")
+                print(f"使用loky.get_reusable_executor进行闭包序列化")
                 
-                try:
-                    result = differential_evolution(
-                        func=self.obj_function,
-                        bounds=bounds,
-                        callback=de_callback,
-                        **de_options
-                    )
-                finally:
-                    pool.close()
-                    pool.join()
+                # 使用loky提供的executor，支持闭包序列化
+                from loky import get_reusable_executor
+                
+                # 创建可重用的executor
+                executor = get_reusable_executor(max_workers=n_workers)
+                
+                # 修改配置以使用executor.map
+                de_options_copy = de_options.copy()
+                de_options_copy['workers'] = executor.map
+                # 保持updating='deferred'以确保并行评估整个种群
+                
+                result = differential_evolution(
+                    func=self.obj_function,
+                    bounds=bounds,
+                    callback=None,
+                    **de_options_copy
+                )
             else:
-                # 单进程模式，直接使用
                 result = differential_evolution(
                     func=self.obj_function,
                     bounds=bounds,

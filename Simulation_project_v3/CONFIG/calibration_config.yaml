@@ -80,8 +80,8 @@ target_moments:
 optimization:
   method: differential_evolution  # 并行优化算法
   options:
-    maxiter: 100  # 减少迭代次数（因为每代会评估多个点）
-    popsize: 32   # 种群大小：每代评估32个参数组合（并行）
+    maxiter: 100  # 最大迭代代数（每代评估32个点，总计3200次评估）
+    popsize: 32   # 种群大小：每代评估32个参数组合
     workers: 32   # 使用32个进程并行评估
     updating: deferred  # 延迟更新，允许并行
     atol: 1.0e-4

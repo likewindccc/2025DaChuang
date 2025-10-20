@@ -1,0 +1,83 @@
+======================================================================
+紧急修复：闭包序列化问题 - 快速部署命令
+======================================================================
+
+问题：Can't pickle local object 'SMMCalibrator._create_mfg_solver.<locals>.mfg_solver'
+解决：使用dill库支持闭包序列化
+
+======================================================================
+步骤1：在本地上传文件（Windows PowerShell）
+======================================================================
+
+cd "D:\Python\2025DaChuang\Simulation_project_v3"
+
+# 替换{区域}为你的实际区域（如 bjb, cqa 等）
+$REGION = "你的区域"  # 例如: bjb
+
+scp MODULES/CALIBRATION/smm_calibrator.py root@connect.$REGION.seetacloud.com:/root/Simulation_project_v3/MODULES/CALIBRATION/
+scp requirements.txt root@connect.$REGION.seetacloud.com:/root/Simulation_project_v3/
+scp AutoDL_Deploy/install_dill.sh root@connect.$REGION.seetacloud.com:/root/Simulation_project_v3/AutoDL_Deploy/
+
+======================================================================
+步骤2：在AutoDL服务器上安装dill（SSH连接后执行）
+======================================================================
+
+cd /root/Simulation_project_v3
+bash AutoDL_Deploy/install_dill.sh
+
+# 或者直接用pip安装
+pip3 install dill
+
+# 验证安装
+python3 -c "import dill; print(f'dill版本: {dill.__version__}')"
+
+======================================================================
+步骤3：重新运行校准
+======================================================================
+
+# 方法A：直接运行（会占用终端）
+cd /root/Simulation_project_v3
+python3 TESTS/test_calibration.py
+
+# 方法B：后台运行（推荐）
+nohup python3 TESTS/test_calibration.py > calibration.log 2>&1 &
+
+# 方法C：screen会话（最推荐）
+screen -S calibration
+python3 TESTS/test_calibration.py
+# 按 Ctrl+A 然后 D 分离
+
+======================================================================
+监控命令
+======================================================================
+
+# 查看CPU使用率
+htop
+
+# 查看运行日志
+tail -f calibration.log
+
+# 重新连接screen会话
+screen -r calibration
+
+# 查看所有screen会话
+screen -ls
+
+======================================================================
+验证修复成功
+======================================================================
+
+如果看到以下输出，说明修复成功：
+- 使用并行差分进化算法
+- 种群大小: 128
+- 并行进程数: 128
+- 开始评估目标函数...
+
+不应该再出现：
+- Can't pickle local object...
+
+CPU利用率应该达到：
+- 10000%+ (即100个核心以上)
+
+======================================================================
+

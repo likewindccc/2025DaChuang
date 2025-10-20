@@ -24,7 +24,8 @@ pyyaml==6.0.3
 copulas==0.12.3
 
 # 多进程增强（支持闭包序列化，用于DE并行校准）
-pathos==0.3.3
+# multiprocess是multiprocessing的fork，使用dill代替pickle
+multiprocess==0.70.17
 
 # 测试框架（可选）
 pytest==8.4.2

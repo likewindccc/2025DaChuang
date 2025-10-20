@@ -46,7 +46,7 @@ else
     echo "警告: 未找到requirements.txt文件"
 fi
 
-# 7. 测试Numba加速
+# 7. 测试环境
 echo ""
 echo "=========================================="
 echo "测试环境配置"
@@ -54,6 +54,7 @@ echo "=========================================="
 python3 -c "import numpy; print('NumPy版本:', numpy.__version__)"
 python3 -c "import numba; print('Numba版本:', numba.__version__)"
 python3 -c "import pandas; print('Pandas版本:', pandas.__version__)"
+python3 -c "import loky; print('loky版本:', loky.__version__)"
 
 echo ""
 echo "=========================================="

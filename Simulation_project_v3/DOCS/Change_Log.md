@@ -12,6 +12,73 @@
 
 ---
 
+## 修改 27 - 北京时间 2025/10/20 13:09
+
+### Commit: (待提交)
+
+**变更类型**: fix + critical + refactor
+
+**变更内容**: 使用multiprocess替代pathos，遵循scipy官方文档最佳实践
+
+**受影响文件**:
+- 修改: `requirements.txt`
+  - 移除 `pathos==0.3.3`
+  - 新增 `multiprocess==0.70.17`（使用dill序列化的multiprocessing fork）
+- 修改: `MODULES/CALIBRATION/smm_calibrator.py`
+  - 第9行：导入 `multiprocess as mp` 替代 pathos
+  - 第257-276行：重构并行实现，直接使用 `pool.map`（符合scipy文档）
+
+**变更动机**:
+
+用户批评我没有使用context7查询最佳实践，导致连续出错。经过context7查询scipy官方文档后，发现：
+
+**scipy官方文档的正确用法**：
+```python
+from multiprocessing import Pool
+
+with Pool(workers) as pool:
+    result = differential_evolution(
+        func=objective, 
+        bounds=bounds,
+        workers=pool.map,  # 直接传递pool.map
+        updating='deferred'  # 并行必须用deferred模式
+    )
+```
+
+**问题根源**：
+1. 我未使用context7查询，凭经验猜测pathos用法
+2. pathos的map接口与scipy期望不完全兼容
+3. 添加包装函数是workaround，不是最佳实践
+
+**正确方案（基于context7）**：
+- 使用 `multiprocess` 库（multiprocessing的fork，底层用dill代替pickle）
+- 直接传递 `pool.map` 给workers参数（符合scipy API规范）
+- 使用with语句管理Pool生命周期
+
+**核心代码**：
+```python
+import multiprocess as mp
+
+with mp.Pool(n_workers) as pool:
+    de_options['workers'] = pool.map
+    result = differential_evolution(
+        func=self.obj_function,
+        bounds=bounds,
+        **de_options
+    )
+```
+
+**影响范围**：
+- ✅ 遵循scipy官方文档最佳实践
+- ✅ 使用multiprocess（multiprocessing + dill）支持闭包序列化
+- ✅ 代码更简洁，无需包装函数
+- ✅ 保持32进程并行能力
+
+**教训**：
+严格遵守规则八（最佳实现原则），在使用任何库之前先查询context7文档！
+
+---
+
 ## 修改 26 - 北京时间 2025/10/20 10:52
 
 ### Commit: (待提交)

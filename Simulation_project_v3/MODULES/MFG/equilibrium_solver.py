@@ -41,14 +41,22 @@ class EquilibriumSolver:
     4. 保存均衡结果
     """
     
-    def __init__(self, config_path: str, population_adjustment: Optional[Dict] = None):
+    def __init__(
+        self, 
+        config_path: str, 
+        population_adjustment: Optional[Dict] = None,
+        save_results: bool = True
+    ):
         """
         初始化均衡求解器
         
         参数:
             config_path: MFG配置文件路径
             population_adjustment: 人口分布调整参数（可选）
+            save_results: 是否保存结果文件（并行校准时应设为False）
         """
+        self.save_results = save_results
+        
         # 加载配置
         with open(config_path, 'r', encoding='utf-8') as f:
             self.config = yaml.safe_load(f)
@@ -479,6 +487,9 @@ class EquilibriumSolver:
             iterations: 迭代轮数
             converged: 是否收敛
         """
+        if not self.save_results:
+            return
+        
         print("保存均衡结果...")
         
         # 保存个体状态
@@ -521,7 +532,8 @@ class EquilibriumSolver:
 
 def solve_equilibrium(
     config_path: str = "CONFIG/mfg_config.yaml",
-    population_adjustment: Optional[Dict] = None
+    population_adjustment: Optional[Dict] = None,
+    save_results: bool = True
 ) -> Tuple[pd.DataFrame, Dict]:
     """
     求解MFG均衡的便捷函数
@@ -535,6 +547,6 @@ def solve_equilibrium(
     返回:
         (individuals_equilibrium, equilibrium_info): 均衡状态和统计信息
     """
-    solver = EquilibriumSolver(config_path, population_adjustment)
+    solver = EquilibriumSolver(config_path, population_adjustment, save_results)
     return solver.solve()
 
