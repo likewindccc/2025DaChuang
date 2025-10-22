@@ -218,7 +218,8 @@ class EquilibriumSolver:
     def solve(
         self, 
         individuals: Optional[pd.DataFrame] = None,
-        verbose: bool = True
+        verbose: bool = True,
+        callback: Optional[callable] = None
     ) -> Tuple[pd.DataFrame, Dict]:
         """
         求解MFG均衡
@@ -226,6 +227,7 @@ class EquilibriumSolver:
         参数:
             individuals: 初始人口（如为None，则自动初始化）
             verbose: 是否输出详细信息
+            callback: 进度回调函数，签名为callback(iteration, stats)
             
         返回:
             (individuals_equilibrium, equilibrium_info): 均衡状态和统计信息
@@ -440,6 +442,19 @@ class EquilibriumSolver:
             self.history['mean_value_U'].append(mean_V_U)
             self.history['mean_value_E'].append(mean_V_E)
             self.history['mean_effort'].append(mean_a)
+            
+            # 调用进度回调函数（供GUI使用）
+            if callback is not None:
+                callback_stats = {
+                    'unemployment_rate': u_rate,
+                    'theta': theta,
+                    'mean_wage': individuals['current_wage'].mean(),
+                    'mean_T': stats['mean_T'],
+                    'mean_S': stats['mean_S'],
+                    'diff_V': diff_V if outer_iter > 0 else 0,
+                    'diff_u': diff_u if outer_iter > 0 else 0
+                }
+                callback(outer_iter + 1, callback_stats)
             
             # 更新状态
             individuals = individuals_next.copy()

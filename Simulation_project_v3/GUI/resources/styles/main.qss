@@ -1,0 +1,293 @@
+/* EconLab现代化样式表 - v2.0 */
+
+/* 主窗口背景 - 渐变背景 */
+QMainWindow {
+    background: qlineargradient(
+        x1:0, y1:0, x2:0, y2:1,
+        stop:0 #F8F9FA, stop:1 #E9ECEF
+    );
+}
+
+/* 标签页样式 - Material Design风格 */
+QTabWidget::pane {
+    border: none;
+    background-color: white;
+    border-radius: 8px;
+}
+
+QTabBar::tab {
+    background-color: transparent;
+    color: #6C757D;
+    padding: 14px 28px;
+    margin-right: 4px;
+    font-size: 15px;
+    font-weight: 600;
+    border: none;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+QTabBar::tab:selected {
+    background-color: white;
+    color: #1ABC9C;
+    border-bottom: 4px solid #1ABC9C;
+}
+
+QTabBar::tab:hover {
+    background-color: rgba(26, 188, 156, 0.1);
+    color: #16A085;
+}
+
+/* 按钮样式 - 现代化设计，带阴影和动画 */
+QPushButton {
+    background-color: qlineargradient(
+        x1:0, y1:0, x2:0, y2:1,
+        stop:0 #1ABC9C, stop:1 #16A085
+    );
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: "Segoe UI", "Microsoft YaHei UI", sans-serif;
+}
+
+QPushButton:hover {
+    background-color: qlineargradient(
+        x1:0, y1:0, x2:0, y2:1,
+        stop:0 #16A085, stop:1 #138D75
+    );
+}
+
+QPushButton:pressed {
+    background-color: #138D75;
+    padding-top: 13px;
+    padding-bottom: 11px;
+}
+
+QPushButton:disabled {
+    background-color: #E9ECEF;
+    color: #ADB5BD;
+}
+
+/* 进度条样式 - 现代化设计 */
+QProgressBar {
+    border: none;
+    border-radius: 12px;
+    background-color: #E9ECEF;
+    text-align: center;
+    height: 30px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: "Segoe UI", "Microsoft YaHei UI", sans-serif;
+    color: #2C3E50;
+}
+
+QProgressBar::chunk {
+    background-color: qlineargradient(
+        x1:0, y1:0, x2:1, y2:0,
+        stop:0 #1ABC9C, stop:0.5 #48C9B0, stop:1 #16A085
+    );
+    border-radius: 12px;
+}
+
+/* 菜单栏样式 */
+QMenuBar {
+    background-color: #ECF0F1;
+    color: #2C3E50;
+    padding: 3px;
+}
+
+QMenuBar::item {
+    padding: 5px 10px;
+    background-color: transparent;
+}
+
+QMenuBar::item:selected {
+    background-color: #1ABC9C;
+    color: white;
+    border-radius: 3px;
+}
+
+QMenu {
+    background-color: white;
+    border: 1px solid #BDC3C7;
+}
+
+QMenu::item {
+    padding: 5px 30px;
+}
+
+QMenu::item:selected {
+    background-color: #1ABC9C;
+    color: white;
+}
+
+/* 工具栏样式 */
+QToolBar {
+    background-color: #ECF0F1;
+    border-bottom: 1px solid #BDC3C7;
+    spacing: 5px;
+    padding: 5px;
+}
+
+QToolBar::separator {
+    background-color: #BDC3C7;
+    width: 1px;
+    margin: 5px;
+}
+
+/* 状态栏样式 */
+QStatusBar {
+    background-color: #ECF0F1;
+    color: #7F8C8D;
+    font-size: 11px;
+}
+
+/* 分组框样式 - 卡片设计 */
+QGroupBox {
+    font-size: 16px;
+    font-weight: 600;
+    font-family: "Segoe UI", "Microsoft YaHei UI", sans-serif;
+    border: none;
+    border-radius: 12px;
+    margin-top: 20px;
+    padding: 20px;
+    background-color: white;
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    left: 15px;
+    padding: 5px 10px;
+    color: #2C3E50;
+    background-color: transparent;
+}
+
+/* 输入框样式 - 现代化设计 */
+QLineEdit {
+    padding: 10px 14px;
+    border: 2px solid #E9ECEF;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: "Segoe UI", "Microsoft YaHei UI", sans-serif;
+    background-color: #F8F9FA;
+}
+
+QLineEdit:focus {
+    border: 2px solid #1ABC9C;
+    background-color: white;
+}
+
+/* 数值输入框样式 */
+QSpinBox, QDoubleSpinBox {
+    padding: 10px 12px;
+    border: 2px solid #E9ECEF;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: "Segoe UI", "Microsoft YaHei UI", sans-serif;
+    background-color: #F8F9FA;
+}
+
+QSpinBox:focus, QDoubleSpinBox:focus {
+    border: 2px solid #1ABC9C;
+    background-color: white;
+}
+
+QSpinBox::up-button, QDoubleSpinBox::up-button {
+    border-radius: 4px;
+}
+
+QSpinBox::down-button, QDoubleSpinBox::down-button {
+    border-radius: 4px;
+}
+
+/* 滑块样式 - 现代化设计 */
+QSlider::groove:horizontal {
+    height: 8px;
+    background: #E9ECEF;
+    border-radius: 4px;
+}
+
+QSlider::sub-page:horizontal {
+    background: qlineargradient(
+        x1:0, y1:0, x2:1, y2:0,
+        stop:0 #1ABC9C, stop:1 #48C9B0
+    );
+    border-radius: 4px;
+}
+
+QSlider::handle:horizontal {
+    background: white;
+    border: 3px solid #1ABC9C;
+    width: 20px;
+    height: 20px;
+    margin: -7px 0;
+    border-radius: 10px;
+}
+
+QSlider::handle:horizontal:hover {
+    background: #1ABC9C;
+    border: 3px solid #16A085;
+    width: 22px;
+    height: 22px;
+    margin: -8px 0;
+}
+
+QSlider::handle:horizontal:pressed {
+    background: #16A085;
+}
+
+/* 文本编辑器样式（日志）*/
+QTextEdit {
+    background-color: #2C3E50;
+    color: #ECF0F1;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 11px;
+    border: 1px solid #34495E;
+    border-radius: 4px;
+}
+
+/* 标签样式 - 优化字体 */
+QLabel {
+    color: #2C3E50;
+    font-family: "Segoe UI", "Microsoft YaHei UI", sans-serif;
+    font-size: 13px;
+}
+
+/* 消息框样式 */
+QMessageBox {
+    background-color: white;
+    font-family: "Segoe UI", "Microsoft YaHei UI", sans-serif;
+}
+
+QMessageBox QPushButton {
+    min-width: 90px;
+    padding: 10px 20px;
+}
+
+/* 菜单栏样式优化 */
+QMenuBar {
+    font-size: 13px;
+    font-family: "Segoe UI", "Microsoft YaHei UI", sans-serif;
+}
+
+QMenu {
+    font-size: 13px;
+    font-family: "Segoe UI", "Microsoft YaHei UI", sans-serif;
+}
+
+/* 工具栏样式优化 */
+QToolBar QToolButton {
+    font-size: 13px;
+    font-family: "Segoe UI", "Microsoft YaHei UI", sans-serif;
+    padding: 8px 12px;
+    border-radius: 4px;
+}
+
+QToolBar QToolButton:hover {
+    background-color: rgba(26, 188, 156, 0.1);
+}
+
