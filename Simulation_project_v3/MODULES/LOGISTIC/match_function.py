@@ -259,6 +259,44 @@ class MatchFunction:
         model_file = output_dir / "match_function_model.pkl"
         with open(model_file, 'wb') as f:
             pickle.dump(self.model, f)
+        
+        # 保存完整训练数据（用于可视化）
+        training_data_file = output_dir / "training_data_full.csv"
+        self.regression_data.to_csv(training_data_file, index=False)
+        
+        # 保存每个theta的统计摘要（用于可视化匹配率变化）
+        theta_summary = self.regression_data.groupby('theta').agg({
+            'matched': ['mean', 'std', 'count'],
+            'T': 'mean',
+            'S': 'mean',
+            'D': 'mean',
+            'W': 'mean',
+            'sigma': 'mean'
+        }).reset_index()
+        theta_summary.columns = ['_'.join(col).strip('_') for col in theta_summary.columns.values]
+        theta_summary_file = output_dir / "training_summary_by_theta.csv"
+        theta_summary.to_csv(theta_summary_file, index=False)
+        
+        # 保存回归诊断信息（用于可视化拟合质量）
+        X_for_predict = self.regression_data[['T', 'S', 'D', 'W', 'sigma', 'theta']]
+        X_for_predict = sm.add_constant(X_for_predict.replace([np.inf, -np.inf], np.nan).dropna())
+        
+        diagnostics = {
+            'predictions': self.model.predict(X_for_predict).values,
+            'residuals': self.model.resid_pearson,
+            'pseudo_r2': self.model.prsquared,
+            'aic': self.model.aic,
+            'bic': self.model.bic,
+            'log_likelihood': self.model.llf,
+            'n_observations': self.model.nobs
+        }
+        diagnostics_file = output_dir / "regression_diagnostics.pkl"
+        with open(diagnostics_file, 'wb') as f:
+            pickle.dump(diagnostics, f)
+        
+        print(f"\n   训练数据已保存: {training_data_file}")
+        print(f"   theta摘要已保存: {theta_summary_file}")
+        print(f"   回归诊断已保存: {diagnostics_file}")
     
     def predict(self, X: pd.DataFrame) -> np.ndarray:
         """

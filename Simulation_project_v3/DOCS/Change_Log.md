@@ -12,6 +12,97 @@
 
 ---
 
+## 修改 28 - 北京时间 2025/10/29 18:51
+
+### Commit: (待提交)
+
+**变更类型**: feat + docs
+
+**变更内容**: 部署项目可视化网站到GitHub Pages
+
+**受影响文件**:
+- 新增: `docs/` - GitHub Pages网站文件夹
+  - 复制自 `Simulation_project_v3/WEBSITE/` 的所有内容
+  - 包含7个HTML页面：index.html, about.html, mfg.html, population.html, logistic.html, calibration.html, simulation.html
+  - 包含README.md说明文档
+
+**变更动机**:
+
+为项目创建一个可公开访问的在线展示网站，用于：
+1. 学术展示和成果汇报
+2. 中期报告演示
+3. 与导师、评委分享研究进展
+4. 项目文档的可视化呈现
+
+**技术实现**:
+
+1. **GitHub Pages配置**:
+   - 仓库：https://github.com/likewindccc/2025DaChuang
+   - 分支：main
+   - 文件夹：/docs
+   - 访问地址：https://likewindccc.github.io/2025DaChuang/
+
+2. **网站结构**:
+   ```
+   docs/
+   ├── index.html          # 首页（项目概览、模块导航）
+   ├── about.html          # 关于项目（背景、目标、团队）
+   ├── population.html     # POPULATION模块展示
+   ├── logistic.html       # LOGISTIC模块展示
+   ├── mfg.html           # MFG模块展示
+   ├── calibration.html    # CALIBRATION模块展示
+   ├── simulation.html     # SIMULATION模块展示
+   └── README.md          # 网站说明文档
+   ```
+
+3. **网站特点**:
+   - ✅ 响应式设计（自适应PC/平板/手机）
+   - ✅ 现代化UI（紫色渐变主题，卡片式布局）
+   - ✅ 平滑滚动和动画效果
+   - ✅ 模块化导航（5个核心模块独立页面）
+   - ✅ 完全静态（纯HTML/CSS/JavaScript）
+   - ✅ 支持交互式图表嵌入（Plotly iframe）
+
+**影响范围**:
+
+1. **项目展示**:
+   - 提供24小时在线的项目可视化展示平台
+   - 任何人都可通过网址访问项目介绍和模块说明
+   - 便于分享给导师、评委、合作者
+
+2. **文档完善**:
+   - 将项目文档以网页形式呈现
+   - 比传统PDF/Word更易于浏览和分享
+   - 支持交互式图表和可视化内容
+
+3. **成果汇报**:
+   - 可用于中期报告展示
+   - 可作为最终答辩的辅助材料
+   - 提升项目的专业性和完整度
+
+**部署验证**:
+
+访问 https://likewindccc.github.io/2025DaChuang/ 可以看到：
+- ✅ 首页显示项目标题和5个模块卡片
+- ✅ 导航栏可切换到不同页面
+- ✅ 所有链接正常工作
+- ✅ 响应式布局在不同设备正常显示
+
+**下一步**:
+
+1. 可以在各模块页面嵌入Plotly交互式图表
+2. 可以添加实际的MFG仿真结果可视化
+3. 可以上传实际运行数据的图表展示
+4. 可以添加项目进度时间线
+
+**备注**:
+
+- GitHub Pages是免费的静态网站托管服务
+- 网站更新：只需修改docs/文件夹内容并push即可
+- 访问无限制：任何人都可以访问，无需GitHub账号
+
+---
+
 ## 修改 27 - 北京时间 2025/10/20 13:09
 
 ### Commit: (待提交)

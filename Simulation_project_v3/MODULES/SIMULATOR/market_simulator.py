@@ -229,6 +229,35 @@ class MarketSimulator:
         import pickle
         with open(scenario_dir / 'equilibrium_summary.pkl', 'wb') as f:
             pickle.dump(summary, f)
+        
+        # 保存状态变量详细分布统计（用于分布对比可视化）
+        state_vars = ['T', 'S', 'D', 'W', 'current_wage']
+        distribution_stats = {}
+        for var in state_vars:
+            if var in individuals.columns:
+                distribution_stats[var] = {
+                    'mean': individuals[var].mean(),
+                    'std': individuals[var].std(),
+                    'min': individuals[var].min(),
+                    'q25': individuals[var].quantile(0.25),
+                    'median': individuals[var].median(),
+                    'q75': individuals[var].quantile(0.75),
+                    'max': individuals[var].max()
+                }
+        
+        dist_stats_df = pd.DataFrame(distribution_stats).T
+        dist_stats_df.to_csv(scenario_dir / 'distribution_statistics.csv')
+        
+        # 保存分就业/失业的对比统计（用于异质性分析）
+        if 'employment_status' in individuals.columns:
+            status_comparison = individuals.groupby('employment_status')[state_vars].describe()
+            status_comparison.to_csv(scenario_dir / 'status_comparison.csv')
+        
+        # 保存时间序列数据（完整的迭代历史，用于时序可视化）
+        if 'history' in eq_info:
+            time_series = pd.DataFrame(eq_info['history'])
+            time_series['scenario_name'] = scenario_name
+            time_series.to_csv(scenario_dir / 'time_series_full.csv', index=False)
     
     def run_batch(self) -> pd.DataFrame:
         """
@@ -258,6 +287,46 @@ class MarketSimulator:
             comparison_path = self.output_dir / 'scenario_comparison.csv'
             results_df.to_csv(comparison_path, index=False)
             print(f"\n场景对比汇总表已保存至: {comparison_path}")
+        
+        # 合并所有场景的时间序列数据（用于多场景时序对比可视化）
+        all_time_series = []
+        for scenario_name in self.config['scenarios'].keys():
+            scenario_dir = self.output_dir / f'scenario_{scenario_name}'
+            ts_file = scenario_dir / 'time_series_full.csv'
+            if ts_file.exists():
+                ts_data = pd.read_csv(ts_file)
+                all_time_series.append(ts_data)
+        
+        if all_time_series:
+            combined_ts = pd.concat(all_time_series, ignore_index=True)
+            combined_ts_path = self.output_dir / 'all_scenarios_time_series.csv'
+            combined_ts.to_csv(combined_ts_path, index=False)
+            print(f"所有场景时间序列数据已合并保存至: {combined_ts_path}")
+        
+        # 计算政策效果相对基准的变化（用于政策效果可视化）
+        if 'baseline' in self.config['scenarios']:
+            baseline_result = results_df[results_df['scenario_name'] == 'baseline'].iloc[0]
+            policy_effects = pd.DataFrame()
+            
+            for idx, row in results_df.iterrows():
+                if row['scenario_name'] != 'baseline':
+                    effect = {
+                        'scenario_name': row['scenario_name'],
+                        'scenario_display_name': row['scenario_display_name'],
+                        'delta_unemployment_rate': (row['unemployment_rate'] - baseline_result['unemployment_rate']) * 100,
+                        'delta_mean_wage': row['mean_wage_employed'] - baseline_result['mean_wage_employed'],
+                        'delta_mean_T': row['mean_T'] - baseline_result['mean_T'],
+                        'delta_mean_S': row['mean_S'] - baseline_result['mean_S'],
+                        'delta_mean_D': row['mean_D'] - baseline_result['mean_D'],
+                        'pct_change_unemployment': ((row['unemployment_rate'] - baseline_result['unemployment_rate']) / baseline_result['unemployment_rate']) * 100,
+                        'pct_change_wage': ((row['mean_wage_employed'] - baseline_result['mean_wage_employed']) / baseline_result['mean_wage_employed']) * 100
+                    }
+                    policy_effects = pd.concat([policy_effects, pd.DataFrame([effect])], ignore_index=True)
+            
+            if not policy_effects.empty:
+                effects_path = self.output_dir / 'policy_effects_vs_baseline.csv'
+                policy_effects.to_csv(effects_path, index=False)
+                print(f"政策效果（相对基准）已保存至: {effects_path}")
         
         # 恢复原始配置（确保最终状态正确）
         self._restore_mfg_config()

@@ -274,64 +274,45 @@
         <div class="content-section">
             <h2 class="section-title">
                 <i class="fas fa-chart-bar"></i>
-                匹配函数系数
+                匹配预测分析
             </h2>
-            <div class="chart-placeholder">
-                <div class="placeholder-icon">
-                    <i class="fas fa-chart-column"></i>
-                </div>
-                <div class="placeholder-title">匹配函数Logistic回归系数图</div>
-                <div class="placeholder-text">
-                    展示各特征变量对匹配概率的影响<br>
-                    β系数的大小和显著性水平
-                </div>
+            <div>
+                <img src="charts/logistic/static/prediction_analysis.png" 
+                     alt="匹配函数预测分析" 
+                     style="width: 100%; max-width: 1200px; border-radius: 15px; box-shadow: 0 10px 30px rgba(59, 130, 246, 0.2);">
+                <p style="text-align: center; color: var(--text-secondary); margin-top: 15px; font-size: 0.95rem;">
+                    图1：匹配函数预测概率分布与实际匹配结果对比
+                </p>
             </div>
         </div>
         
         <div class="content-section">
             <h2 class="section-title">
                 <i class="fas fa-chart-line"></i>
-                分离率函数系数
+                偏好分数分布
             </h2>
-            <div class="chart-placeholder">
-                <div class="placeholder-icon">
-                    <i class="fas fa-chart-bar"></i>
-                </div>
-                <div class="placeholder-title">分离率Logistic回归系数图</div>
-                <div class="placeholder-text">
-                    展示各特征变量对分离概率的影响<br>
-                    γ系数的大小和显著性水平
-                </div>
+            <div>
+                <img src="charts/logistic/static/preference_distribution.png" 
+                     alt="偏好分数分布" 
+                     style="width: 100%; max-width: 1000px; border-radius: 15px; box-shadow: 0 10px 30px rgba(59, 130, 246, 0.2);">
+                <p style="text-align: center; color: var(--text-secondary); margin-top: 15px; font-size: 0.95rem;">
+                    图2：双边市场偏好分数分布（劳动者对企业、企业对劳动者）
+                </p>
             </div>
         </div>
         
         <div class="content-section">
             <h2 class="section-title">
                 <i class="fas fa-chart-area"></i>
-                模型性能评估
+                虚拟市场分布
             </h2>
-            <div class="chart-grid">
-                <div class="chart-placeholder">
-                    <div class="placeholder-icon">
-                        <i class="fas fa-chart-line"></i>
-                    </div>
-                    <div class="placeholder-title">ROC曲线</div>
-                    <div class="placeholder-text">
-                        受试者工作特征曲线<br>
-                        评估分类器性能，AUC值
-                    </div>
-                </div>
-                
-                <div class="chart-placeholder">
-                    <div class="placeholder-icon">
-                        <i class="fas fa-th"></i>
-                    </div>
-                    <div class="placeholder-title">混淆矩阵</div>
-                    <div class="placeholder-text">
-                        真正例、假正例、真负例、假负例<br>
-                        精确率、召回率、F1分数
-                    </div>
-                </div>
+            <div>
+                <img src="charts/logistic/static/distribution_visualization.png" 
+                     alt="虚拟市场分布" 
+                     style="width: 100%; max-width: 1000px; border-radius: 15px; box-shadow: 0 10px 30px rgba(59, 130, 246, 0.2);">
+                <p style="text-align: center; color: var(--text-secondary); margin-top: 15px; font-size: 0.95rem;">
+                    图3：虚拟劳动力市场的状态变量分布特征
+                </p>
             </div>
         </div>
         

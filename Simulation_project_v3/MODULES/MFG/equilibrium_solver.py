@@ -542,6 +542,35 @@ class EquilibriumSolver:
         with open(summary_path, 'wb') as f:
             pickle.dump(summary, f)
         print(f"  汇总信息已保存至: {summary_path}")
+        
+        # 保存价值函数完整分布（用于可视化价值函数分布）
+        value_distribution = pd.DataFrame({
+            'individual_id': individuals.index,
+            'V_U': V_U,
+            'V_E': V_E,
+            'delta_V': V_E - V_U,
+            'a_optimal': a_optimal,
+            'employment_status': individuals['employment_status'],
+            'T': individuals['T'],
+            'S': individuals['S'],
+            'D': individuals['D'],
+            'W': individuals['W']
+        })
+        value_dist_path = self.output_dir / "value_distribution_full.csv"
+        value_distribution.to_csv(value_dist_path, index=False, encoding='utf-8-sig')
+        print(f"  价值函数完整分布已保存至: {value_dist_path}")
+        
+        # 保存分就业/失业状态的统计摘要（用于对比可视化）
+        status_summary = individuals.groupby('employment_status').agg({
+            'T': ['mean', 'std', 'min', 'max'],
+            'S': ['mean', 'std', 'min', 'max'],
+            'D': ['mean', 'std', 'min', 'max'],
+            'W': ['mean', 'std', 'min', 'max'],
+            'current_wage': ['mean', 'std', 'count']
+        }).round(2)
+        status_summary_path = self.output_dir / "status_comparison_summary.csv"
+        status_summary.to_csv(status_summary_path, encoding='utf-8-sig')
+        print(f"  就业/失业对比统计已保存至: {status_summary_path}")
         print()
 
 
