@@ -350,17 +350,15 @@
         <div class="content-section">
             <h2 class="section-title">
                 <i class="fas fa-chart-line"></i>
-                价值函数演化
+                MFG收敛过程
             </h2>
-            <div class="chart-placeholder">
-                <div class="placeholder-icon">
-                    <i class="fas fa-chart-line"></i>
-                </div>
-                <div class="placeholder-title">V<sub>U</sub>和V<sub>E</sub>随迭代次数的变化</div>
-                <div class="placeholder-text">
-                    展示失业价值和就业价值的收敛过程<br>
-                    横轴：迭代次数，纵轴：价值函数值
-                </div>
+            <div>
+                <img src="charts/mfg/static/convergence_curves.png" 
+                     alt="MFG收敛曲线" 
+                     style="width: 100%; max-width: 1200px; border-radius: 15px; box-shadow: 0 10px 30px rgba(139, 92, 246, 0.2);">
+                <p style="text-align: center; color: var(--text-secondary); margin-top: 15px; font-size: 0.95rem;">
+                    图1：MFG均衡求解的收敛过程（价值函数、努力水平、失业率三重收敛）
+                </p>
             </div>
         </div>
         
@@ -369,92 +367,95 @@
                 <i class="fas fa-users"></i>
                 最优策略分布
             </h2>
-            <div class="chart-grid">
-                <div class="chart-placeholder">
-                    <div class="placeholder-icon">
-                        <i class="fas fa-chart-histogram"></i>
-                    </div>
-                    <div class="placeholder-title">最优努力水平a*分布</div>
-                    <div class="placeholder-text">
-                        不同个体的最优努力选择<br>
-                        横轴：努力水平，纵轴：频数
-                    </div>
-                </div>
-                
-                <div class="chart-placeholder">
-                    <div class="placeholder-icon">
-                        <i class="fas fa-chart-scatter"></i>
-                    </div>
-                    <div class="placeholder-title">a*与状态变量的关系</div>
-                    <div class="placeholder-text">
-                        分析T、S、D、W如何影响最优策略<br>
-                        散点图 + 趋势线
-                    </div>
-                </div>
+            <div>
+                <img src="charts/mfg/static/effort_distribution.png" 
+                     alt="最优努力水平分布" 
+                     style="width: 100%; max-width: 1000px; border-radius: 15px; box-shadow: 0 10px 30px rgba(139, 92, 246, 0.2);">
+                <p style="text-align: center; color: var(--text-secondary); margin-top: 15px; font-size: 0.95rem;">
+                    图2：10000个失业个体的最优努力水平a*分布
+                </p>
             </div>
         </div>
         
         <div class="content-section">
             <h2 class="section-title">
-                <i class="fas fa-chart-area"></i>
-                人口分布演化
+                <i class="fas fa-cube"></i>
+                3D价值函数可视化
             </h2>
-            <div class="chart-placeholder">
-                <div class="placeholder-icon">
-                    <i class="fas fa-film"></i>
-                </div>
-                <div class="placeholder-title">T、S、D、W分布的动态演化动画</div>
-                <div class="placeholder-text">
-                    展示从初始分布到均衡分布的演化过程<br>
-                    支持播放/暂停，拖动时间轴
-                </div>
+            
+            <!-- 失业价值函数 -->
+            <div style="margin-bottom: 40px;">
+                <h3 style="color: var(--accent-purple); margin-bottom: 20px; font-size: 1.3rem;">
+                    <i class="fas fa-cube"></i> 失业价值函数 V<sub>U</sub>
+                </h3>
+                <iframe src="charts/mfg/interactive/value_function_V_U_3D.html" 
+                        width="100%" 
+                        height="700px" 
+                        frameborder="0"
+                        style="border-radius: 15px; box-shadow: 0 10px 30px rgba(139, 92, 246, 0.2);">
+                </iframe>
+                <p style="text-align: center; color: var(--text-secondary); margin-top: 15px; font-size: 0.95rem;">
+                    图3：3D交互式失业价值函数（可旋转、缩放、悬停查看数值）
+                </p>
+            </div>
+            
+            <!-- 就业价值函数 -->
+            <div style="margin-bottom: 40px;">
+                <h3 style="color: var(--accent-purple); margin-bottom: 20px; font-size: 1.3rem;">
+                    <i class="fas fa-cube"></i> 就业价值函数 V<sub>E</sub>
+                </h3>
+                <iframe src="charts/mfg/interactive/value_function_V_E_3D.html" 
+                        width="100%" 
+                        height="700px" 
+                        frameborder="0"
+                        style="border-radius: 15px; box-shadow: 0 10px 30px rgba(139, 92, 246, 0.2);">
+                </iframe>
+                <p style="text-align: center; color: var(--text-secondary); margin-top: 15px; font-size: 0.95rem;">
+                    图4：3D交互式就业价值函数（可旋转、缩放、悬停查看数值）
+                </p>
             </div>
         </div>
         
         <div class="content-section">
             <h2 class="section-title">
-                <i class="fas fa-crosshairs"></i>
-                收敛性诊断
+                <i class="fas fa-fire"></i>
+                价值函数热力图
             </h2>
             <div class="chart-grid">
-                <div class="chart-placeholder">
-                    <div class="placeholder-icon">
-                        <i class="fas fa-chart-line"></i>
-                    </div>
-                    <div class="placeholder-title">价值函数变化率</div>
-                    <div class="placeholder-text">
-                        |ΔV|/|V| 随迭代次数的变化<br>
-                        对比收敛阈值ε<sub>V</sub>=0.01
-                    </div>
+                <div>
+                    <img src="charts/mfg/static/value_function_V_U.png" 
+                         alt="失业价值函数热力图" 
+                         style="width: 100%; border-radius: 15px; box-shadow: 0 10px 30px rgba(139, 92, 246, 0.2);">
+                    <p style="text-align: center; color: var(--text-secondary); margin-top: 10px; font-size: 0.9rem;">
+                        V<sub>U</sub> 热力图
+                    </p>
                 </div>
-                
-                <div class="chart-placeholder">
-                    <div class="placeholder-icon">
-                        <i class="fas fa-chart-bar"></i>
-                    </div>
-                    <div class="placeholder-title">失业率演化</div>
-                    <div class="placeholder-text">
-                        u<sub>t</sub>随迭代次数的变化<br>
-                        对比收敛阈值ε<sub>u</sub>=0.001
-                    </div>
+                <div>
+                    <img src="charts/mfg/static/value_function_V_E.png" 
+                         alt="就业价值函数热力图" 
+                         style="width: 100%; border-radius: 15px; box-shadow: 0 10px 30px rgba(139, 92, 246, 0.2);">
+                    <p style="text-align: center; color: var(--text-secondary); margin-top: 10px; font-size: 0.9rem;">
+                        V<sub>E</sub> 热力图
+                    </p>
                 </div>
             </div>
+            <p style="text-align: center; color: var(--text-secondary); margin-top: 15px; font-size: 0.95rem;">
+                图5-6：价值函数在T-S空间的分布（固定D和W的中位数）
+            </p>
         </div>
         
         <div class="content-section">
             <h2 class="section-title">
                 <i class="fas fa-balance-scale"></i>
-                市场匹配度分析
+                市场分布对比
             </h2>
-            <div class="chart-placeholder">
-                <div class="placeholder-icon">
-                    <i class="fas fa-chart-radar"></i>
-                </div>
-                <div class="placeholder-title">劳动者 vs 企业特征对比雷达图</div>
-                <div class="placeholder-text">
-                    均衡状态下的供需匹配度<br>
-                    评估结构性失业风险
-                </div>
+            <div>
+                <img src="charts/mfg/static/market_distribution_comparison.png" 
+                     alt="市场分布对比" 
+                     style="width: 100%; max-width: 1200px; border-radius: 15px; box-shadow: 0 10px 30px rgba(139, 92, 246, 0.2);">
+                <p style="text-align: center; color: var(--text-secondary); margin-top: 15px; font-size: 0.95rem;">
+                    图7：均衡状态下劳动者与企业需求的分布对比（供需匹配度分析）
+                </p>
             </div>
         </div>
     </div>
