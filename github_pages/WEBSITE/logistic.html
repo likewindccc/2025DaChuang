@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logistic 匹配函数估计 - 农村女性就业市场研究</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;600;700;900&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --bg-primary: #f8f9ff;
+            --accent-purple: #8b5cf6;
+            --accent-blue: #3b82f6;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f8f9ff 0%, #fff5f7 100%);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            padding: 100px 80px 80px 200px;
+        }
+        
+        .back-home {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            z-index: 1000;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 25px;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(139, 92, 246, 0.2);
+            border-radius: 50px;
+            color: var(--accent-purple);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .back-home:hover {
+            background: var(--accent-purple);
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .page-header {
+            margin-bottom: 60px;
+            animation: fadeInUp 1s ease;
+        }
+        
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .module-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1));
+            border: 2px solid rgba(139, 92, 246, 0.2);
+            border-radius: 50px;
+            font-weight: 600;
+            color: var(--accent-purple);
+            margin-bottom: 20px;
+        }
+        
+        .page-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 4.5rem;
+            font-weight: 900;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, var(--text-primary), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .page-description {
+            font-size: 1.3rem;
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+        
+        .content-section {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(139, 92, 246, 0.15);
+            border-radius: 32px;
+            padding: 50px;
+            margin-bottom: 40px;
+            transition: all 0.5s ease;
+        }
+        
+        .content-section:hover {
+            background: rgba(255, 255, 255, 0.8);
+            border-color: rgba(139, 92, 246, 0.3);
+            transform: translateY(-5px);
+            box-shadow: 0 20px 50px rgba(139, 92, 246, 0.15);
+        }
+        
+        .section-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: var(--accent-purple);
+        }
+        
+        .section-title i {
+            font-size: 2.5rem;
+        }
+        
+        .formula-box {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(59, 130, 246, 0.05));
+            border: 2px solid rgba(139, 92, 246, 0.2);
+            border-radius: 16px;
+            padding: 30px;
+            margin: 30px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 1.2rem;
+            text-align: center;
+            color: var(--text-primary);
+        }
+        
+        .chart-placeholder {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(59, 130, 246, 0.05));
+            border: 2px dashed rgba(139, 92, 246, 0.3);
+            border-radius: 24px;
+            padding: 80px 40px;
+            text-align: center;
+            margin: 30px 0;
+            transition: all 0.3s ease;
+        }
+        
+        .chart-placeholder:hover {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1));
+            border-color: var(--accent-purple);
+        }
+        
+        .placeholder-icon {
+            font-size: 4rem;
+            color: var(--accent-purple);
+            margin-bottom: 20px;
+            opacity: 0.6;
+        }
+        
+        .placeholder-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 15px;
+        }
+        
+        .placeholder-text {
+            font-size: 1rem;
+            color: var(--text-secondary);
+        }
+        
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            margin: 30px 0;
+        }
+        
+        @media (max-width: 1024px) {
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 80px 20px 60px 20px;
+            }
+            
+            .page-title {
+                font-size: 2.5rem;
+            }
+            
+            .content-section {
+                padding: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-home">
+        <i class="fas fa-home"></i>
+        <span>返回首页</span>
+    </a>
+    
+    <div class="container">
+        <div class="page-header">
+            <div class="module-badge">
+                <i class="fas fa-project-diagram"></i>
+                <span>Logistic 模块</span>
+            </div>
+            <h1 class="page-title">匹配函数估计</h1>
+            <p class="page-description">
+                采用逻辑回归估计劳动力市场的匹配函数和分离率函数，
+                量化个体特征（技能、数字素养等）对就业匹配概率的影响，
+                为MFG模型提供关键参数。
+            </p>
+        </div>
+        
+        <div class="content-section">
+            <h2 class="section-title">
+                <i class="fas fa-info-circle"></i>
+                模块说明
+            </h2>
+            <div style="font-size: 1.1rem; line-height: 2; color: var(--text-secondary);">
+                <p style="margin-bottom: 20px;">
+                    <strong style="color: var(--accent-purple);">匹配函数（λ）：</strong>
+                    刻画劳动者找到工作的概率，取决于个体特征（T、S、D、W）、
+                    企业需求（σ）和劳动力市场紧张度（θ）。
+                </p>
+                <p style="margin-bottom: 20px;">
+                    <strong style="color: var(--accent-purple);">分离率函数（μ）：</strong>
+                    刻画就业者失去工作的概率，主要由个体特征与岗位匹配度决定。
+                </p>
+                <p>
+                    <strong style="color: var(--accent-purple);">技术方法：</strong>
+                    基于历史就业数据，使用Logistic回归估计两个函数的系数，
+                    通过ROC曲线、混淆矩阵等指标评估模型性能。
+                </p>
+            </div>
+        </div>
+        
+        <div class="content-section">
+            <h2 class="section-title">
+                <i class="fas fa-function"></i>
+                模型公式
+            </h2>
+            <div class="formula-box">
+                <div style="margin-bottom: 30px;">
+                    <strong>匹配函数：</strong><br>
+                    λ(x', σ, θ) = 1 / (1 + exp(-(β₀ + β₁·T + β₂·S + β₃·D + β₄·W + β₅·θ)))
+                </div>
+                <div>
+                    <strong>分离率函数：</strong><br>
+                    μ(x, σ) = 1 / (1 + exp(-(γ₀ + γ₁·S + γ₂·D + γ₃·|W-σ|)))
+                </div>
+            </div>
+        </div>
+        
+        <div class="content-section">
+            <h2 class="section-title">
+                <i class="fas fa-chart-bar"></i>
+                匹配函数系数
+            </h2>
+            <div class="chart-placeholder">
+                <div class="placeholder-icon">
+                    <i class="fas fa-chart-column"></i>
+                </div>
+                <div class="placeholder-title">匹配函数Logistic回归系数图</div>
+                <div class="placeholder-text">
+                    展示各特征变量对匹配概率的影响<br>
+                    β系数的大小和显著性水平
+                </div>
+            </div>
+        </div>
+        
+        <div class="content-section">
+            <h2 class="section-title">
+                <i class="fas fa-chart-line"></i>
+                分离率函数系数
+            </h2>
+            <div class="chart-placeholder">
+                <div class="placeholder-icon">
+                    <i class="fas fa-chart-bar"></i>
+                </div>
+                <div class="placeholder-title">分离率Logistic回归系数图</div>
+                <div class="placeholder-text">
+                    展示各特征变量对分离概率的影响<br>
+                    γ系数的大小和显著性水平
+                </div>
+            </div>
+        </div>
+        
+        <div class="content-section">
+            <h2 class="section-title">
+                <i class="fas fa-chart-area"></i>
+                模型性能评估
+            </h2>
+            <div class="chart-grid">
+                <div class="chart-placeholder">
+                    <div class="placeholder-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="placeholder-title">ROC曲线</div>
+                    <div class="placeholder-text">
+                        受试者工作特征曲线<br>
+                        评估分类器性能，AUC值
+                    </div>
+                </div>
+                
+                <div class="chart-placeholder">
+                    <div class="placeholder-icon">
+                        <i class="fas fa-th"></i>
+                    </div>
+                    <div class="placeholder-title">混淆矩阵</div>
+                    <div class="placeholder-text">
+                        真正例、假正例、真负例、假负例<br>
+                        精确率、召回率、F1分数
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="content-section">
+            <h2 class="section-title">
+                <i class="fas fa-chart-scatter"></i>
+                预测概率分布
+            </h2>
+            <div class="chart-placeholder">
+                <div class="placeholder-icon">
+                    <i class="fas fa-chart-histogram"></i>
+                </div>
+                <div class="placeholder-title">匹配概率预测分布</div>
+                <div class="placeholder-text">
+                    展示模型预测的匹配概率分布<br>
+                    对比实际就业结果的一致性
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.querySelectorAll('.content-section').forEach((section, index) => {
+            section.style.animation = 'fadeInUp 1s ease';
+            section.style.animationDelay = `${index * 0.1}s`;
+            section.style.animationFillMode = 'backwards';
+        });
+    </script>
+</body>
+</html>
+

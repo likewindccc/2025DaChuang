@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calibration 参数校准 - 农村女性就业市场研究</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;600;700;900&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --bg-primary: #f8f9ff;
+            --accent-purple: #8b5cf6;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f8f9ff 0%, #fff5f7 100%);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            padding: 100px 80px 80px 200px;
+        }
+        
+        .back-home {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            z-index: 1000;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 25px;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(139, 92, 246, 0.2);
+            border-radius: 50px;
+            color: var(--accent-purple);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .back-home:hover {
+            background: var(--accent-purple);
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .page-header {
+            margin-bottom: 60px;
+            animation: fadeInUp 1s ease;
+        }
+        
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .module-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1));
+            border: 2px solid rgba(139, 92, 246, 0.2);
+            border-radius: 50px;
+            font-weight: 600;
+            color: var(--accent-purple);
+            margin-bottom: 20px;
+        }
+        
+        .page-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 4.5rem;
+            font-weight: 900;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, var(--text-primary), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .page-description {
+            font-size: 1.3rem;
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+        
+        .content-section {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(139, 92, 246, 0.15);
+            border-radius: 32px;
+            padding: 50px;
+            margin-bottom: 40px;
+            transition: all 0.5s ease;
+        }
+        
+        .content-section:hover {
+            background: rgba(255, 255, 255, 0.8);
+            border-color: rgba(139, 92, 246, 0.3);
+            transform: translateY(-5px);
+            box-shadow: 0 20px 50px rgba(139, 92, 246, 0.15);
+        }
+        
+        .section-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: var(--accent-purple);
+        }
+        
+        .section-title i {
+            font-size: 2.5rem;
+        }
+        
+        .formula-box {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(59, 130, 246, 0.05));
+            border: 2px solid rgba(139, 92, 246, 0.2);
+            border-radius: 16px;
+            padding: 30px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1rem;
+            color: var(--text-primary);
+            text-align: center;
+        }
+        
+        .chart-placeholder {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(59, 130, 246, 0.05));
+            border: 2px dashed rgba(139, 92, 246, 0.3);
+            border-radius: 24px;
+            padding: 80px 40px;
+            text-align: center;
+            margin: 30px 0;
+            transition: all 0.3s ease;
+        }
+        
+        .chart-placeholder:hover {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1));
+            border-color: var(--accent-purple);
+        }
+        
+        .placeholder-icon {
+            font-size: 4rem;
+            color: var(--accent-purple);
+            margin-bottom: 20px;
+            opacity: 0.6;
+        }
+        
+        .placeholder-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 15px;
+        }
+        
+        .placeholder-text {
+            font-size: 1rem;
+            color: var(--text-secondary);
+        }
+        
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            margin: 30px 0;
+        }
+        
+        .param-table {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .param-card {
+            background: rgba(255, 255, 255, 0.5);
+            border: 2px solid rgba(139, 92, 246, 0.1);
+            border-radius: 16px;
+            padding: 25px;
+            transition: all 0.3s ease;
+        }
+        
+        .param-card:hover {
+            background: white;
+            border-color: var(--accent-purple);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(139, 92, 246, 0.2);
+        }
+        
+        .param-name {
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: var(--accent-purple);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .param-range {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+        
+        .param-optimal {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--accent-green);
+        }
+        
+        @media (max-width: 1024px) {
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .param-table {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 80px 20px 60px 20px;
+            }
+            
+            .page-title {
+                font-size: 2.5rem;
+            }
+            
+            .content-section {
+                padding: 30px;
+            }
+            
+            .param-table {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-home">
+        <i class="fas fa-home"></i>
+        <span>返回首页</span>
+    </a>
+    
+    <div class="container">
+        <div class="page-header">
+            <div class="module-badge">
+                <i class="fas fa-sliders-h"></i>
+                <span>Calibration 模块</span>
+            </div>
+            <h1 class="page-title">参数校准</h1>
+            <p class="page-description">
+                采用模拟矩匹配（SMM）方法校准MFG模型的关键参数，
+                通过差分进化算法（Differential Evolution）优化目标函数，
+                最小化模拟矩与目标矩之间的加权距离，确保模型与现实数据吻合。
+            </p>
+        </div>
+        
+        <div class="content-section">
+            <h2 class="section-title">
+                <i class="fas fa-info-circle"></i>
+                校准方法
+            </h2>
+            <div style="font-size: 1.1rem; line-height: 2; color: var(--text-secondary);">
+                <p style="margin-bottom: 20px;">
+                    <strong style="color: var(--accent-purple);">模拟矩匹配（SMM）：</strong>
+                    一种参数估计方法，通过最小化模拟数据的统计矩与实际数据统计矩之间的距离来估计模型参数。
+                    相比传统极大似然估计，SMM更适用于复杂的结构化模型。
+                </p>
+                <p style="margin-bottom: 20px;">
+                    <strong style="color: var(--accent-purple);">优化算法：</strong>
+                    采用差分进化算法（DE），一种全局优化算法，擅长处理多峰、非凸、高维优化问题。
+                    配置32进程并行评估，大幅提升校准效率。
+                </p>
+                <p>
+                    <strong style="color: var(--accent-purple);">目标矩：</strong>
+                    失业率、平均工资、工资标准差、T/S/D/W的均值和标准差等12个关键统计量。
+                </p>
+            </div>
+        </div>
+        
+        <div class="content-section">
+            <h2 class="section-title">
+                <i class="fas fa-function"></i>
+                目标函数
+            </h2>
+            <div class="formula-box">
+                <strong>SMM目标函数：</strong><br><br>
+                L(θ) = (m<sub>sim</sub>(θ) - m<sub>target</sub>)' W (m<sub>sim</sub>(θ) - m<sub>target</sub>)<br><br>
+                其中：m<sub>sim</sub>为模拟矩，m<sub>target</sub>为目标矩，W为权重矩阵
+            </div>
+        </div>
+        
+        <div class="content-section">
+            <h2 class="section-title">
+                <i class="fas fa-cogs"></i>
+                待校准参数
+            </h2>
+            <div class="param-table">
+                <div class="param-card">
+                    <div class="param-name">
+                        <i class="fas fa-percentage"></i>
+                        ρ - 贴现因子
+                    </div>
+                    <div class="param-range">搜索范围：[0.30, 0.60]</div>
+                    <div class="param-optimal">最优值：0.40</div>
+                </div>
+                
+                <div class="param-card">
+                    <div class="param-name">
+                        <i class="fas fa-bolt"></i>
+                        κ - 努力成本系数
+                    </div>
+                    <div class="param-range">搜索范围：[1000, 4000]</div>
+                    <div class="param-optimal">最优值：2000</div>
+                </div>
+                
+                <div class="param-card">
+                    <div class="param-name">
+                        <i class="fas fa-chart-line"></i>
+                        α<sub>T</sub> - T负效用系数
+                    </div>
+                    <div class="param-range">搜索范围：[0.10, 0.60]</div>
+                    <div class="param-optimal">最优值：0.30</div>
+                </div>
+                
+                <div class="param-card">
+                    <div class="param-name">
+                        <i class="fas fa-arrow-up"></i>
+                        γ<sub>T</sub> - T转移速度
+                    </div>
+                    <div class="param-range">搜索范围：[0.08, 0.15]</div>
+                    <div class="param-optimal">最优值：待校准</div>
+                </div>
+                
+                <div class="param-card">
+                    <div class="param-name">
+                        <i class="fas fa-graduation-cap"></i>
+                        γ<sub>S</sub> - S转移速度
+                    </div>
+                    <div class="param-range">搜索范围：[0.08, 0.15]</div>
+                    <div class="param-optimal">最优值：待校准</div>
+                </div>
+                
+                <div class="param-card">
+                    <div class="param-name">
+                        <i class="fas fa-laptop"></i>
+                        γ<sub>D</sub> - D转移速度
+                    </div>
+                    <div class="param-range">搜索范围：[0.08, 0.15]</div>
+                    <div class="param-optimal">最优值：待校准</div>
+                </div>
+                
+                <div class="param-card">
+                    <div class="param-name">
+                        <i class="fas fa-dollar-sign"></i>
+                        γ<sub>W</sub> - W转移速度
+                    </div>
+                    <div class="param-range">搜索范围：[0.08, 0.15]</div>
+                    <div class="param-optimal">最优值：待校准</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="content-section">
+            <h2 class="section-title">
+                <i class="fas fa-chart-line"></i>
+                目标函数收敛曲线
+            </h2>
+            <div class="chart-placeholder">
+                <div class="placeholder-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="placeholder-title">L(θ)随迭代次数的变化</div>
+                <div class="placeholder-text">
+                    展示目标函数值的下降过程<br>
+                    横轴：迭代次数，纵轴：目标函数值
+                </div>
+            </div>
+        </div>
+        
+        <div class="content-section">
+            <h2 class="section-title">
+                <i class="fas fa-chart-scatter"></i>
+                参数收敛轨迹
+            </h2>
+            <div class="chart-grid">
+                <div class="chart-placeholder">
+                    <div class="placeholder-icon">
+                        <i class="fas fa-chart-area"></i>
+                    </div>
+                    <div class="placeholder-title">ρ收敛轨迹</div>
+                    <div class="placeholder-text">
+                        贴现因子在优化过程中的变化<br>
+                        横轴：迭代次数，纵轴：参数值
+                    </div>
+                </div>
+                
+                <div class="chart-placeholder">
+                    <div class="placeholder-icon">
+                        <i class="fas fa-chart-area"></i>
+                    </div>
+                    <div class="placeholder-title">κ收敛轨迹</div>
+                    <div class="placeholder-text">
+                        努力成本系数的收敛过程<br>
+                        横轴：迭代次数，纵轴：参数值
+                    </div>
+                </div>
+                
+                <div class="chart-placeholder">
+                    <div class="placeholder-icon">
+                        <i class="fas fa-chart-area"></i>
+                    </div>
+                    <div class="placeholder-title">α<sub>T</sub>收敛轨迹</div>
+                    <div class="placeholder-text">
+                        T负效用系数的收敛过程<br>
+                        横轴：迭代次数，纵轴：参数值
+                    </div>
+                </div>
+                
+                <div class="chart-placeholder">
+                    <div class="placeholder-icon">
+                        <i class="fas fa-chart-area"></i>
+                    </div>
+                    <div class="placeholder-title">γ参数收敛轨迹</div>
+                    <div class="placeholder-text">
+                        转移速度参数的收敛过程<br>
+                        同时展示γ<sub>T</sub>、γ<sub>S</sub>、γ<sub>D</sub>、γ<sub>W</sub>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="content-section">
+            <h2 class="section-title">
+                <i class="fas fa-balance-scale"></i>
+                矩匹配质量
+            </h2>
+            <div class="chart-placeholder">
+                <div class="placeholder-icon">
+                    <i class="fas fa-chart-bar"></i>
+                </div>
+                <div class="placeholder-title">模拟矩 vs 目标矩对比</div>
+                <div class="placeholder-text">
+                    对比12个关键统计矩的拟合效果<br>
+                    柱状图展示目标值与模拟值的偏差
+                </div>
+            </div>
+        </div>
+        
+        <div class="content-section">
+            <h2 class="section-title">
+                <i class="fas fa-thermometer-half"></i>
+                参数敏感性分析
+            </h2>
+            <div class="chart-grid">
+                <div class="chart-placeholder">
+                    <div class="placeholder-icon">
+                        <i class="fas fa-chart-radar"></i>
+                    </div>
+                    <div class="placeholder-title">参数敏感性雷达图</div>
+                    <div class="placeholder-text">
+                        展示各参数对目标函数的影响程度<br>
+                        评估参数可识别性
+                    </div>
+                </div>
+                
+                <div class="chart-placeholder">
+                    <div class="placeholder-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="placeholder-title">单参数扰动分析</div>
+                    <div class="placeholder-text">
+                        固定其他参数，扰动单个参数<br>
+                        观察目标函数的变化
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="content-section">
+            <h2 class="section-title">
+                <i class="fas fa-check-circle"></i>
+                校准结果诊断
+            </h2>
+            <div class="chart-placeholder">
+                <div class="placeholder-icon">
+                    <i class="fas fa-table"></i>
+                </div>
+                <div class="placeholder-title">校准诊断报告表</div>
+                <div class="placeholder-text">
+                    最优参数值、标准误、t统计量、拟合优度R²<br>
+                    目标函数最小值、优化算法收敛信息
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.querySelectorAll('.content-section').forEach((section, index) => {
+            section.style.animation = 'fadeInUp 1s ease';
+            section.style.animationDelay = `${index * 0.1}s`;
+            section.style.animationFillMode = 'backwards';
+        });
+    </script>
+</body>
+</html>
+
