@@ -349,17 +349,158 @@
         
         <div class="content-section">
             <h2 class="section-title">
-                <i class="fas fa-chart-line"></i>
-                MFG收敛过程
+                <i class="fas fa-trophy"></i>
+                实验结果概览
             </h2>
-            <div>
-                <img src="charts/mfg/static/convergence_curves.png" 
-                     alt="MFG收敛曲线" 
+            <div style="font-size: 1.1rem; line-height: 2; color: var(--text-secondary);">
+                <p style="margin-bottom: 20px;">
+                    本研究基于平均场博弈框架求解了包含<strong style="color: var(--accent-purple);">10,000个异质性个体</strong>的劳动力市场均衡。
+                    实验结果显示，在市场紧张度θ=1.5的条件下，系统经过<strong style="color: var(--accent-purple);">85轮迭代</strong>成功收敛至稳态均衡，
+                    最终失业率稳定在<strong style="color: var(--accent-purple);">6.49%</strong>，接近自然失业率水平。
+                </p>
+                <div style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(59, 130, 246, 0.05)); 
+                            border: 2px solid rgba(139, 92, 246, 0.2); border-radius: 16px; padding: 30px; margin: 20px 0;">
+                    <h4 style="color: var(--accent-purple); margin-bottom: 15px; font-size: 1.2rem;">
+                        <i class="fas fa-lightbulb"></i> 核心发现
+                    </h4>
+                    <ul style="padding-left: 30px; margin-bottom: 0;">
+                        <li>失业率从初始<strong>47.14%</strong>降至均衡<strong>6.49%</strong>，下降40.65个百分点</li>
+                        <li>人力资本积累显著：技能水平提升<strong>16%</strong>，数字素养提升<strong>25%</strong></li>
+                        <li>就业者在技能、数字素养上高出失业者<strong>31.3%</strong>和<strong>41.2%</strong></li>
+                        <li>均衡时超过<strong>50%</strong>的失业者选择零努力，符合边际收益递减规律</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="content-section">
+            <h2 class="section-title">
+                <i class="fas fa-table"></i>
+                均衡状态对比
+            </h2>
+            <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                <thead>
+                    <tr style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1)); 
+                               border-bottom: 2px solid var(--accent-purple);">
+                        <th style="padding: 15px; text-align: left; font-weight: 700; color: var(--text-primary);">指标</th>
+                        <th style="padding: 15px; text-align: center; font-weight: 700; color: var(--text-primary);">初始值</th>
+                        <th style="padding: 15px; text-align: center; font-weight: 700; color: var(--text-primary);">最终值</th>
+                        <th style="padding: 15px; text-align: center; font-weight: 700; color: var(--text-primary);">变化</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="border-bottom: 1px solid rgba(139, 92, 246, 0.1);">
+                        <td style="padding: 15px; font-weight: 600; color: var(--accent-purple);">失业率</td>
+                        <td style="padding: 15px; text-align: center;">47.14%</td>
+                        <td style="padding: 15px; text-align: center;">6.49%</td>
+                        <td style="padding: 15px; text-align: center; color: #10b981; font-weight: 700;">-40.65pp</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(139, 92, 246, 0.1);">
+                        <td style="padding: 15px; font-weight: 600; color: var(--accent-purple);">平均T</td>
+                        <td style="padding: 15px; text-align: center;">42.74h/周</td>
+                        <td style="padding: 15px; text-align: center;">46.65h/周</td>
+                        <td style="padding: 15px; text-align: center; color: #10b981; font-weight: 700;">+3.91h</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(139, 92, 246, 0.1);">
+                        <td style="padding: 15px; font-weight: 600; color: var(--accent-purple);">平均S</td>
+                        <td style="padding: 15px; text-align: center;">25.66</td>
+                        <td style="padding: 15px; text-align: center;">29.78</td>
+                        <td style="padding: 15px; text-align: center; color: #10b981; font-weight: 700;">+4.12</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(139, 92, 246, 0.1);">
+                        <td style="padding: 15px; font-weight: 600; color: var(--accent-purple);">平均D</td>
+                        <td style="padding: 15px; text-align: center;">9.04</td>
+                        <td style="padding: 15px; text-align: center;">11.27</td>
+                        <td style="padding: 15px; text-align: center; color: #10b981; font-weight: 700;">+2.23</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p style="text-align: center; color: var(--text-secondary); margin-top: 15px; font-size: 0.95rem;">
+                表1：MFG均衡前后的关键指标对比
+            </p>
+        </div>
+        
+        <div class="content-section">
+            <h2 class="section-title">
+                <i class="fas fa-user-check"></i>
+                就业者 vs 失业者对比
+            </h2>
+            <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                <thead>
+                    <tr style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1)); 
+                               border-bottom: 2px solid var(--accent-purple);">
+                        <th style="padding: 15px; text-align: left; font-weight: 700; color: var(--text-primary);">变量</th>
+                        <th style="padding: 15px; text-align: center; font-weight: 700; color: var(--text-primary);">就业者(9349人)</th>
+                        <th style="padding: 15px; text-align: center; font-weight: 700; color: var(--text-primary);">失业者(651人)</th>
+                        <th style="padding: 15px; text-align: center; font-weight: 700; color: var(--text-primary);">差距</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="border-bottom: 1px solid rgba(139, 92, 246, 0.1);">
+                        <td style="padding: 15px; font-weight: 600; color: var(--accent-purple);">T</td>
+                        <td style="padding: 15px; text-align: center;">47.27h</td>
+                        <td style="padding: 15px; text-align: center;">37.70h</td>
+                        <td style="padding: 15px; text-align: center; color: #3b82f6; font-weight: 700;">+25.4%</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(139, 92, 246, 0.1);">
+                        <td style="padding: 15px; font-weight: 600; color: var(--accent-purple);">S</td>
+                        <td style="padding: 15px; text-align: center;">30.25</td>
+                        <td style="padding: 15px; text-align: center;">23.04</td>
+                        <td style="padding: 15px; text-align: center; color: #3b82f6; font-weight: 700;">+31.3%</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(139, 92, 246, 0.1);">
+                        <td style="padding: 15px; font-weight: 600; color: var(--accent-purple);">D</td>
+                        <td style="padding: 15px; text-align: center;">11.49</td>
+                        <td style="padding: 15px; text-align: center;">8.14</td>
+                        <td style="padding: 15px; text-align: center; color: #3b82f6; font-weight: 700;">+41.2%</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(139, 92, 246, 0.1);">
+                        <td style="padding: 15px; font-weight: 600; color: var(--accent-purple);">W</td>
+                        <td style="padding: 15px; text-align: center;">4569元</td>
+                        <td style="padding: 15px; text-align: center;">3598元</td>
+                        <td style="padding: 15px; text-align: center; color: #3b82f6; font-weight: 700;">+27.0%</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p style="text-align: center; color: var(--text-secondary); margin-top: 15px; font-size: 0.95rem;">
+                表2：均衡时就业者与失业者的状态变量差异
+            </p>
+        </div>
+        
+        <div class="content-section">
+            <h2 class="section-title">
+                <i class="fas fa-chart-line"></i>
+                收敛指标监控
+            </h2>
+            <div style="margin-bottom: 30px;">
+                <img src="../OUTPUT/mfg/convergence_metrics_with_unemployment.png" 
+                     alt="收敛指标曲线" 
                      style="width: 100%; max-width: 1200px; border-radius: 15px; box-shadow: 0 10px 30px rgba(139, 92, 246, 0.2);">
                 <p style="text-align: center; color: var(--text-secondary); margin-top: 15px; font-size: 0.95rem;">
-                    图1：MFG均衡求解的收敛过程（价值函数、努力水平、失业率三重收敛）
+                    图1：三大收敛指标（|ΔV|、|Δa|、|Δu|）与失业率的双轴演化图
                 </p>
             </div>
+            <div class="chart-grid">
+                <div>
+                    <img src="../OUTPUT/mfg/convergence_unemployment_rate.png" 
+                         alt="失业率演化" 
+                         style="width: 100%; border-radius: 15px; box-shadow: 0 10px 30px rgba(139, 92, 246, 0.2);">
+                    <p style="text-align: center; color: var(--text-secondary); margin-top: 10px; font-size: 0.9rem;">
+                        失业率收敛曲线
+                    </p>
+                </div>
+                <div>
+                    <img src="../OUTPUT/mfg/convergence_effort.png" 
+                         alt="努力水平演化" 
+                         style="width: 100%; border-radius: 15px; box-shadow: 0 10px 30px rgba(139, 92, 246, 0.2);">
+                    <p style="text-align: center; color: var(--text-secondary); margin-top: 10px; font-size: 0.9rem;">
+                        努力水平收敛曲线
+                    </p>
+                </div>
+            </div>
+            <p style="text-align: center; color: var(--text-secondary); margin-top: 15px; font-size: 0.95rem;">
+                图2-3：失业率和努力水平随迭代轮次的变化趋势
+            </p>
         </div>
         
         <div class="content-section">
@@ -367,12 +508,33 @@
                 <i class="fas fa-users"></i>
                 最优策略分布
             </h2>
-            <div>
-                <img src="charts/mfg/static/effort_distribution.png" 
-                     alt="最优努力水平分布" 
-                     style="width: 100%; max-width: 1000px; border-radius: 15px; box-shadow: 0 10px 30px rgba(139, 92, 246, 0.2);">
-                <p style="text-align: center; color: var(--text-secondary); margin-top: 15px; font-size: 0.95rem;">
-                    图2：10000个失业个体的最优努力水平a*分布
+            <div class="chart-grid">
+                <div>
+                    <img src="../OUTPUT/mfg/effort_distribution_histogram.png" 
+                         alt="最优努力水平分布" 
+                         style="width: 100%; border-radius: 15px; box-shadow: 0 10px 30px rgba(139, 92, 246, 0.2);">
+                    <p style="text-align: center; color: var(--text-secondary); margin-top: 10px; font-size: 0.9rem;">
+                        努力水平直方图
+                    </p>
+                </div>
+                <div>
+                    <img src="../OUTPUT/mfg/effort_vs_skill.png" 
+                         alt="技能-努力关系" 
+                         style="width: 100%; border-radius: 15px; box-shadow: 0 10px 30px rgba(139, 92, 246, 0.2);">
+                    <p style="text-align: center; color: var(--text-secondary); margin-top: 10px; font-size: 0.9rem;">
+                        技能水平与最优努力的关系
+                    </p>
+                </div>
+            </div>
+            <p style="text-align: center; color: var(--text-secondary); margin-top: 15px; font-size: 0.95rem;">
+                图4-5：最优努力水平分布与技能-努力关系散点图
+            </p>
+            <div style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(59, 130, 246, 0.05)); 
+                        border: 2px solid rgba(139, 92, 246, 0.2); border-radius: 16px; padding: 25px; margin-top: 25px;">
+                <p style="line-height: 1.8; color: var(--text-secondary); margin: 0;">
+                    <strong style="color: var(--accent-purple);">关键观察：</strong>
+                    均衡时超过50%的失业者选择零努力（中位数为0），当劳动力市场接近充分就业时，额外求职努力带来的匹配概率增量极为有限，
+                    理性个体选择降低努力水平。此外，技能水平与最优努力呈现明显正相关，高技能劳动者(S>30)的平均努力水平显著高于低技能劳动者(S<20)。
                 </p>
             </div>
         </div>

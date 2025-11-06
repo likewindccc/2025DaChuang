@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据分析 - 农村女性就业市场研究</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;600;700;900&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --bg-primary: #f8f9ff;
+            --accent-purple: #8b5cf6;
+            --accent-blue: #3b82f6;
+            --accent-pink: #ec4899;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f8f9ff 0%, #fff5f7 100%);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            padding: 100px 80px 80px 200px;
+        }
+        
+        .back-home {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            z-index: 1000;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 25px;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(139, 92, 246, 0.2);
+            border-radius: 50px;
+            color: var(--accent-purple);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .back-home:hover {
+            background: var(--accent-purple);
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .page-header {
+            margin-bottom: 60px;
+            animation: fadeInUp 1s ease;
+        }
+        
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .module-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1));
+            border: 2px solid rgba(139, 92, 246, 0.2);
+            border-radius: 50px;
+            font-weight: 600;
+            color: var(--accent-purple);
+            margin-bottom: 20px;
+        }
+        
+        .page-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 4.5rem;
+            font-weight: 900;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, var(--text-primary), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .page-description {
+            font-size: 1.3rem;
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+        
+        .content-section {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(139, 92, 246, 0.15);
+            border-radius: 32px;
+            padding: 50px;
+            margin-bottom: 40px;
+            transition: all 0.5s ease;
+        }
+        
+        .content-section:hover {
+            background: rgba(255, 255, 255, 0.8);
+            border-color: rgba(139, 92, 246, 0.3);
+            transform: translateY(-5px);
+            box-shadow: 0 20px 50px rgba(139, 92, 246, 0.15);
+        }
+        
+        .section-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: var(--accent-purple);
+        }
+        
+        .section-title i {
+            font-size: 2.5rem;
+        }
+        
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(59, 130, 246, 0.05));
+            border: 2px solid rgba(139, 92, 246, 0.2);
+            border-radius: 16px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1));
+            border-color: var(--accent-purple);
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 15px 40px rgba(139, 92, 246, 0.2);
+        }
+        
+        .stat-label {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent-purple);
+        }
+        
+        @media (max-width: 1024px) {
+            .stat-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 80px 20px 60px 20px;
+            }
+            
+            .page-title {
+                font-size: 2.5rem;
+            }
+            
+            .content-section {
+                padding: 30px;
+            }
+            
+            .stat-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-home">
+        <i class="fas fa-home"></i>
+        <span>返回首页</span>
+    </a>
+    
+    <div class="container">
+        <div class="page-header">
+            <div class="module-badge">
+                <i class="fas fa-chart-pie"></i>
+                <span>数据分析</span>
+            </div>
+            <h1 class="page-title">描述性统计</h1>
+            <p class="page-description">
+                基于300个农村女性样本的调查数据，进行全面的描述性统计分析。
+                数据涵盖基本信息、工作意愿、工作能力等多个维度，为后续模型提供empirical基础。
+            </p>
+        </div>
+        
+        <div class="content-section">
+            <h2 class="section-title">
+                <i class="fas fa-info-circle"></i>
+                样本概览
+            </h2>
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <div class="stat-label">总样本量</div>
+                    <div class="stat-value">300人</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">平均年龄</div>
+                    <div class="stat-value">36.98岁</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">工作意愿</div>
+                    <div class="stat-value">76.67%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">有工作经历</div>
+                    <div class="stat-value">92.33%</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="content-section">
+            <h2 class="section-title">
+                <i class="fas fa-chart-bar"></i>
+                核心变量相关性分析
+            </h2>
+            <div style="margin: 30px 0;">
+                <img src="../OUTPUT/survey_analysis/correlation_heatmap_pearson.png" 
+                     alt="Pearson相关性热力图" 
+                     style="width: 100%; max-width: 1000px; border-radius: 15px; box-shadow: 0 10px 30px rgba(139, 92, 246, 0.2);">
+                <p style="text-align: center; color: var(--text-secondary); margin-top: 15px; font-size: 0.95rem;">
+                    图1：核心连续变量的Pearson相关系数热力图（600 DPI）
+                </p>
+            </div>
+            <div style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(59, 130, 246, 0.05)); 
+                        border: 2px solid rgba(139, 92, 246, 0.2); border-radius: 16px; padding: 30px; margin: 30px 0;">
+                <h4 style="color: var(--accent-purple); margin-bottom: 15px; font-size: 1.2rem;">
+                    <i class="fas fa-lightbulb"></i> 关键发现
+                </h4>
+                <ul style="padding-left: 30px; margin-bottom: 0; line-height: 2;">
+                    <li><strong>工作能力与数字素养</strong>呈现中等正相关（r≈0.4-0.5）</li>
+                    <li><strong>学历与工作能力</strong>显著正相关，教育投资回报明显</li>
+                    <li><strong>期望收入与工作时长</strong>正相关，反映劳动-收入权衡</li>
+                    <li><strong>家务劳动时间与闲暇时间</strong>负相关，时间资源约束明显</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="content-section">
+            <h2 class="section-title">
+                <i class="fas fa-table"></i>
+                连续变量统计汇总
+            </h2>
+            <div style="font-size: 1rem; line-height: 1.8; color: var(--text-secondary);">
+                <p style="margin-bottom: 20px;">
+                    样本平均年龄为<strong style="color: var(--accent-purple);">36.98岁</strong>（标准差6.07岁），
+                    平均有<strong style="color: var(--accent-purple);">1.57个孩子</strong>。
+                    被调查者每天平均花费<strong style="color: var(--accent-purple);">6.83小时</strong>进行家务劳动，
+                    拥有<strong style="color: var(--accent-purple);">7.62小时</strong>的闲暇时间。
+                    在就业期望方面，平均期望每周工作<strong style="color: var(--accent-purple);">5.22天</strong>，
+                    每天<strong style="color: var(--accent-purple);">8.04小时</strong>，
+                    期望月收入为<strong style="color: var(--accent-purple);">4520.77元</strong>（范围1400-8000元）。
+                </p>
+                <p style="margin-bottom: 20px;">
+                    在人力资本维度，样本平均累计工作年限为<strong style="color: var(--accent-purple);">7.97年</strong>，
+                    学历平均为<strong style="color: var(--accent-purple);">3.53</strong>（0-6分制，相当于高中至大专水平）。
+                    工作能力平均评分为<strong style="color: var(--accent-purple);">25.02分</strong>（满分48分），
+                    数字素养平均评分为<strong style="color: var(--accent-purple);">8.62分</strong>（满分20分），
+                    表明数字技能仍有较大提升空间。
+                </p>
+                <p>
+                    在工作权益认知方面，被调查者对工作保险和劳动合同的重要性评分分别为
+                    <strong style="color: var(--accent-purple);">1.95分</strong>和
+                    <strong style="color: var(--accent-purple);">2.16分</strong>（0-3分制），
+                    显示出较高的劳动权益保护意识。
+                </p>
+            </div>
+        </div>
+        
+        <div class="content-section">
+            <h2 class="section-title">
+                <i class="fas fa-chart-pie"></i>
+                分类变量分布
+            </h2>
+            <div style="font-size: 1rem; line-height: 1.8; color: var(--text-secondary);">
+                <p style="margin-bottom: 20px;">
+                    <strong style="color: var(--accent-purple);">地区分布：</strong>
+                    样本主要分布在西部地区（31.00%）和中部地区（30.33%），
+                    东部地区占21.67%，东北地区占15.33%，港澳台及国外占1.67%。
+                </p>
+                <p style="margin-bottom: 20px;">
+                    <strong style="color: var(--accent-purple);">工作意愿：</strong>
+                    76.67%的被调查者希望工作，其中80.87%倾向于全职工作，19.13%偏好兼职。
+                    在工作方式偏好上，17.83%希望线上工作，82.17%偏好线下工作，
+                    显示农村女性对传统线下工作模式的偏好较强。
+                </p>
+                <p>
+                    <strong style="color: var(--accent-purple);">工作经历：</strong>
+                    92.33%的被调查者有工作经历，仅7.67%从未工作过，
+                    表明农村女性整体具备一定的劳动力市场参与经验。
+                </p>
+            </div>
+        </div>
+        
+        <div class="content-section">
+            <h2 class="section-title">
+                <i class="fas fa-chart-network"></i>
+                政策启示
+            </h2>
+            <div style="font-size: 1rem; line-height: 2; color: var(--text-secondary);">
+                <ul style="padding-left: 30px;">
+                    <li style="margin-bottom: 15px;">
+                        <strong style="color: var(--accent-purple);">数字素养培训：</strong>
+                        数字素养平均仅8.62分（满分20分），且与工作能力呈显著正相关，
+                        政府应加大农村女性数字技能培训投入，缩小数字鸿沟。
+                    </li>
+                    <li style="margin-bottom: 15px;">
+                        <strong style="color: var(--accent-purple);">家庭支持政策：</strong>
+                        平均每天6.83小时的家务劳动时间严重挤压了工作时间，
+                        需要通过托幼服务、家政支持等政策减轻家庭负担。
+                    </li>
+                    <li style="margin-bottom: 15px;">
+                        <strong style="color: var(--accent-purple);">灵活就业推广：</strong>
+                        19.13%的人偏好兼职、17.83%偏好线上工作，
+                        应大力发展灵活就业形态，满足多元化就业需求。
+                    </li>
+                    <li>
+                        <strong style="color: var(--accent-purple);">劳动权益保障：</strong>
+                        虽然权益保护意识较高（保险2.16分、合同1.95分），
+                        但实际保障水平可能不足，需强化执法监督和法律宣传。
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.querySelectorAll('.content-section').forEach((section, index) => {
+            section.style.animation = 'fadeInUp 1s ease';
+            section.style.animationDelay = `${index * 0.1}s`;
+            section.style.animationFillMode = 'backwards';
+        });
+    </script>
+</body>
+</html>
+

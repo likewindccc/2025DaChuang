@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>实验结果报告 - 农村女性就业市场研究</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;600;700;900&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --bg-primary: #f8f9ff;
+            --accent-purple: #8b5cf6;
+            --accent-blue: #3b82f6;
+            --accent-pink: #ec4899;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f8f9ff 0%, #fff5f7 100%);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            padding: 100px 80px 80px 200px;
+        }
+        
+        .back-home {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            z-index: 1000;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 25px;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(139, 92, 246, 0.2);
+            border-radius: 50px;
+            color: var(--accent-purple);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .back-home:hover {
+            background: var(--accent-purple);
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .page-header {
+            margin-bottom: 60px;
+            animation: fadeInUp 1s ease;
+        }
+        
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .module-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1));
+            border: 2px solid rgba(139, 92, 246, 0.2);
+            border-radius: 50px;
+            font-weight: 600;
+            color: var(--accent-purple);
+            margin-bottom: 20px;
+        }
+        
+        .page-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 4.5rem;
+            font-weight: 900;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, var(--text-primary), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .page-description {
+            font-size: 1.3rem;
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+        
+        .content-section {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(139, 92, 246, 0.15);
+            border-radius: 32px;
+            padding: 50px;
+            margin-bottom: 40px;
+            transition: all 0.5s ease;
+        }
+        
+        .content-section:hover {
+            background: rgba(255, 255, 255, 0.8);
+            border-color: rgba(139, 92, 246, 0.3);
+            transform: translateY(-5px);
+            box-shadow: 0 20px 50px rgba(139, 92, 246, 0.15);
+        }
+        
+        .section-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: var(--accent-purple);
+        }
+        
+        .section-title i {
+            font-size: 2.5rem;
+        }
+        
+        .academic-text {
+            font-size: 1.05rem;
+            line-height: 2.2;
+            color: var(--text-primary);
+            text-align: justify;
+            text-indent: 2em;
+        }
+        
+        .academic-text:first-letter {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: var(--accent-purple);
+        }
+        
+        .figure-ref {
+            color: var(--accent-blue);
+            font-weight: 600;
+            text-decoration: none;
+            border-bottom: 2px dashed var(--accent-blue);
+            transition: all 0.3s ease;
+        }
+        
+        .figure-ref:hover {
+            color: var(--accent-purple);
+            border-bottom-color: var(--accent-purple);
+            background: rgba(139, 92, 246, 0.05);
+            padding: 0 5px;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 80px 20px 60px 20px;
+            }
+            
+            .page-title {
+                font-size: 2.5rem;
+            }
+            
+            .content-section {
+                padding: 30px;
+            }
+            
+            .academic-text {
+                font-size: 1rem;
+                text-indent: 1.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-home">
+        <i class="fas fa-home"></i>
+        <span>返回首页</span>
+    </a>
+    
+    <div class="container">
+        <div class="page-header">
+            <div class="module-badge">
+                <i class="fas fa-flask"></i>
+                <span>实验报告</span>
+            </div>
+            <h1 class="page-title">实验结果与讨论</h1>
+            <p class="page-description">
+                基于平均场博弈框架的大规模异质性个体劳动力市场均衡求解实验结果的学术解读。
+                本报告以学术论文风格呈现实验发现，结合图表进行深入分析，并提出政策启示。
+            </p>
+        </div>
+        
+        <div class="content-section">
+            <h2 class="section-title">
+                <i class="fas fa-microscope"></i>
+                实验设计与方法
+            </h2>
+            <p class="academic-text">
+                本研究基于平均场博弈框架求解了包含10,000个异质性个体的劳动力市场均衡。
+                实验设定市场紧张度θ=1.5（15,000个岗位/10,000名劳动者），采用值迭代算法求解Bellman方程，
+                并通过Monte Carlo仿真演化人口分布。系统设定三重收敛准则：价值函数相对变化量ε<sub>V</sub>=0.01、
+                努力水平平均变化量ε<sub>a</sub>=0.01、失业率变化量ε<sub>u</sub>=0.001，确保数值稳定性和均衡唯一性。
+                实验结果显示，系统经过85轮迭代成功收敛至稳态均衡，最终失业率稳定在6.49%，接近自然失业率水平，
+                表明模型有效刻画了劳动力市场的动态调整过程。
+            </p>
+        </div>
+        
+        <div class="content-section">
+            <h2 class="section-title">
+                <i class="fas fa-chart-line"></i>
+                收敛过程分析
+            </h2>
+            <p class="academic-text">
+                <a href="#fig1" class="figure-ref">图1</a>（失业率演化曲线）展示了从初始失业率47.14%到均衡状态的完整收敛路径。
+                前40轮迭代中失业率快速下降，降幅达35个百分点，反映了劳动力市场在初期存在大量摩擦性失业，
+                随着个体调整求职策略和人力资本投资决策，匹配效率显著提升。第40轮之后，失业率下降速度明显放缓，
+                逐步趋于稳态，最终收敛至6.49%。这一均衡失业率主要由结构性因素（技能-岗位匹配度）和
+                摩擦性因素（搜寻成本、信息不对称）共同决定，符合搜寻匹配理论的预测。
+                <a href="#fig4" class="figure-ref">图4</a>（收敛指标监控）进一步验证了算法的数值稳定性，
+                价值函数最大变化量|ΔV|从第2轮的0.0205下降至第85轮的0.0098（相对变化），
+                努力水平平均变化量|Δa|降至0.00044，失业率变化量|Δu|降至0.0009，三项收敛指标均满足预设阈值，
+                确认了均衡的唯一性和算法的收敛性。
+            </p>
+        </div>
+        
+        <div class="content-section">
+            <h2 class="section-title">
+                <i class="fas fa-users"></i>
+                人力资本积累效应
+            </h2>
+            <p class="academic-text">
+                状态变量演化分析表明，通过求职努力的人力资本积累效应显著。
+                全体劳动者的平均技能水平从初始的25.66提升至均衡时的29.78，增长16.1%；
+                数字素养从9.04提升至11.27，增长24.7%。这一结果验证了模型中状态转移方程的合理性：
+                x' = x + γ·a·(x<sub>bound</sub> - x)，即个体通过努力投资可以逐步提升自身人力资本，
+                接近理论上界。值得注意的是，在均衡状态下，就业者与失业者在人力资本维度呈现显著差异：
+                就业者的平均技能水平S为30.25，较失业者的23.04高出31.3%；平均数字素养D为11.49，
+                较失业者的8.14高出41.2%。这一异质性差异揭示了劳动力市场的筛选机制——
+                高人力资本个体更容易获得就业机会，形成"强者愈强"的马太效应，
+                对理解长期失业陷阱和设计针对性就业帮扶政策具有重要启示意义。
+            </p>
+        </div>
+        
+        <div class="content-section">
+            <h2 class="section-title">
+                <i class="fas fa-chart-bar"></i>
+                最优努力策略分布
+            </h2>
+            <p class="academic-text">
+                <a href="#fig3" class="figure-ref">图3</a>（努力水平演化曲线）和
+                <a href="#fig5" class="figure-ref">图5</a>（努力分布直方图）揭示了均衡中的一个重要现象：
+                失业者的平均最优努力水平从初始的12.1%单调递减至均衡时的2.8%，
+                且均衡时超过50%的失业者选择零努力（中位数为0）。这一结果符合边际努力收益递减的经济学直觉——
+                当劳动力市场接近充分就业时（失业率仅6.49%），额外求职努力带来的匹配概率增量极为有限，
+                导致理性个体选择降低努力水平。具体而言，在均衡状态下，失业者面临的匹配概率λ(x')已趋近饱和，
+                继续增加努力a的边际收益∂λ/∂a趋近于零，而努力成本κ·a²仍然存在，
+                根据一阶最优性条件，最优努力水平a*下降至接近零的水平。
+                <a href="#fig6" class="figure-ref">图6</a>（技能-努力关系散点图）进一步验证了模型的微观机制：
+                技能水平与最优努力呈现明显的正相关关系，高技能劳动者（S>30）的平均努力水平显著高于低技能劳动者（S<20），
+                这与匹配函数中技能对匹配概率的正向影响一致。值得关注的是，当技能水平低于15时，
+                个体的最优努力几乎全部集中在零附近，呈现出"放弃求职"的边界效应。
+            </p>
+        </div>
+        
+        <div class="content-section">
+            <h2 class="section-title">
+                <i class="fas fa-wallet"></i>
+                就业溢价分析
+            </h2>
+            <p class="academic-text">
+                就业溢价分析显示，就业状态相对失业状态的平均价值函数差值（Delta_V = V<sub>E</sub> - V<sub>U</sub>）
+                达到4517.92元，且个体间差异显著（标准差1531.79元），反映了异质性个体从就业中获得的长期收益存在实质性分化。
+                具体而言，就业者的平均周工作时长为47.27小时，较失业者的37.70小时高出25.4%，
+                但其平均工资为4569元，较失业者的期望工资3598元高出27.0%，
+                表明劳动力市场实现了较为合理的劳动-报酬匹配。此外，就业者在技能（+31.3%）和数字素养（+41.2%）
+                上的显著优势，进一步解释了其获得更高就业溢价的原因。这一发现与人力资本理论高度一致：
+                教育和技能投资的长期回报显著，高人力资本个体不仅更容易就业，而且能够获得更高的工资和更稳定的职业生涯。
+            </p>
+        </div>
+        
+        <div class="content-section">
+            <h2 class="section-title">
+                <i class="fas fa-lightbulb"></i>
+                政策启示与建议
+            </h2>
+            <p class="academic-text">
+                综合实验结果表明，本文构建的平均场博弈模型不仅在宏观层面准确再现了劳动力市场的总量平衡，
+                更在微观层面合理刻画了异质性个体的最优决策行为及其对人力资本积累的内生响应。
+                基于模型仿真结果，我们提出以下政策建议：<strong style="color: var(--accent-purple);">（1）加大人力资本投资</strong>：
+                鉴于技能和数字素养对就业概率和工资收入的显著正向影响，政府应加大职业技能培训和数字素养提升项目的投入，
+                特别是针对低技能群体的定向帮扶，缩小人力资本异质性差距；
+                <strong style="color: var(--accent-purple);">（2）优化劳动力市场信息匹配机制</strong>：
+                模型显示，在均衡状态下仍存在6.49%的结构性失业，反映出劳动力市场存在信息不对称和匹配摩擦，
+                建议通过大数据和人工智能技术构建智能化就业服务平台，提升匹配效率；
+                <strong style="color: var(--accent-purple);">（3）关注长期失业群体的"放弃求职"现象</strong>：
+                均衡时超过50%的失业者选择零努力，表明部分群体可能陷入长期失业陷阱，
+                需要通过就业补贴、心理辅导、社区支持等综合措施重新激活其就业积极性；
+                <strong style="color: var(--accent-purple);">（4）动态调整就业政策</strong>：
+                模型仿真能力为政策"预演"提供了科学工具，决策者可在政策实施前通过模型评估其长期效应，
+                实现循证决策（evidence-based policymaking），避免"一刀切"政策带来的负面冲击。
+            </p>
+        </div>
+        
+        <div class="content-section">
+            <h2 class="section-title">
+                <i class="fas fa-chart-network"></i>
+                图表索引
+            </h2>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+                <div style="background: rgba(255, 255, 255, 0.5); border: 2px solid rgba(139, 92, 246, 0.1); 
+                            border-radius: 16px; padding: 20px; transition: all 0.3s ease;">
+                    <div id="fig1" style="font-weight: 700; color: var(--accent-purple); margin-bottom: 10px;">
+                        <i class="fas fa-image"></i> 图1
+                    </div>
+                    <div style="color: var(--text-secondary); font-size: 0.95rem;">
+                        三大收敛指标与失业率演化
+                    </div>
+                </div>
+                
+                <div style="background: rgba(255, 255, 255, 0.5); border: 2px solid rgba(139, 92, 246, 0.1); 
+                            border-radius: 16px; padding: 20px;">
+                    <div id="fig2" style="font-weight: 700; color: var(--accent-purple); margin-bottom: 10px;">
+                        <i class="fas fa-image"></i> 图2
+                    </div>
+                    <div style="color: var(--text-secondary); font-size: 0.95rem;">
+                        失业率收敛曲线
+                    </div>
+                </div>
+                
+                <div style="background: rgba(255, 255, 255, 0.5); border: 2px solid rgba(139, 92, 246, 0.1); 
+                            border-radius: 16px; padding: 20px;">
+                    <div id="fig3" style="font-weight: 700; color: var(--accent-purple); margin-bottom: 10px;">
+                        <i class="fas fa-image"></i> 图3
+                    </div>
+                    <div style="color: var(--text-secondary); font-size: 0.95rem;">
+                        努力水平演化曲线
+                    </div>
+                </div>
+                
+                <div style="background: rgba(255, 255, 255, 0.5); border: 2px solid rgba(139, 92, 246, 0.1); 
+                            border-radius: 16px; padding: 20px;">
+                    <div id="fig4" style="font-weight: 700; color: var(--accent-purple); margin-bottom: 10px;">
+                        <i class="fas fa-image"></i> 图4
+                    </div>
+                    <div style="color: var(--text-secondary); font-size: 0.95rem;">
+                        收敛指标监控
+                    </div>
+                </div>
+                
+                <div style="background: rgba(255, 255, 255, 0.5); border: 2px solid rgba(139, 92, 246, 0.1); 
+                            border-radius: 16px; padding: 20px;">
+                    <div id="fig5" style="font-weight: 700; color: var(--accent-purple); margin-bottom: 10px;">
+                        <i class="fas fa-image"></i> 图5
+                    </div>
+                    <div style="color: var(--text-secondary); font-size: 0.95rem;">
+                        努力水平分布直方图
+                    </div>
+                </div>
+                
+                <div style="background: rgba(255, 255, 255, 0.5); border: 2px solid rgba(139, 92, 246, 0.1); 
+                            border-radius: 16px; padding: 20px;">
+                    <div id="fig6" style="font-weight: 700; color: var(--accent-purple); margin-bottom: 10px;">
+                        <i class="fas fa-image"></i> 图6
+                    </div>
+                    <div style="color: var(--text-secondary); font-size: 0.95rem;">
+                        技能-努力关系散点图
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.querySelectorAll('.content-section').forEach((section, index) => {
+            section.style.animation = 'fadeInUp 1s ease';
+            section.style.animationDelay = `${index * 0.1}s`;
+            section.style.animationFillMode = 'backwards';
+        });
+        
+        // 平滑滚动到图表索引
+        document.querySelectorAll('.figure-ref').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    targetElement.parentElement.style.background = 'rgba(139, 92, 246, 0.15)';
+                    targetElement.parentElement.style.transform = 'scale(1.05)';
+                    setTimeout(() => {
+                        targetElement.parentElement.style.background = 'rgba(255, 255, 255, 0.5)';
+                        targetElement.parentElement.style.transform = 'scale(1)';
+                    }, 1500);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+
