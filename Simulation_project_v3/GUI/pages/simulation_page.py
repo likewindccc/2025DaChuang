@@ -6,7 +6,7 @@
 
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, 
                              QGroupBox, QLabel, QPushButton, 
-                             QProgressBar, QTextEdit, QFrame)
+                             QProgressBar, QTextEdit, QFrame, QMessageBox)
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont
 
@@ -407,7 +407,7 @@ class SimulationPage(QWidget):
             "这可能是Numba/llvmlite的DLL加载问题。\n"
             "建议解决方法：\n"
             "1. 重启应用重试\n"
-            "2. 重新安装Numba: pip install numba==0.59.0\n"
+            "2. 重新安装Numba: pip install numba==0.62.0\n"
             "3. 安装Visual C++ Redistributable"
         )
         

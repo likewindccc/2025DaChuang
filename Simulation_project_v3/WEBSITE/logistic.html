@@ -257,16 +257,114 @@
         <div class="content-section">
             <h2 class="section-title">
                 <i class="fas fa-function"></i>
-                模型公式
+                匹配函数拟合结果
             </h2>
+            <div style="font-size: 1.1rem; line-height: 2; color: var(--text-secondary); margin-bottom: 30px;">
+                <p style="margin-bottom: 20px;">
+                    基于4500个虚拟市场匹配样本，采用Logit回归估计匹配函数。模型在训练集和测试集上的AUC分别为<strong style="color: var(--accent-purple);">0.892</strong>和<strong style="color: var(--accent-purple);">0.885</strong>，
+                    表明良好的预测能力和泛化性能。
+                </p>
+            </div>
+            
+            <h3 style="color: var(--accent-purple); margin: 30px 0 20px 0; font-size: 1.5rem;">
+                <i class="fas fa-equals"></i> 函数形式
+            </h3>
             <div class="formula-box">
-                <div style="margin-bottom: 30px;">
-                    <strong>匹配函数：</strong><br>
-                    λ(x', σ, θ) = 1 / (1 + exp(-(β₀ + β₁·T + β₂·S + β₃·D + β₄·W + β₅·θ)))
+                <div style="margin-bottom: 25px;">
+                    <strong>Logit形式：</strong><br><br>
+                    logit(P(matched=1)) = -5.735 + 0.129T + 0.040S + 0.128D - 0.001W + 0.162σ - 0.812θ
                 </div>
                 <div>
-                    <strong>分离率函数：</strong><br>
-                    μ(x, σ) = 1 / (1 + exp(-(γ₀ + γ₁·S + γ₂·D + γ₃·|W-σ|)))
+                    <strong>概率形式：</strong><br><br>
+                    P(matched=1) = 1 / (1 + exp(5.735 - 0.129T - 0.040S - 0.128D + 0.001W - 0.162σ + 0.812θ))
+                </div>
+            </div>
+            
+            <h3 style="color: var(--accent-purple); margin: 30px 0 20px 0; font-size: 1.5rem;">
+                <i class="fas fa-table"></i> 回归系数
+            </h3>
+            <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                <thead>
+                    <tr style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1)); 
+                               border-bottom: 2px solid var(--accent-purple);">
+                        <th style="padding: 15px; text-align: left; font-weight: 700;">变量</th>
+                        <th style="padding: 15px; text-align: center; font-weight: 700;">系数</th>
+                        <th style="padding: 15px; text-align: center; font-weight: 700;">标准误</th>
+                        <th style="padding: 15px; text-align: center; font-weight: 700;">z值</th>
+                        <th style="padding: 15px; text-align: center; font-weight: 700;">P>|z|</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="border-bottom: 1px solid rgba(139, 92, 246, 0.1);">
+                        <td style="padding: 15px; font-weight: 600; color: var(--accent-purple);">常数项</td>
+                        <td style="padding: 15px; text-align: center;">-5.735</td>
+                        <td style="padding: 15px; text-align: center;">0.205</td>
+                        <td style="padding: 15px; text-align: center;">-27.97</td>
+                        <td style="padding: 15px; text-align: center;"><0.001</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(139, 92, 246, 0.1);">
+                        <td style="padding: 15px; font-weight: 600; color: var(--accent-purple);">T (工作时间)</td>
+                        <td style="padding: 15px; text-align: center;">0.129</td>
+                        <td style="padding: 15px; text-align: center;">0.002</td>
+                        <td style="padding: 15px; text-align: center;">56.88</td>
+                        <td style="padding: 15px; text-align: center;"><0.001</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(139, 92, 246, 0.1);">
+                        <td style="padding: 15px; font-weight: 600; color: var(--accent-purple);">S (技能水平)</td>
+                        <td style="padding: 15px; text-align: center;">0.040</td>
+                        <td style="padding: 15px; text-align: center;">0.003</td>
+                        <td style="padding: 15px; text-align: center;">13.96</td>
+                        <td style="padding: 15px; text-align: center;"><0.001</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(139, 92, 246, 0.1);">
+                        <td style="padding: 15px; font-weight: 600; color: var(--accent-purple);">D (数字素养)</td>
+                        <td style="padding: 15px; text-align: center;">0.128</td>
+                        <td style="padding: 15px; text-align: center;">0.009</td>
+                        <td style="padding: 15px; text-align: center;">14.08</td>
+                        <td style="padding: 15px; text-align: center;"><0.001</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(139, 92, 246, 0.1);">
+                        <td style="padding: 15px; font-weight: 600; color: var(--accent-purple);">W (工资期望)</td>
+                        <td style="padding: 15px; text-align: center;">-0.001</td>
+                        <td style="padding: 15px; text-align: center;">0.000</td>
+                        <td style="padding: 15px; text-align: center;">-13.58</td>
+                        <td style="padding: 15px; text-align: center;"><0.001</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(139, 92, 246, 0.1);">
+                        <td style="padding: 15px; font-weight: 600; color: var(--accent-purple);">σ (岗位标准差)</td>
+                        <td style="padding: 15px; text-align: center;">0.162</td>
+                        <td style="padding: 15px; text-align: center;">0.012</td>
+                        <td style="padding: 15px; text-align: center;">13.02</td>
+                        <td style="padding: 15px; text-align: center;"><0.001</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(139, 92, 246, 0.1);">
+                        <td style="padding: 15px; font-weight: 600; color: var(--accent-purple);">θ (市场紧张度)</td>
+                        <td style="padding: 15px; text-align: center;">-0.812</td>
+                        <td style="padding: 15px; text-align: center;">0.037</td>
+                        <td style="padding: 15px; text-align: center;">-21.71</td>
+                        <td style="padding: 15px; text-align: center;"><0.001</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h3 style="color: var(--accent-purple); margin: 30px 0 20px 0; font-size: 1.5rem;">
+                <i class="fas fa-chart-pie"></i> 模型拟合质量
+            </h3>
+            <div style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(59, 130, 246, 0.05)); 
+                        border: 2px solid rgba(139, 92, 246, 0.2); border-radius: 16px; padding: 30px; margin: 20px 0;">
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+                    <div style="text-align: center;">
+                        <div style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 8px;">Pseudo R²</div>
+                        <div style="font-size: 2rem; font-weight: 700; color: var(--accent-purple);">0.753</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 8px;">AUC (训练集)</div>
+                        <div style="font-size: 2rem; font-weight: 700; color: var(--accent-blue);">0.892</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 8px;">AUC (测试集)</div>
+                        <div style="font-size: 2rem; font-weight: 700; color: #10b981;">0.885</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -318,18 +416,42 @@
         
         <div class="content-section">
             <h2 class="section-title">
-                <i class="fas fa-chart-scatter"></i>
-                预测概率分布
+                <i class="fas fa-exchange-alt"></i>
+                Gale-Shapley稳定匹配算法
             </h2>
-            <div class="chart-placeholder">
-                <div class="placeholder-icon">
-                    <i class="fas fa-chart-histogram"></i>
+            <div style="font-size: 1.1rem; line-height: 2; color: var(--text-secondary); margin-bottom: 30px;">
+                <p style="margin-bottom: 20px;">
+                    <strong style="color: var(--accent-purple);">算法原理：</strong>
+                    Gale-Shapley算法由David Gale和Lloyd Shapley于1962年提出，用于解决稳定匹配问题。
+                    该算法保证在劳动力市场中找到一个稳定匹配，即不存在任何一对劳动者和企业，他们都愿意离开当前匹配而重新匹配。
+                </p>
+                <p>
+                    <strong style="color: var(--accent-purple);">应用场景：</strong>
+                    本研究使用GS算法生成虚拟劳动力市场的匹配数据，为Logistic回归提供训练样本。
+                    通过模拟多种市场条件(均衡、富余、短缺)下的匹配过程，获得具有代表性的就业匹配数据。
+                </p>
                 </div>
-                <div class="placeholder-title">匹配概率预测分布</div>
-                <div class="placeholder-text">
-                    展示模型预测的匹配概率分布<br>
-                    对比实际就业结果的一致性
+            
+            <div style="margin: 30px 0;">
+                <img src="../OUTPUT/flowcharts/gs_flowchart_core.png" 
+                     alt="Gale-Shapley算法流程图" 
+                     style="width: 100%; max-width: 1400px; border-radius: 15px; box-shadow: 0 10px 30px rgba(59, 130, 246, 0.2);">
+                <p style="text-align: center; color: var(--text-secondary); margin-top: 15px; font-size: 0.95rem;">
+                    图4：Gale-Shapley稳定匹配算法流程图
+                </p>
                 </div>
+            
+            <div style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(59, 130, 246, 0.05)); 
+                        border: 2px solid rgba(139, 92, 246, 0.2); border-radius: 16px; padding: 30px; margin: 20px 0;">
+                <h4 style="color: var(--accent-purple); margin-bottom: 15px; font-size: 1.2rem;">
+                    <i class="fas fa-lightbulb"></i> 算法特点
+                </h4>
+                <ul style="padding-left: 30px; margin-bottom: 0; line-height: 2;">
+                    <li><strong>稳定性保证：</strong>算法必然收敛至稳定匹配，不存在阻塞对</li>
+                    <li><strong>时间复杂度：</strong>O(n²)，适合大规模市场仿真</li>
+                    <li><strong>单边最优：</strong>求职方（劳动者）获得最优稳定匹配</li>
+                    <li><strong>完全匹配：</strong>在市场均衡条件下实现完全匹配</li>
+                </ul>
             </div>
         </div>
     </div>

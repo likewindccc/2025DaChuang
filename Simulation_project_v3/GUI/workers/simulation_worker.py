@@ -95,6 +95,19 @@ class SimulationWorker(QThread):
             error_msg = f"{type(e).__name__}: {str(e)}"
             self.log_message.emit("ERROR", f"运行出错: {error_msg}")
             self.error_occurred.emit(error_msg)
+
+            # 将详细堆栈写入打包目录，便于排查实际原因
+            try:
+                import traceback
+                log_path = Path(sys.argv[0]).resolve().parent / 'runtime_boot.log'
+                with open(log_path, 'a', encoding='utf-8') as fh:
+                    fh.write('SimulationWorker 异常:
+')
+                    fh.write(traceback.format_exc())
+                    fh.write('
+')
+            except Exception:
+                pass
             
             # 清理临时文件
             if temp_config_path and os.path.exists(temp_config_path):

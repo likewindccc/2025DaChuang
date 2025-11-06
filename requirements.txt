@@ -9,6 +9,7 @@ scipy==1.16.2
 
 # 数值加速（用于MFG和KFE求解器的JIT编译）
 numba==0.62.0
+llvmlite==0.45.0
 
 # 统计分析（用于匹配函数的Logistic回归）
 statsmodels==0.14.5

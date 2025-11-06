@@ -1,0 +1,163 @@
+\documentclass[12pt, a4paper]{article}
+\usepackage{ctex}
+\usepackage{booktabs}
+\usepackage{geometry}
+\usepackage{multirow}
+\usepackage{amsmath}
+\usepackage{caption}
+
+\geometry{left=2.5cm, right=2.5cm, top=2.5cm, bottom=2.5cm}
+
+% 设置中文字体
+\setCJKmainfont{SimSun}
+
+% 设置表格标题格式
+\captionsetup[table]{
+    labelsep=space,
+    font={bf},
+    skip=10pt
+}
+
+% 调整行距
+\renewcommand{\arraystretch}{1.3}
+
+\begin{document}
+
+\section*{Logistic匹配函数回归结果}
+
+\subsection*{表1：系数估计与统计检验}
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{lccccc}
+\toprule
+\textbf{变量} & \textbf{系数估计值} & \textbf{标准误} & \textbf{z统计量} & \textbf{p值} & \textbf{95\%置信区间} \\
+\midrule
+截距 (const)        & $-5.735$*** & 0.070 & $-81.42$ & $<0.001$ & [$-5.873$, $-5.597$] \\
+工作时长 (T)        & $0.129$***  & 0.001 & $122.43$ & $<0.001$ & [0.127, 0.131] \\
+技能水平 (S)        & $0.040$***  & 0.001 & $45.57$  & $<0.001$ & [0.038, 0.041] \\
+数字素养 (D)        & $0.128$***  & 0.002 & $71.49$  & $<0.001$ & [0.125, 0.132] \\
+期望工资 (W)        & $-0.001$*** & 0.000 & $-82.54$ & $<0.001$ & [$-0.001$, $-0.001$] \\
+控制变量 ($\sigma$) & $-0.162$**  & 0.053 & $-3.05$  & $0.002$  & [$-0.266$, $-0.058$] \\
+市场紧张度 ($\theta$) & $0.812$*** & 0.043 & $18.91$  & $<0.001$ & [0.728, 0.897] \\
+\bottomrule
+\end{tabular}
+\caption*{注：*** $p<0.001$, ** $p<0.01$, * $p<0.05$}
+\end{table}
+
+\vspace{1cm}
+
+\subsection*{表2：模型拟合质量}
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{lc}
+\toprule
+\textbf{统计量} & \textbf{数值} \\
+\midrule
+Pseudo R²         & 0.1851 \\
+对数似然值 (Log-likelihood) & $-56091.67$ \\
+赤池信息准则 (AIC) & 112197.34 \\
+贝叶斯信息准则 (BIC) & 112263.93 \\
+观测样本量 (N)    & 99,999 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\vspace{1cm}
+
+\subsection*{表3：系数解释}
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{lcl}
+\toprule
+\textbf{变量} & \textbf{系数} & \textbf{经济含义} \\
+\midrule
+工作时长 (T) & $+0.129$ & 工作时间越长，匹配概率越高 \\
+技能水平 (S) & $+0.040$ & 技能水平越高，匹配概率越高 \\
+数字素养 (D) & $+0.128$ & 数字能力越强，匹配概率越高 \\
+期望工资 (W) & $-0.001$ & 期望工资越高，匹配概率越低 \\
+控制变量 ($\sigma$) & $-0.162$ & 人口特征综合指标的负向影响 \\
+市场紧张度 ($\theta$) & $+0.812$ & 岗位供给越充足，匹配概率越高 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\newpage
+
+\subsection*{表4：完整回归结果（学术版）}
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{lccccc}
+\toprule
+\textbf{变量} & \textbf{系数} & \textbf{标准误} & \textbf{z值} & \textbf{p值} & \textbf{95\% CI} \\
+\midrule
+\multicolumn{6}{l}{\textbf{因变量：匹配成功 (matched = 1)}} \\
+\midrule
+\textbf{截距项} & $-5.735$*** & (0.070) & $-81.42$ & 0.000 & [$-5.873$, $-5.597$] \\
+\midrule
+\multicolumn{6}{l}{\textbf{劳动力核心特征}} \\
+\quad 工作时长 (T) & $0.129$*** & (0.001) & $122.43$ & 0.000 & [0.127, 0.131] \\
+\quad 技能水平 (S) & $0.040$*** & (0.001) & $45.57$ & 0.000 & [0.038, 0.041] \\
+\quad 数字素养 (D) & $0.128$*** & (0.002) & $71.49$ & 0.000 & [0.125, 0.132] \\
+\quad 期望工资 (W) & $-0.001$*** & (0.000) & $-82.54$ & 0.000 & [$-0.001$, $-0.001$] \\
+\midrule
+\multicolumn{6}{l}{\textbf{控制变量}} \\
+\quad $\sigma$ (age, edu, children) & $-0.162$** & (0.053) & $-3.05$ & 0.002 & [$-0.266$, $-0.058$] \\
+\midrule
+\multicolumn{6}{l}{\textbf{市场条件}} \\
+\quad $\theta$ (市场紧张度) & $0.812$*** & (0.043) & $18.91$ & 0.000 & [0.728, 0.897] \\
+\midrule
+\midrule
+\textbf{观测样本量} & \multicolumn{5}{c}{\textbf{99,999}} \\
+\textbf{Pseudo R²} & \multicolumn{5}{c}{\textbf{0.1851}} \\
+\textbf{Log-likelihood} & \multicolumn{5}{c}{\textbf{$-56091.67$}} \\
+\textbf{AIC} & \multicolumn{5}{c}{\textbf{112197.34}} \\
+\textbf{BIC} & \multicolumn{5}{c}{\textbf{112263.93}} \\
+\bottomrule
+\end{tabular}
+\caption*{注：标准误在括号内；*** $p<0.001$, ** $p<0.01$, * $p<0.05$}
+\end{table}
+
+\vspace{1cm}
+
+\subsection*{回归方程}
+
+\textbf{Logit形式：}
+\begin{equation}
+\begin{aligned}
+\text{logit}(P(\text{matched}=1)) = \, &-5.735 + 0.129T + 0.040S + 0.128D \\
+&- 0.001W - 0.162\sigma + 0.812\theta
+\end{aligned}
+\end{equation}
+
+\textbf{概率形式：}
+\begin{equation}
+P(\text{matched}=1) = \frac{1}{1 + \exp(Z)}
+\end{equation}
+
+其中：
+\begin{equation}
+\begin{aligned}
+Z = \, &5.735 - 0.129T - 0.040S - 0.128D \\
+&+ 0.001W + 0.162\sigma - 0.812\theta
+\end{aligned}
+\end{equation}
+
+\vspace{0.3cm}
+
+变量说明：
+\begin{itemize}
+    \item $T$：劳动力工作时长（每周小时数）
+    \item $S$：劳动力技能水平（1-10评分）
+    \item $D$：劳动力数字素养（1-10评分）
+    \item $W$：劳动力期望工资（元/小时）
+    \item $\sigma$：控制变量综合指标（年龄、学历、孩子数量的二次标准化）
+    \item $\theta$：市场紧张度（岗位数/求职者数）
+\end{itemize}
+
+\end{document}
+

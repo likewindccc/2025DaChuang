@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gale-Shapley算法流程图 - 高分辨率导出</title>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'base',
+            themeVariables: {
+                'primaryColor': '#ffffff',
+                'primaryTextColor': '#1f2937',
+                'primaryBorderColor': '#3b82f6',
+                'lineColor': '#6b7280',
+                'fontSize': '22px',
+                'fontFamily': 'Microsoft YaHei, sans-serif',
+                'edgeLabelBackground': 'transparent'
+            },
+            flowchart: {
+                htmlLabels: true,
+                curve: 'basis',
+                padding: 30
+            }
+        });
+    </script>
+    <style>
+        body {
+            margin: 0;
+            padding: 60px;
+            background-color: white;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .mermaid {
+            background-color: white;
+            padding: 40px;
+        }
+        .instructions {
+            background-color: #f3f4f6;
+            padding: 30px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+            border-left: 4px solid #3b82f6;
+        }
+        .instructions h2 {
+            margin-top: 0;
+            color: #1f2937;
+        }
+        .instructions ol {
+            line-height: 1.8;
+            color: #4b5563;
+        }
+        .instructions code {
+            background-color: #e5e7eb;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Consolas', monospace;
+        }
+        button {
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Microsoft YaHei', sans-serif;
+            margin-top: 20px;
+        }
+        button:hover {
+            background-color: #2563eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="instructions">
+            <h2>📸 如何导出高分辨率PNG图片</h2>
+            <ol>
+                <li><strong>Chrome浏览器</strong>（推荐）：
+                    <ul>
+                        <li>按 <code>F12</code> 打开开发者工具</li>
+                        <li>按 <code>Ctrl+Shift+P</code> 打开命令面板</li>
+                        <li>输入 <code>screenshot</code> 并选择 <strong>Capture node screenshot</strong></li>
+                        <li>点击选择下方的流程图SVG元素</li>
+                        <li>图片将自动下载为PNG（原始分辨率）</li>
+                    </ul>
+                </li>
+                <li><strong>或者直接右键</strong>：
+                    <ul>
+                        <li>在流程图上右键点击</li>
+                        <li>选择"另存为图片"或"Save image as"</li>
+                        <li>保存为PNG格式</li>
+                    </ul>
+                </li>
+                <li><strong>一键复制到剪贴板</strong>：
+                    <ul>
+                        <li>点击下方的"复制流程图"按钮</li>
+                        <li>然后可以直接粘贴到Word、PowerPoint等应用中</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+
+        <button onclick="copyDiagramToClipboard()">📋 复制流程图到剪贴板</button>
+
+        <div class="mermaid">
+flowchart LR
+    Start(["开始匹配"])
+    Init["初始化阶段<br/>计算双边偏好矩阵<br/>生成偏好排序列表<br/>初始化匹配状态"]
+    Loop{"匹配轮次判断<br/>r ≤ R_max?"}
+    Apply["劳动力发起申请<br/>未匹配劳动力向<br/>偏好企业发送申请"]
+    Decide{"企业决策<br/>比较当前匹配<br/>与新申请者"}
+    
+    Accept["接受或替换<br/>更新双边匹配状态<br/>记录新的匹配关系"]
+    Reject["拒绝申请<br/>劳动力向下一<br/>偏好企业申请"]
+    Check{"终止条件检查<br/>全部匹配完成?"}
+    End(["输出匹配结果"])
+    
+    Start --> Init
+    Init --> Loop
+    Loop -->|<font size=5><b>继续匹配</b></font>| Apply
+    Apply --> Decide
+    Decide -->|<font size=5><b>新申请者更优</b></font>| Accept
+    Decide -->|<font size=5><b>保持原匹配</b></font>| Reject
+    
+    Accept --> Check
+    Reject --> Check
+    Check -->|<font size=5><b>否</b></font>| Loop
+    Check -->|<font size=5><b>是</b></font>| End
+    Loop -.->|<font size=5><b>达到上限</b></font>| End
+    
+    classDef startEnd fill:#e0f2fe,stroke:#0284c7,stroke-width:3px,color:#0c4a6e,font-weight:bold
+    classDef compute fill:#f0f9ff,stroke:#3b82f6,stroke-width:2.5px,color:#1e40af,font-weight:bold
+    classDef decision fill:#fef3c7,stroke:#f59e0b,stroke-width:2.5px,color:#92400e,font-weight:bold
+    classDef accept fill:#d1fae5,stroke:#10b981,stroke-width:2.5px,color:#065f46,font-weight:bold
+    classDef reject fill:#fee2e2,stroke:#ef4444,stroke-width:2.5px,color:#991b1b,font-weight:bold
+    classDef action fill:#e9d5ff,stroke:#a855f7,stroke-width:2.5px,color:#6b21a8,font-weight:bold
+    
+    class Start,End startEnd
+    class Init compute
+    class Loop,Decide,Check decision
+    class Apply action
+    class Accept accept
+    class Reject reject
+        </div>
+    </div>
+
+    <script>
+        async function copyDiagramToClipboard() {
+            try {
+                const svg = document.querySelector('.mermaid svg');
+                if (!svg) {
+                    alert('流程图还未加载完成，请稍候再试');
+                    return;
+                }
+                
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const svgData = new XMLSerializer().serializeToString(svg);
+                
+                const img = new Image();
+                const svgBlob = new Blob([svgData], {type: 'image/svg+xml;charset=utf-8'});
+                const url = URL.createObjectURL(svgBlob);
+                
+                img.onload = async function() {
+                    canvas.width = img.width * 2;
+                    canvas.height = img.height * 2;
+                    ctx.scale(2, 2);
+                    ctx.drawImage(img, 0, 0);
+                    URL.revokeObjectURL(url);
+                    
+                    canvas.toBlob(async function(blob) {
+                        try {
+                            await navigator.clipboard.write([
+                                new ClipboardItem({ 'image/png': blob })
+                            ]);
+                            alert('✅ 流程图已复制到剪贴板！\n您可以直接粘贴到Word、PowerPoint等应用中。');
+                        } catch (err) {
+                            alert('❌ 复制失败，请使用右键另存为图片的方式。');
+                        }
+                    }, 'image/png');
+                };
+                img.src = url;
+            } catch (err) {
+                alert('❌ 复制失败: ' + err.message);
+            }
+        }
+    </script>
+</body>
+</html>
+
+

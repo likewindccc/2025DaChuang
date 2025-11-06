@@ -1,0 +1,62 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage{ctex}
+\usepackage{booktabs}
+\usepackage{geometry}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+
+% 字体设置
+\setCJKmainfont{SimSun}[BoldFont=SimHei,ItalicFont=KaiTi]
+\setCJKsansfont{Microsoft YaHei}
+\setCJKmonofont{FangSong}
+
+% 页面设置
+\geometry{left=2cm,right=2cm,top=2cm,bottom=2cm}
+
+% 表格行距
+\renewcommand{\arraystretch}{1.3}
+
+\title{\textbf{MFG均衡求解实验结果}}
+\author{}
+\date{2025年11月06日}
+
+\begin{document}
+
+\maketitle
+
+\section{核心结果分析}
+
+\subsection{均衡状态对比}
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{lccc}
+\toprule
+\textbf{指标} & \textbf{初始值} & \textbf{最终值} & \textbf{变化} \\
+\midrule
+\textbf{失业率} & 47.14\% & 6.49\% & -40.65\% \\
+\textbf{平均T} & 42.74小时/周 & 46.65小时/周 & +3.91小时/周 \\
+\textbf{平均S} & 25.66 & 29.78 & +4.12 \\
+\textbf{平均D} & 9.04 & 11.27 & +2.23 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{就业者 vs 失业者对比（均衡时）}
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{lccc}
+\toprule
+\textbf{变量} & \textbf{就业者(9349人)} & \textbf{失业者(651人)} & \textbf{差距} \\
+\midrule
+\textbf{T} & 47.27小时 & 37.70小时 & +25.4\% \\
+\textbf{S} & 30.25 & 23.04 & +31.3\% \\
+\textbf{D} & 11.49 & 8.14 & +41.2\% \\
+\textbf{W} & 4569元 & 3598元 & +27.0\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\end{document}

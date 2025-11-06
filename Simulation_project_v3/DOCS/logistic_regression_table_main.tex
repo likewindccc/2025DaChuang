@@ -1,0 +1,67 @@
+\documentclass[12pt, a4paper]{article}
+\usepackage{ctex}
+\usepackage{booktabs}
+\usepackage{geometry}
+\usepackage{amsmath}
+\usepackage{caption}
+
+\geometry{left=2.5cm, right=2.5cm, top=2.5cm, bottom=2.5cm}
+
+% 字体设置 - 使用更美观的字体
+\setCJKmainfont{SimSun}[BoldFont=SimHei,ItalicFont=KaiTi]
+\setCJKsansfont{Microsoft YaHei}
+\setCJKmonofont{FangSong}
+
+% 调整行距
+\renewcommand{\arraystretch}{1.3}
+
+\begin{document}
+
+% 表1：回归系数估计
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{lccccc}
+\toprule
+\textbf{变量} & \textbf{系数} & \textbf{标准误} & \textbf{z值} & \textbf{p值} & \textbf{95\% CI} \\
+\midrule
+\multicolumn{6}{l}{\textbf{因变量：匹配成功 (matched = 1)}} \\
+\midrule
+\textbf{截距项} & $-5.735$*** & (0.070) & $-81.42$ & 0.000 & [$-5.873$, $-5.597$] \\
+\midrule
+\multicolumn{6}{l}{\textbf{劳动力核心特征}} \\
+\quad 工作时长 (T) & $0.129$*** & (0.001) & $122.43$ & 0.000 & [0.127, 0.131] \\
+\quad 技能水平 (S) & $0.040$*** & (0.001) & $45.57$ & 0.000 & [0.038, 0.041] \\
+\quad 数字素养 (D) & $0.128$*** & (0.002) & $71.49$ & 0.000 & [0.125, 0.132] \\
+\quad 期望工资 (W) & $-0.001$*** & (0.000) & $-82.54$ & 0.000 & [$-0.001$, $-0.001$] \\
+\midrule
+\multicolumn{6}{l}{\textbf{控制变量}} \\
+\quad $\sigma$ (age, edu, children) & $-0.162$** & (0.053) & $-3.05$ & 0.002 & [$-0.266$, $-0.058$] \\
+\midrule
+\multicolumn{6}{l}{\textbf{市场条件}} \\
+\quad $\theta$ (市场紧张度) & $0.812$*** & (0.043) & $18.91$ & 0.000 & [0.728, 0.897] \\
+\bottomrule
+\end{tabular}
+\caption*{注：标准误在括号内；*** $p<0.001$, ** $p<0.01$, * $p<0.05$}
+\end{table}
+
+\vspace{0.5cm}
+
+% 表2：模型拟合统计量
+\begin{table}[htbp]
+\centering
+\begin{tabular}{lc}
+\toprule
+\textbf{统计量} & \textbf{数值} \\
+\midrule
+\textbf{观测样本量} & \textbf{99,999} \\
+\textbf{Pseudo R²} & \textbf{0.1851} \\
+\textbf{Log-likelihood} & \textbf{$-56091.67$} \\
+\textbf{AIC} & \textbf{112197.34} \\
+\textbf{BIC} & \textbf{112263.93} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\end{document}
+

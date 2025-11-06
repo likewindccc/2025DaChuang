@@ -341,7 +341,8 @@
 numpy>=1.26.0          # 数值计算
 pandas>=2.0.0          # 数据处理
 scipy>=1.11.0          # 科学计算
-numba>=0.59.0          # JIT加速（关键）
+numba>=0.62.0          # JIT加速（关键）
+llvmlite>=0.45.0       # Numba依赖的LLVM封装
 copulas>=0.12.0        # Copula建模
 statsmodels>=0.14.0    # Logit回归
 pyyaml>=6.0            # 配置文件

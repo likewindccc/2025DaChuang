@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gale-Shapley算法流程图</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            themeVariables: {
+                fontSize: '16px',
+                fontFamily: 'Arial, sans-serif'
+            }
+        });
+    </script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .mermaid {
+            text-align: center;
+            background-color: white;
+        }
+        .instructions {
+            margin-top: 30px;
+            padding: 15px;
+            background-color: #e8f4f8;
+            border-left: 4px solid #2196F3;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Gale-Shapley稳定匹配算法流程图</h1>
+        
+        <div class="mermaid">
+flowchart LR
+    A([开始]) --> B[计算双边偏好]
+    B --> C[生成偏好排序]
+    C --> D{匹配循环<br/>r=1 to R_max}
+    D --> E[未匹配劳动力<br/>向偏好企业申请]
+    E --> F{企业比较<br/>新旧申请者}
+    F -->|新申请者更优| G[替换匹配]
+    F -->|旧申请者更优| H[拒绝申请]
+    G --> I{继续?}
+    H --> I
+    I -->|未达最大轮次| D
+    I -->|达到最大轮次<br/>或全部匹配| J([返回结果])
+    
+    style A fill:#90EE90,stroke:#2E8B57,stroke-width:3px
+    style J fill:#90EE90,stroke:#2E8B57,stroke-width:3px
+    style F fill:#FFB6C1,stroke:#DC143C,stroke-width:2px
+    style I fill:#FFB6C1,stroke:#DC143C,stroke-width:2px
+    style D fill:#FFFACD,stroke:#FFD700,stroke-width:2px
+        </div>
+        
+        <div class="instructions">
+            <h3>💡 使用说明</h3>
+            <p><strong>导出图片：</strong> 右键点击图表，选择"Save image as..."保存为PNG</p>
+            <p><strong>缩放查看：</strong> 使用浏览器的缩放功能（Ctrl +/-）调整大小</p>
+            <p><strong>打印输出：</strong> 按Ctrl+P打印或保存为PDF</p>
+        </div>
+    </div>
+</body>
+</html>

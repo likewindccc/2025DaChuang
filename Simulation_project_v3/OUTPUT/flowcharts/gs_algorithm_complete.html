@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gale-Shapley算法流程图</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            themeVariables: {
+                fontSize: '16px',
+                fontFamily: 'Arial, sans-serif'
+            }
+        });
+    </script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .mermaid {
+            text-align: center;
+            background-color: white;
+        }
+        .instructions {
+            margin-top: 30px;
+            padding: 15px;
+            background-color: #e8f4f8;
+            border-left: 4px solid #2196F3;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Gale-Shapley稳定匹配算法流程图</h1>
+        
+        <div class="mermaid">
+flowchart TB
+    Start([开始]) --> Init[初始化匹配状态<br/>laborer_match = -1<br/>enterprise_match = -1<br/>next_proposal = 0]
+    
+    Init --> ComputePref[计算双边偏好]
+    
+    ComputePref --> LaborPref[劳动力偏好函数<br/>U_i^j = γ₀ - γ₁T_req - γ₂max0,S_req-S_i<br/>- γ₃max0,D_req-D_i + γ₄W_offer]
+    
+    ComputePref --> EntPref[企业偏好函数<br/>V^j_i = β₀ + β₁T_i + β₂S_i + β₃D_i + β₄W_i]
+    
+    LaborPref --> Normalize[MinMax标准化<br/>各项独立标准化到 0,1]
+    EntPref --> Normalize
+    
+    Normalize --> GenRank[生成偏好排序<br/>argsort降序]
+    
+    GenRank --> LoopStart{开始第 r 轮匹配<br/>r = 1, 2, ..., R_max}
+    
+    LoopStart --> CheckAll{所有劳动力<br/>都已匹配?}
+    
+    CheckAll -->|是| End([返回匹配结果<br/>laborer_match])
+    CheckAll -->|否| ForLabor[遍历劳动力 i = 1 to N]
+    
+    ForLabor --> CheckMatched{劳动力 i<br/>已匹配?}
+    
+    CheckMatched -->|是| NextLabor[继续下一个劳动力]
+    CheckMatched -->|否| CheckMore{还有可申请<br/>的企业?}
+    
+    CheckMore -->|否| NextLabor
+    CheckMore -->|是| GetNext[获取下一个偏好企业 j<br/>next_proposal++]
+    
+    GetNext --> CheckEnt{企业 j<br/>已匹配?}
+    
+    CheckEnt -->|否<br/>未匹配| Accept[直接接受<br/>enterprise_match_j = i<br/>laborer_match_i = j]
+    
+    CheckEnt -->|是<br/>已匹配| Compare[比较新旧申请者<br/>当前匹配: k = enterprise_match_j<br/>比较 rank_i 和 rank_k]
+    
+    Compare --> CheckBetter{新申请者更优?<br/>rank_i < rank_k}
+    
+    CheckBetter -->|是| Replace[替换匹配<br/>laborer_match_k = -1<br/>enterprise_match_j = i<br/>laborer_match_i = j]
+    
+    CheckBetter -->|否| Reject[拒绝申请<br/>i 继续向下一个企业申请]
+    
+    Accept --> NextLabor
+    Replace --> NextLabor
+    Reject --> NextLabor
+    
+    NextLabor --> CheckLoop{所有劳动力<br/>遍历完毕?}
+    
+    CheckLoop -->|否| ForLabor
+    CheckLoop -->|是| CheckRound{达到最大轮次?<br/>r ≥ R_max}
+    
+    CheckRound -->|是| End
+    CheckRound -->|否<br/>r++| LoopStart
+    
+    style Start fill:#90EE90,stroke:#2E8B57,stroke-width:3px
+    style End fill:#90EE90,stroke:#2E8B57,stroke-width:3px
+    style CheckAll fill:#FFB6C1,stroke:#DC143C,stroke-width:2px
+    style CheckMatched fill:#FFB6C1,stroke:#DC143C,stroke-width:2px
+    style CheckMore fill:#FFB6C1,stroke:#DC143C,stroke-width:2px
+    style CheckEnt fill:#FFB6C1,stroke:#DC143C,stroke-width:2px
+    style CheckBetter fill:#FFB6C1,stroke:#DC143C,stroke-width:2px
+    style CheckLoop fill:#FFB6C1,stroke:#DC143C,stroke-width:2px
+    style CheckRound fill:#FFB6C1,stroke:#DC143C,stroke-width:2px
+    style LoopStart fill:#FFFACD,stroke:#FFD700,stroke-width:2px
+    style ComputePref fill:#B0E0E6,stroke:#4682B4,stroke-width:2px
+    style LaborPref fill:#DDA0DD,stroke:#9370DB,stroke-width:2px
+    style EntPref fill:#DDA0DD,stroke:#9370DB,stroke-width:2px
+    style Normalize fill:#F0E68C,stroke:#DAA520,stroke-width:2px
+        </div>
+        
+        <div class="instructions">
+            <h3>💡 使用说明</h3>
+            <p><strong>导出图片：</strong> 右键点击图表，选择"Save image as..."保存为PNG</p>
+            <p><strong>缩放查看：</strong> 使用浏览器的缩放功能（Ctrl +/-）调整大小</p>
+            <p><strong>打印输出：</strong> 按Ctrl+P打印或保存为PDF</p>
+        </div>
+    </div>
+</body>
+</html>

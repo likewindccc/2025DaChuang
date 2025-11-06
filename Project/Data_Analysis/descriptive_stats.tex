@@ -1,0 +1,108 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage{ctex}
+\usepackage{booktabs}
+\usepackage{geometry}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+
+% 字体设置 - 使用更美观的字体
+\setCJKmainfont{SimSun}[BoldFont=SimHei,ItalicFont=KaiTi]
+\setCJKsansfont{Microsoft YaHei}
+\setCJKmonofont{FangSong}
+
+% 页面设置
+\geometry{left=0.5cm,right=0.5cm,top=0.5cm,bottom=0.5cm}
+
+% 表格行距
+\renewcommand{\arraystretch}{1.2}
+
+\title{\textbf{数据描述性统计分析报告}}
+\author{}
+\date{2025年11月05日}
+
+\begin{document}
+
+\maketitle
+
+\section{概述}
+
+本报告对cleaned\_data.csv数据集进行了全面的描述性统计分析。数据集共包含300个样本，涵盖了被调查者的基本信息、工作意愿、工作能力等多个维度的数据。
+
+\section{连续变量描述性统计}
+
+下表展示了13个连续变量的描述性统计结果，包括均值、标准差、最小值、四分位数和最大值。变量名后括号中标注了各变量的赋分范围或单位。
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{lccccccc}
+\toprule
+\textbf{变量} & \textbf{均值} & \textbf{标准差} & \textbf{最小值} & \textbf{25\%} & \textbf{中位数} & \textbf{75\%} & \textbf{最大值} \\
+\midrule
+\textbf{年龄} & 36.98 & 6.07 & 25.00 & 32.00 & 36.50 & 41.00 & 50.00 \\
+\textbf{孩子数量（个）} & 1.57 & 0.77 & 0.00 & 1.00 & 2.00 & 2.00 & 3.00 \\
+\textbf{每日家务劳动时间（小时）} & 6.83 & 2.47 & 2.00 & 5.00 & 6.00 & 8.25 & 14.00 \\
+\textbf{每日闲暇时间（小时）} & 7.62 & 3.40 & 1.00 & 5.00 & 7.00 & 10.00 & 17.00 \\
+\textbf{每周期望工作天数} & 5.22 & 0.62 & 3.00 & 5.00 & 5.00 & 6.00 & 7.00 \\
+\textbf{每天期望工作时数} & 8.04 & 1.50 & 3.00 & 8.00 & 8.00 & 9.00 & 10.00 \\
+\textbf{每月期望收入（元）} & 4520.77 & 1333.03 & 1400.00 & 3500.00 & 4500.00 & 5500.00 & 8000.00 \\
+\textbf{工作保险重要性（0-3）} & 1.95 & 0.73 & 0.00 & 1.00 & 2.00 & 2.00 & 3.00 \\
+\textbf{劳动合同重要性（0-3）} & 2.16 & 0.71 & 0.00 & 2.00 & 2.00 & 3.00 & 3.00 \\
+\textbf{学历（0-6）} & 3.53 & 0.98 & 0.00 & 3.00 & 4.00 & 4.00 & 6.00 \\
+\textbf{累计工作年限} & 7.97 & 4.98 & 0.00 & 5.00 & 7.00 & 10.00 & 30.00 \\
+\textbf{工作能力评分（0-48）} & 25.02 & 9.08 & 2.00 & 21.00 & 26.00 & 32.00 & 44.00 \\
+\textbf{数字素养评分（0-20）} & 8.62 & 4.70 & 0.00 & 5.75 & 9.00 & 12.00 & 20.00 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\section{分类变量频数统计}
+
+下表展示了5个分类变量的频数分布和百分比统计。变量名后括号中标注了该变量的类型或赋分范围。
+
+注：*标注的变量仅统计希望工作的样本（N=230）。
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{llcc}
+\toprule
+\textbf{变量} & \textbf{类别} & \textbf{频数} & \textbf{百分比(\%)} \\
+\midrule
+\textbf{常住地区} & 东北地区 & 46 & 15.33 \\
+ & 东部地区 & 65 & 21.67 \\
+ & 中部地区 & 91 & 30.33 \\
+ & 西部地区 & 93 & 31.00 \\
+ & 香港、澳门、台湾或国外 & 5 & 1.67 \\
+\midrule
+\textbf{工作意愿} & 不希望 & 70 & 23.33 \\
+ & 希望 & 230 & 76.67 \\
+\midrule
+\textbf{全职或兼职*} & 全职 & 186 & 80.87 \\
+ & 兼职 & 44 & 19.13 \\
+\midrule
+\textbf{线上或线下*} & 线上 & 41 & 17.83 \\
+ & 线下 & 189 & 82.17 \\
+\midrule
+\textbf{是否曾工作} & 否 & 23 & 7.67 \\
+ & 是 & 277 & 92.33 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\section{主要发现}
+
+\begin{itemize}
+    \item 样本平均年龄为36.98岁，标准差为6.07岁，年龄分布相对集中。
+    \item 被调查者平均有1.57个孩子，每天平均花费6.83小时进行家务劳动。
+    \item 76.67\%的被调查者希望工作，其中65\%倾向于全职工作。
+    \item 73.67\%的被调查者偏好线下工作，仅26.33\%偏好线上工作。
+    \item 每月期望收入平均为4520.77元，范围从1400元到8000元。
+    \item 92.33\%的被调查者有工作经历，平均累计工作年限为7.97年。
+    \item 工作能力平均评分为25.02分，数字素养平均评分为8.62分。
+    \item 工作保险重要性和劳动合同重要性平均评分分别为1.95和2.16（0-3分制）。
+    \item 学历平均为3.53（0-6分制），相当于高中至大专水平。
+\end{itemize}
+
+\end{document}
