@@ -125,3 +125,4 @@ cython_debug/
 *_old.py
 experimental/
 deprecated/
+.augment/rules/imported/rules/rule.md
