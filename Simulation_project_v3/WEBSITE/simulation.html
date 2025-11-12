@@ -92,7 +92,7 @@
         
         .page-title {
             font-family: 'Space Grotesk', sans-serif;
-            font-size: 4.5rem;
+            font-size: 4rem;
             font-weight: 900;
             margin-bottom: 20px;
             background: linear-gradient(135deg, var(--text-primary), var(--accent-purple));
@@ -100,21 +100,21 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
-        
+
         .page-description {
             font-size: 1.3rem;
             color: var(--text-secondary);
             line-height: 1.8;
         }
-        
+
         .content-section {
             background: rgba(255, 255, 255, 0.6);
             backdrop-filter: blur(20px);
             border: 2px solid rgba(139, 92, 246, 0.15);
             border-radius: 32px;
             padding: 50px;
-            margin-bottom: 40px;
-            transition: all 0.5s ease;
+            margin-bottom: 80px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
         .content-section:hover {
@@ -172,12 +172,44 @@
             font-size: 1rem;
             color: var(--text-secondary);
         }
-        
+
+        /* 图表容器统一样式 */
+        .chart-container {
+            margin: 40px auto;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(139, 92, 246, 0.15);
+            overflow: hidden;
+            background: white;
+            padding: 20px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .chart-container:hover {
+            box-shadow: 0 15px 50px rgba(139, 92, 246, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .chart-iframe {
+            width: 100%;
+            height: 650px;
+            border: none;
+            border-radius: 15px;
+        }
+
+        .chart-caption {
+            text-align: center;
+            color: #475569;
+            margin-top: 15px;
+            font-size: 0.95rem;
+            font-style: italic;
+            font-weight: 500;
+        }
+
         .chart-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 30px;
-            margin: 30px 0;
+            gap: 40px;
+            margin: 40px 0;
         }
         
         .policy-grid {
@@ -246,32 +278,82 @@
             line-height: 1.6;
         }
         
+        /* 响应式布局 */
+        @media (max-width: 1200px) {
+            body {
+                padding: 100px 40px 60px 40px;
+            }
+
+            .side-nav {
+                display: none;
+            }
+
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
         @media (max-width: 1024px) {
             .chart-grid {
                 grid-template-columns: 1fr;
             }
-            
+
             .policy-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
         }
-        
+
         @media (max-width: 768px) {
             body {
-                padding: 80px 20px 60px 20px;
+                padding: 80px 20px 40px 20px;
             }
-            
+
             .page-title {
-                font-size: 2.5rem;
+                font-size: 3rem;
             }
-            
+
+            .section-title {
+                font-size: 1.8rem;
+            }
+
             .content-section {
                 padding: 30px;
             }
-            
+
             .policy-grid {
                 grid-template-columns: 1fr;
             }
+
+            .chart-iframe {
+                height: 500px;
+            }
+        }
+
+        /* 表格行hover效果 */
+        tbody tr {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        tbody tr:hover {
+            background: rgba(139, 92, 246, 0.08) !important;
+            transform: scale(1.01);
+        }
+
+        /* 表格thead优化渐变色 */
+        thead tr {
+            background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%) !important;
+        }
+
+        /* 最后一个content-section的margin调整 */
+        .content-section:last-of-type {
+            margin-bottom: 60px;
+        }
+
+        /* 图片居中显示 */
+        img {
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
         }
     </style>
 </head>
@@ -397,15 +479,16 @@
                 <i class="fas fa-chart-bar"></i>
                 政策效果对比
             </h2>
-            <div class="chart-placeholder">
-                <div class="placeholder-icon">
-                    <i class="fas fa-chart-column"></i>
-                </div>
-                <div class="placeholder-title">各政策场景下的失业率对比</div>
-                <div class="placeholder-text">
-                    柱状图展示不同政策对失业率的影响<br>
-                    横轴：政策场景，纵轴：失业率（%）
-                </div>
+            <div style="margin: 30px 0;">
+                <iframe src="charts/simulation/interactive/policy_comparison.html"
+                        width="100%"
+                        height="600px"
+                        frameborder="0"
+                        style="border-radius: 15px; box-shadow: 0 10px 30px rgba(139, 92, 246, 0.2);">
+                </iframe>
+                <p style="text-align: center; color: var(--text-secondary); margin-top: 15px; font-size: 0.95rem;">
+                    图1：政策场景对比分析（失业率、平均技能、平均工资）- 交互式图表
+                </p>
             </div>
         </div>
         
@@ -414,15 +497,16 @@
                 <i class="fas fa-chart-line"></i>
                 时间序列仿真
             </h2>
-            <div class="chart-placeholder">
-                <div class="placeholder-icon">
-                    <i class="fas fa-chart-area"></i>
-                </div>
-                <div class="placeholder-title">失业率动态演化路径</div>
-                <div class="placeholder-text">
-                    展示不同政策下失业率从初始状态到稳态的演化过程<br>
-                    横轴：时间（期），纵轴：失业率（%）
-                </div>
+            <div style="margin: 30px 0;">
+                <iframe src="charts/simulation/interactive/unemployment_evolution.html"
+                        width="100%"
+                        height="700px"
+                        frameborder="0"
+                        style="border-radius: 15px; box-shadow: 0 10px 30px rgba(139, 92, 246, 0.2);">
+                </iframe>
+                <p style="text-align: center; color: var(--text-secondary); margin-top: 15px; font-size: 0.95rem;">
+                    图3：失业率动态演化路径对比 - 交互式图表
+                </p>
             </div>
         </div>
         
@@ -432,26 +516,25 @@
                 工资效应分析
             </h2>
             <div class="chart-grid">
-                <div class="chart-placeholder">
-                    <div class="placeholder-icon">
-                        <i class="fas fa-chart-bar"></i>
-                    </div>
-                    <div class="placeholder-title">平均工资变化</div>
-                    <div class="placeholder-text">
-                        各政策场景下平均工资的变化幅度<br>
-                        评估政策对收入水平的影响
-                    </div>
+                <div style="margin: 20px 0;">
+                    <iframe src="charts/simulation/interactive/wage_evolution.html"
+                            width="100%"
+                            height="700px"
+                            frameborder="0"
+                            style="border-radius: 15px; box-shadow: 0 10px 30px rgba(139, 92, 246, 0.2);">
+                    </iframe>
+                    <p style="text-align: center; color: var(--text-secondary); margin-top: 15px; font-size: 0.95rem;">
+                        图4：平均工资动态演化路径对比 - 交互式图表
+                    </p>
                 </div>
-                
-                <div class="chart-placeholder">
-                    <div class="placeholder-icon">
-                        <i class="fas fa-chart-histogram"></i>
-                    </div>
-                    <div class="placeholder-title">工资分布变化</div>
-                    <div class="placeholder-text">
-                        对比基准场景与政策场景的工资分布<br>
-                        评估政策对收入不平等的影响
-                    </div>
+
+                <div style="margin: 20px 0;">
+                    <img src="charts/simulation/static/wage_distribution_comparison.png"
+                         alt="工资分布对比"
+                         style="width: 100%; border-radius: 15px; box-shadow: 0 10px 30px rgba(139, 92, 246, 0.2);">
+                    <p style="text-align: center; color: var(--text-secondary); margin-top: 15px; font-size: 0.95rem;">
+                        图5：各场景工资分布对比
+                    </p>
                 </div>
             </div>
         </div>
@@ -461,15 +544,16 @@
                 <i class="fas fa-smile"></i>
                 福利效应分析
             </h2>
-            <div class="chart-placeholder">
-                <div class="placeholder-icon">
-                    <i class="fas fa-chart-radar"></i>
-                </div>
-                <div class="placeholder-title">劳动者福利水平雷达图</div>
-                <div class="placeholder-text">
-                    多维度评估政策对劳动者福利的影响<br>
-                    包括就业概率、工资水平、努力成本、价值函数等
-                </div>
+            <div style="margin: 30px 0;">
+                <iframe src="charts/simulation/interactive/policy_effects_radar.html"
+                        width="100%"
+                        height="700px"
+                        frameborder="0"
+                        style="border-radius: 15px; box-shadow: 0 10px 30px rgba(139, 92, 246, 0.2);">
+                </iframe>
+                <p style="text-align: center; color: var(--text-secondary); margin-top: 15px; font-size: 0.95rem;">
+                    图2：政策效应多维度评估雷达图 - 交互式图表
+                </p>
             </div>
         </div>
         
