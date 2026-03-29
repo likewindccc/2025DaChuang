@@ -1,11 +1,14 @@
 import numpy as np
 import pandas as pd
-import yaml
 from pathlib import Path
+import logging
 from datetime import datetime
-from typing import Dict, Optional, Callable
+from typing import Dict, Optional, Callable, Union, Sequence
 
 from .target_moments import TargetMoments
+
+
+logger = logging.getLogger(__name__)
 
 
 class ObjectiveFunction:
@@ -31,7 +34,9 @@ class ObjectiveFunction:
         target_moments: TargetMoments,
         weight_matrix: np.ndarray,
         mfg_solver_func: Callable,
-        output_dir: Path
+        output_dir: Path,
+        use_pid_history: bool = False,
+        history_save_interval: int = 10
     ):
         """
         初始化SMM目标函数
@@ -41,11 +46,20 @@ class ObjectiveFunction:
             weight_matrix: 权重矩阵，形状为(n_moments, n_moments)
             mfg_solver_func: MFG求解函数，签名为func(params_dict) -> (individuals, eq_info)
             output_dir: 输出目录（用于保存评估历史）
+            use_pid_history: 是否使用PID历史文件（并行模式建议True）
+            history_save_interval: 历史保存间隔（评估次数）
         """
         self.target_moments = target_moments
         self.weight_matrix = weight_matrix
         self.mfg_solver_func = mfg_solver_func
         self.output_dir = output_dir
+        self.use_pid_history = use_pid_history
+        # 并行PID历史模式下，目标函数对象可能在worker侧频繁重建，
+        # 因此必须每次评估都落盘，避免计数器重置导致历史丢失。
+        if self.use_pid_history:
+            self.history_save_interval = 1
+        else:
+            self.history_save_interval = max(1, int(history_save_interval))
         
         # 初始化评估历史
         self.evaluation_history = []
@@ -81,11 +95,11 @@ class ObjectiveFunction:
         5. 记录评估结果
         """
         self.n_evaluations += 1
-        
-        print(f"\n{'='*80}")
-        print(f"目标函数评估 #{self.n_evaluations}")
-        print(f"{'='*80}")
-        print(f"参数向量: {params_vector}")
+
+        logger.info("%s", "=" * 80)
+        logger.info("目标函数评估 #%d", self.n_evaluations)
+        logger.info("%s", "=" * 80)
+        logger.info("参数向量: %s", params_vector)
         
         # 步骤1: 运行MFG求解
         individuals, eq_info = self.mfg_solver_func(params_vector)
@@ -110,12 +124,12 @@ class ObjectiveFunction:
             individuals,
             eq_info
         )
-        
-        # 步骤5: 打印评估摘要
-        print(f"\n结果:")
-        print(f"  SMM距离: {smm_distance:.6f}")
-        print(f"  矩差异范数: {np.linalg.norm(moment_diff):.6f}")
-        
+
+        # 步骤5: 输出评估摘要
+        logger.info("结果:")
+        logger.info("  SMM距离: %.6f", smm_distance)
+        logger.info("  矩差异范数: %.6f", np.linalg.norm(moment_diff))
+
         # 打印矩对比
         self.target_moments.print_moment_comparison(individuals, eq_info)
         
@@ -160,9 +174,9 @@ class ObjectiveFunction:
         # 添加到历史记录
         self.evaluation_history.append(record)
         
-        # 每10次评估保存一次历史（使用进程ID避免并发写入冲突）
-        if self.n_evaluations % 10 == 0:
-            self._save_history(use_pid=True)
+        # 每隔固定评估次数保存一次历史
+        if self.n_evaluations % self.history_save_interval == 0:
+            self._save_history(use_pid=self.use_pid_history)
     
     def _save_history(self, use_pid: bool = False) -> None:
         """
@@ -180,10 +194,13 @@ class ObjectiveFunction:
             # 串行模式：写入同一个文件
             history_file = self.output_dir / 'calibration_history.csv'
         
-        # 将历史记录转换为DataFrame
-        history_data = []
-        
-        for record in self.evaluation_history:
+        # 并行模式采用“单条追加写入”以兼容worker对象频繁重建；
+        # 串行模式保持“全量覆盖写入”便于直接读取完整历史。
+        if use_pid:
+            if not self.evaluation_history:
+                return
+
+            record = self.evaluation_history[-1]
             row = {
                 'evaluation_id': record['evaluation_id'],
                 'timestamp': record['timestamp'],
@@ -192,22 +209,48 @@ class ObjectiveFunction:
                 'converged': record['converged'],
                 'iterations': record['iterations']
             }
-            
-            # 添加参数
+
             for i, param_val in enumerate(record['params']):
                 row[f'param_{i}'] = param_val
-            
-            # 添加模拟矩
+
             for moment_name, moment_val in record['simulated_moments'].items():
                 row[f'sim_{moment_name}'] = moment_val
-            
-            history_data.append(row)
-        
-        df = pd.DataFrame(history_data)
-        df.to_csv(history_file, index=False, encoding='utf-8-sig')
+
+            row_df = pd.DataFrame([row])
+            file_exists = history_file.exists()
+            row_df.to_csv(
+                history_file,
+                mode='a',
+                header=not file_exists,
+                index=False,
+                encoding='utf-8-sig'
+            )
+        else:
+            history_data = []
+
+            for record in self.evaluation_history:
+                row = {
+                    'evaluation_id': record['evaluation_id'],
+                    'timestamp': record['timestamp'],
+                    'smm_distance': record['smm_distance'],
+                    'moment_diff_norm': record['moment_diff_norm'],
+                    'converged': record['converged'],
+                    'iterations': record['iterations']
+                }
+
+                for i, param_val in enumerate(record['params']):
+                    row[f'param_{i}'] = param_val
+
+                for moment_name, moment_val in record['simulated_moments'].items():
+                    row[f'sim_{moment_name}'] = moment_val
+
+                history_data.append(row)
+
+            df = pd.DataFrame(history_data)
+            df.to_csv(history_file, index=False, encoding='utf-8-sig')
         
         if not use_pid:
-            print(f"\n评估历史已保存至: {history_file}")
+            logger.info("评估历史已保存至: %s", history_file)
     
     def get_moment_difference(
         self, 
@@ -261,28 +304,33 @@ class ObjectiveFunction:
         打印历史最优评估结果
         """
         best_record = self.get_best_evaluation()
-        
+
         if best_record is None:
-            print("尚无评估历史")
+            logger.info("尚无评估历史")
             return
-        
-        print("\n" + "="*80)
-        print("历史最优评估")
-        print("="*80)
-        print(f"评估ID: {best_record['evaluation_id']}")
-        print(f"时间: {best_record['timestamp']}")
-        print(f"SMM距离: {best_record['smm_distance']:.6f}")
-        print(f"矩差异范数: {best_record['moment_diff_norm']:.6f}")
-        print(f"\n参数:")
+
+        logger.info("%s", "=" * 80)
+        logger.info("历史最优评估")
+        logger.info("%s", "=" * 80)
+        logger.info("评估ID: %s", best_record["evaluation_id"])
+        logger.info("时间: %s", best_record["timestamp"])
+        logger.info("SMM距离: %.6f", best_record["smm_distance"])
+        logger.info("矩差异范数: %.6f", best_record["moment_diff_norm"])
+        logger.info("参数:")
         for i, param_val in enumerate(best_record['params']):
-            print(f"  param_{i}: {param_val:.6f}")
-        print(f"\n模拟矩:")
+            logger.info("  param_%d: %.6f", i, param_val)
+        logger.info("模拟矩:")
         for moment_name, moment_val in best_record['simulated_moments'].items():
             target_val = self.target_moments.get_target_moments()[moment_name]
             diff = moment_val - target_val
-            print(f"  {moment_name}: {moment_val:.4f} "
-                  f"(目标: {target_val:.4f}, 差异: {diff:.4f})")
-        print("="*80)
+            logger.info(
+                "  %s: %.4f (目标: %.4f, 差异: %.4f)",
+                moment_name,
+                moment_val,
+                target_val,
+                diff,
+            )
+        logger.info("%s", "=" * 80)
     
     def reset_evaluation_count(self) -> None:
         """
@@ -332,33 +380,96 @@ class ObjectiveFunction:
         # 更新评估计数
         self.n_evaluations = len(self.evaluation_history)
         
-        print(f"已加载 {self.n_evaluations} 条评估历史")
+        logger.info("已加载 %d 条评估历史", self.n_evaluations)
+
+
+def _build_diagonal_weights(
+    n_moments: int,
+    custom_weights: Optional[Union[Dict[str, float], Sequence[float]]],
+    target_moments: Optional[TargetMoments],
+) -> np.ndarray:
+    """构建对角权重矩阵。"""
+    if custom_weights is None:
+        return np.eye(n_moments)
+
+    if isinstance(custom_weights, dict):
+        if target_moments is None:
+            raise ValueError("使用 dict 自定义权重时，必须提供 TargetMoments")
+        ordered_names = target_moments.get_moment_names()
+        diagonal = np.array(
+            [float(custom_weights.get(name, 1.0)) for name in ordered_names],
+            dtype=float
+        )
+    else:
+        diagonal = np.asarray(custom_weights, dtype=float)
+        if diagonal.shape[0] != n_moments:
+            raise ValueError(
+                f"自定义权重长度不匹配：期望 {n_moments}，实际 {diagonal.shape[0]}"
+            )
+
+    if np.any(diagonal <= 0):
+        raise ValueError("对角权重必须为正数")
+
+    return np.diag(diagonal)
 
 
 def create_weight_matrix(
-    n_moments: int, 
-    weight_type: str = 'identity'
+    target_moments_or_n: Union[TargetMoments, int],
+    weight_type: str = "identity",
+    custom_weights: Optional[Union[Dict[str, float], Sequence[float]]] = None,
+    covariance_matrix: Optional[np.ndarray] = None,
+    regularization: float = 1.0e-8,
+    strict_bootstrap_se: bool = False,
 ) -> np.ndarray:
     """
-    创建权重矩阵
-    
+    创建权重矩阵（兼容旧接口）。
+
     参数:
-        n_moments: 矩的数量
+        target_moments_or_n: TargetMoments实例，或矩数量（旧接口）
         weight_type: 权重类型
-            - 'identity': 单位矩阵（等权重）
-            - 'diagonal': 对角矩阵（可自定义权重）
-            - 'optimal': 最优权重矩阵（需要矩的协方差矩阵，暂不实现）
-    
-    返回:
-        权重矩阵，形状为(n_moments, n_moments)
+            - identity: 等权重单位阵
+            - diagonal: 自定义对角权重
+            - inverse_variance_bootstrap: bootstrap逆方差对角权重
+            - efficient_from_covariance / optimal: 协方差逆矩阵
+        custom_weights: 对角权重（仅 diagonal 使用）
+        covariance_matrix: 矩误差协方差（仅 efficient_from_covariance 使用）
+        regularization: 协方差逆时的岭正则项
+        strict_bootstrap_se: True 时要求目标矩文件必须提供 bootstrap_se
     """
-    if weight_type == 'identity':
-        return np.eye(n_moments)
-    
-    elif weight_type == 'diagonal':
-        # 暂时返回单位矩阵，后续可从配置文件读取自定义权重
-        return np.eye(n_moments)
-    
+    if isinstance(target_moments_or_n, TargetMoments):
+        target_moments = target_moments_or_n
+        n_moments = target_moments.get_n_moments()
     else:
-        raise ValueError(f"不支持的权重类型: {weight_type}")
+        target_moments = None
+        n_moments = int(target_moments_or_n)
+
+    if weight_type == "identity":
+        return np.eye(n_moments)
+
+    if weight_type == "diagonal":
+        return _build_diagonal_weights(
+            n_moments=n_moments,
+            custom_weights=custom_weights,
+            target_moments=target_moments
+        )
+
+    if weight_type == "inverse_variance_bootstrap":
+        if target_moments is None:
+            raise ValueError("inverse_variance_bootstrap 需要 TargetMoments 实例")
+        se_vec = target_moments.get_bootstrap_se_vector(strict=strict_bootstrap_se)
+        var_vec = np.maximum(se_vec ** 2, 1.0e-12)
+        return np.diag(1.0 / var_vec)
+
+    if weight_type in {"efficient_from_covariance", "optimal"}:
+        if covariance_matrix is None:
+            raise ValueError("efficient_from_covariance 需要 covariance_matrix")
+        cov = np.asarray(covariance_matrix, dtype=float)
+        if cov.shape != (n_moments, n_moments):
+            raise ValueError(
+                f"协方差矩阵形状不匹配：期望 {(n_moments, n_moments)}，实际 {cov.shape}"
+            )
+        regularized_cov = cov + regularization * np.eye(n_moments)
+        return np.linalg.pinv(regularized_cov)
+
+    raise ValueError(f"不支持的权重类型: {weight_type}")
 

@@ -1,596 +1,852 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-MFG均衡求解器（主控制器）
+MFG 均衡求解器。
 
-实现Bellman方程和KFE的交替迭代，求解平均场博弈的稳态均衡。
-
-算法流程（研究计划4.6节）：
-1. 初始化：生成N个个体，所有人失业，然后随机匹配一次
-2. 外层迭代（直到收敛）：
-   a) 计算市场紧张度 θ_t = V / U_t
-   b) 求解Bellman方程 → 得到最优策略 a*(x) 和价值函数 V(x)
-   c) 用a*求解KFE → 更新人口分布 m_{t+1}
-   d) 检查收敛：
-      - 价值函数相对变化：|ΔV|/|V| < ε_V (0.01)
-      - 平均努力水平变化：|mean(a_{t+1}) - mean(a_t)| < ε_a (0.01)
-      - 失业率变化：|u_{t+1} - u_t| < ε_u (0.001)
-
-收敛后得到平均场均衡（MFE）：个体策略与市场状态自洽。
+该模块负责组织 Bellman 方程与 KFE 的交替求解，并在需要时将均衡结果
+落盘保存。当前实现也支持在参数校准阶段复用基础人口样本，以减少重复采样
+带来的固定开销。
 """
+
+import logging
+import pickle
+from pathlib import Path
+from typing import Callable, Dict, Optional, Tuple
 
 import numpy as np
 import pandas as pd
-import pickle
 import yaml
-from pathlib import Path
-from typing import Dict, Tuple, Optional
 
 from .bellman_solver import BellmanSolver, load_match_function_model
 from .kfe_solver import KFESolver
 
 
+logger = logging.getLogger(__name__)
+
+
 class EquilibriumSolver:
     """
-    MFG均衡求解器
-    
-    负责：
-    1. 初始化人口（基于POPULATION模块的分布）
-    2. 协调Bellman和KFE的交替迭代
-    3. 监控收敛过程
-    4. 保存均衡结果
+    MFG 均衡求解器。
+
+    主要职责：
+    1. 生成或复用基础人口样本。
+    2. 协调 BellmanSolver 与 KFESolver 的交替迭代。
+    3. 判断均衡是否收敛，并记录历史轨迹。
+    4. 在需要时保存均衡结果文件。
     """
-    
+
     def __init__(
-        self, 
-        config_path: str, 
+        self,
+        config_path: str,
         population_adjustment: Optional[Dict] = None,
-        save_results: bool = True
+        save_results: bool = True,
     ):
         """
-        初始化均衡求解器
-        
-        参数:
-            config_path: MFG配置文件路径
-            population_adjustment: 人口分布调整参数（可选）
-            save_results: 是否保存结果文件（并行校准时应设为False）
+        初始化均衡求解器。
+
+        参数：
+            config_path: MFG 配置文件路径。
+            population_adjustment: 人口分布调整参数，例如培训政策冲击。
+            save_results: 是否将求解结果写入输出目录。
         """
         self.save_results = save_results
-        
-        # 加载配置
-        with open(config_path, 'r', encoding='utf-8') as f:
-            self.config = yaml.safe_load(f)
-        
-        # 加载匹配函数模型
-        model_path = self.config['paths']['match_function_model']
+
+        with open(config_path, "r", encoding="utf-8") as file:
+            self.config = yaml.safe_load(file)
+
+        model_path = self.config["paths"]["match_function_model"]
         self.match_model = load_match_function_model(model_path)
-        
-        # 初始化Bellman和KFE求解器
+
         self.bellman_solver = BellmanSolver(self.config, self.match_model)
         self.kfe_solver = KFESolver(self.config, self.match_model)
-        
-        # 提取参数
-        self.n_individuals = self.config['population']['n_individuals']
-        self.target_theta = self.config['market']['target_theta']  # 【修改】使用外生市场紧张度
-        self.max_outer_iter = self.config['equilibrium']['max_outer_iter']
-        self.damping_factor = self.config['equilibrium']['damping_factor']  # 【新增】阻尼因子
-        self.epsilon_V = self.config['equilibrium']['convergence']['epsilon_V']
-        self.epsilon_a = self.config['equilibrium']['convergence']['epsilon_a']
-        self.epsilon_u = self.config['equilibrium']['convergence']['epsilon_u']
-        self.use_relative_tol = self.config['equilibrium']['convergence']['use_relative_tol']  # 【新增】相对阈值标志
-        
-        # 【新增】人口分布调整参数
+
+        self.n_individuals = self.config["population"]["n_individuals"]
+        self.target_theta = self.config["market"]["target_theta"]
+        self.max_outer_iter = self.config["equilibrium"]["max_outer_iter"]
+        self.damping_factor = self.config["equilibrium"]["damping_factor"]
+        self.epsilon_V = self.config["equilibrium"]["convergence"]["epsilon_V"]
+        self.epsilon_a = self.config["equilibrium"]["convergence"]["epsilon_a"]
+        self.epsilon_u = self.config["equilibrium"]["convergence"]["epsilon_u"]
+        self.use_relative_tol = self.config["equilibrium"]["convergence"][
+            "use_relative_tol"
+        ]
         self.population_adjustment = population_adjustment
-        
-        # 输出目录
-        self.output_dir = Path(self.config['paths']['output_dir'])
+
+        self.output_dir = Path(self.config["paths"]["output_dir"])
         self.output_dir.mkdir(parents=True, exist_ok=True)
-        
-        # 历史记录
-        self.history = {
-            'iteration': [],
-            'theta': [],
-            'unemployment_rate': [],
-            'mean_T': [],
-            'mean_S': [],
-            'mean_D': [],
-            'mean_W': [],
-            'mean_wage_employed': [],
-            'mean_value_U': [],
-            'mean_value_E': [],
-            'mean_effort': [],
-            'convergence_V': [],
-            'convergence_a': [],
-            'convergence_u': []
+
+        self.initial_T: Optional[np.ndarray] = None
+        self.history = self._create_empty_history()
+        self.lambda_intercept_shift = float(
+            getattr(self.bellman_solver, "lambda_intercept_shift", 0.0)
+        )
+        self.calibrated_eta0 = float(getattr(self.bellman_solver, "eta0", 0.0))
+
+    def _sync_transition_parameters(
+        self,
+        lambda_intercept_shift: Optional[float] = None,
+        eta0: Optional[float] = None,
+    ) -> None:
+        """
+        将结构参数同步到 BellmanSolver 与 KFESolver。
+
+        由于两个求解器都会独立使用匹配概率和离职率函数，因此任何结构
+        截距项更新都必须同时写入二者，避免价值函数与人口演化口径不一致。
+        """
+        if lambda_intercept_shift is not None:
+            self.lambda_intercept_shift = float(lambda_intercept_shift)
+            self.bellman_solver.set_lambda_intercept_shift(
+                self.lambda_intercept_shift
+            )
+            self.kfe_solver.set_lambda_intercept_shift(
+                self.lambda_intercept_shift
+            )
+
+        if eta0 is not None:
+            self.calibrated_eta0 = float(eta0)
+            self.bellman_solver.set_eta0(self.calibrated_eta0)
+            self.kfe_solver.set_eta0(self.calibrated_eta0)
+
+    def _calibrate_transition_intercepts(
+        self,
+        individuals: pd.DataFrame,
+        theta: float,
+        effort: Optional[pd.Series] = None,
+        calibrate_lambda: bool = True,
+        calibrate_eta0: bool = False,
+        verbose: bool = True,
+    ) -> None:
+        """
+        基于参考样本校准匹配概率平移项和离职率截距。
+
+        参数：
+            individuals: 参考样本。
+            theta: 参考市场紧张度。
+            effort: 参考努力水平；若为空则默认使用全 0 努力。
+            calibrate_lambda: 是否校准匹配概率截距平移项。
+            calibrate_eta0: 是否同时反解 eta0。
+            verbose: 是否输出日志。
+        """
+        if effort is None:
+            effort_series = pd.Series(
+                np.zeros(len(individuals), dtype=float),
+                index=individuals.index,
+            )
+        else:
+            effort_series = pd.Series(
+                np.asarray(effort, dtype=float),
+                index=individuals.index,
+            )
+
+        if calibrate_lambda:
+            lambda_intercept_shift = self.kfe_solver.calibrate_lambda_intercept(
+                individuals,
+                theta,
+                effort_series,
+                verbose=verbose,
+            )
+            self._sync_transition_parameters(
+                lambda_intercept_shift=lambda_intercept_shift
+            )
+
+        if calibrate_eta0:
+            eta0 = self.kfe_solver.calibrate_eta0(
+                individuals,
+                verbose=verbose,
+            )
+            self._sync_transition_parameters(eta0=eta0)
+
+    @staticmethod
+    def _create_empty_history() -> Dict[str, list]:
+        """
+        创建一份空的迭代历史记录容器。
+        """
+        return {
+            "iteration": [],
+            "theta": [],
+            "unemployment_rate": [],
+            "mean_T": [],
+            "mean_S": [],
+            "mean_D": [],
+            "mean_W": [],
+            "mean_wage_employed": [],
+            "mean_value_U": [],
+            "mean_value_E": [],
+            "mean_effort": [],
+            "convergence_V": [],
+            "convergence_a": [],
+            "convergence_u": [],
         }
-    
-    def initialize_population(self) -> pd.DataFrame:
+
+    def create_base_population_sample(
+        self,
+        verbose: bool = True,
+    ) -> Tuple[pd.DataFrame, np.ndarray]:
         """
-        初始化人口
-        
-        步骤（研究计划市场初始化）：
-        1. 从POPULATION模块的分布中采样N个个体
-        2. 所有个体初始状态为失业（employment_status='unemployed'）
-        3. 运行一次随机匹配（effort=0，基于匹配函数λ）
-        4. 根据匹配结果确定初始就业状态
-        
-        返回:
-            individuals: DataFrame，包含所有个体的初始状态
+        创建可复用的基础人口样本。
+
+        该样本只包含状态变量与静态特征，不包含会在求解过程中被重写的
+        `employment_status` 和 `current_wage`，以便在不同参数点评估时安全复用。
+
+        参数：
+            verbose: 是否输出过程日志。
+
+        返回：
+            (base_population, initial_T): 基础人口样本与其初始 T 值副本。
         """
-        print("=" * 80)
-        print("初始化人口")
-        print("=" * 80)
-        
-        # 加载劳动力分布模型
+        if verbose:
+            logger.info("%s", "=" * 80)
+            logger.info("生成基础人口样本")
+            logger.info("%s", "=" * 80)
+
         from MODULES.POPULATION import LaborDistribution
+
         pop_config_path = "CONFIG/population_config.yaml"
-        with open(pop_config_path, 'r', encoding='utf-8') as f:
-            pop_config = yaml.safe_load(f)
-        
+        with open(pop_config_path, "r", encoding="utf-8") as file:
+            pop_config = yaml.safe_load(file)
+
         labor_model = LaborDistribution(pop_config)
         labor_model.fit()
-        
-        # 采样N个个体
-        print(f"从人口分布中采样 {self.n_individuals} 个个体...")
-        
-        # 采样连续变量（T, S, D, W, age）
+
+        if verbose:
+            logger.info("从人口分布中采样 %s 个个体...", self.n_individuals)
+
         continuous_samples = labor_model.copula_model.sample(self.n_individuals)
-        
-        # 采样离散变量（education, children）
-        edu_values = list(labor_model.discrete_dist['edu'].keys())
-        edu_probs = list(labor_model.discrete_dist['edu'].values())
+
+        edu_values = list(labor_model.discrete_dist["edu"].keys())
+        edu_probs = list(labor_model.discrete_dist["edu"].values())
         edu_samples = np.random.choice(
-            edu_values, size=self.n_individuals, p=edu_probs
+            edu_values,
+            size=self.n_individuals,
+            p=edu_probs,
         )
-        
-        children_values = list(labor_model.discrete_dist['children'].keys())
-        children_probs = list(labor_model.discrete_dist['children'].values())
+
+        children_values = list(labor_model.discrete_dist["children"].keys())
+        children_probs = list(labor_model.discrete_dist["children"].values())
         children_samples = np.random.choice(
-            children_values, size=self.n_individuals, p=children_probs
+            children_values,
+            size=self.n_individuals,
+            p=children_probs,
         )
-        
-        # 组合为DataFrame
+
         individuals = continuous_samples.copy()
-        individuals['education'] = edu_samples
-        individuals['children'] = children_samples
-        
-        # 【新增】记录每个个体的初始T值（作为其理想工作时间）
-        self.initial_T = individuals['T'].values.copy()
-        print(f"记录初始T值：均值 = {self.initial_T.mean():.2f} 小时/周")
-        print()
-        
-        # 【新增】应用人口分布调整（如果有）
-        if self.population_adjustment is not None:
-            print("应用人口分布调整（培训政策）...")
-            if 'mean_S_multiplier' in self.population_adjustment:
-                multiplier = self.population_adjustment['mean_S_multiplier']
-                individuals['S'] = individuals['S'] * multiplier
-                print(f"  技能水平S × {multiplier}")
-            
-            if 'mean_D_multiplier' in self.population_adjustment:
-                multiplier = self.population_adjustment['mean_D_multiplier']
-                individuals['D'] = individuals['D'] * multiplier
-                print(f"  数字素养D × {multiplier}")
-            print()
-        
-        # 初始化就业状态（所有人失业）
-        individuals['employment_status'] = 'unemployed'
-        individuals['current_wage'] = 0.0
-        
-        print(f"初始化完成：{self.n_individuals} 个个体，全部失业")
-        print()
-        
-        # 运行一次初始匹配（effort=0）
-        print("运行初始随机匹配...")
+        individuals["education"] = edu_samples
+        individuals["children"] = children_samples
+
+        individuals = self._apply_population_adjustment(
+            individuals,
+            verbose=verbose,
+        )
+
+        initial_t_array = individuals["T"].to_numpy(dtype=float).copy()
+        if verbose:
+            logger.info(
+                "记录初始 T 值：均值 = %.2f 小时/周",
+                initial_t_array.mean(),
+            )
+            logger.info("")
+
+        return individuals, initial_t_array
+
+    def _apply_population_adjustment(
+        self,
+        individuals: pd.DataFrame,
+        verbose: bool = True,
+    ) -> pd.DataFrame:
+        """
+        对基础人口样本施加政策引起的状态分布冲击。
+
+        该方法既服务于“即时采样后立刻调整”，也服务于“复用同一基础样本时
+        再按场景复制并调整”，从而确保不同政策场景共享同一底层人口抽样，
+        同时保留政策冲击本身。
+        """
+        adjusted = individuals.copy(deep=True)
+
+        if self.population_adjustment is None:
+            return adjusted
+
+        if verbose:
+            logger.info("应用人口分布调整（培训政策）...")
+
+        if "mean_S_multiplier" in self.population_adjustment:
+            multiplier = self.population_adjustment["mean_S_multiplier"]
+            adjusted["S"] = adjusted["S"] * multiplier
+            if verbose:
+                logger.info("  技能水平 S × %s", multiplier)
+
+        if "mean_D_multiplier" in self.population_adjustment:
+            multiplier = self.population_adjustment["mean_D_multiplier"]
+            adjusted["D"] = adjusted["D"] * multiplier
+            if verbose:
+                logger.info("  数字素养 D × %s", multiplier)
+
+        if verbose:
+            logger.info("")
+
+        return adjusted
+
+    def initialize_population(
+        self,
+        base_population: Optional[pd.DataFrame] = None,
+        initial_T: Optional[np.ndarray] = None,
+        verbose: bool = True,
+    ) -> pd.DataFrame:
+        """
+        初始化人口状态。
+
+        如果外部未提供基础人口样本，则即时生成；否则基于传入样本深拷贝，
+        再补齐就业状态和当前工资，并执行一次初始随机匹配。
+
+        参数：
+            base_population: 仅包含基础特征的人口样本。
+            initial_T: 与基础样本对应的初始 T 数组。
+            verbose: 是否输出过程日志。
+
+        返回：
+            初始化后的个体状态表。
+        """
+        if verbose:
+            logger.info("%s", "=" * 80)
+            logger.info("初始化人口")
+            logger.info("%s", "=" * 80)
+
+        generated_from_internal_sampler = base_population is None
+        if base_population is None:
+            base_population, initial_T = self.create_base_population_sample(
+                verbose=verbose,
+            )
+
+        if initial_T is None:
+            raise ValueError("初始化人口时缺少 initial_T。")
+
+        individuals = base_population.copy(deep=True)
+        if self.population_adjustment is not None and not generated_from_internal_sampler:
+            individuals = self._apply_population_adjustment(
+                individuals,
+                verbose=verbose,
+            )
+        self.initial_T = np.asarray(initial_T, dtype=float).copy()
+
+        individuals["employment_status"] = "unemployed"
+        individuals["current_wage"] = 0.0
+
+        if verbose:
+            logger.info("初始化完成：%s 个个体，全部失业", self.n_individuals)
+            logger.info("运行初始随机匹配...")
+
         initial_effort = pd.Series(
-            np.zeros(self.n_individuals), 
-            index=individuals.index
+            np.zeros(self.n_individuals, dtype=float),
+            index=individuals.index,
         )
-        
-        # 【修改】使用外生市场紧张度
         theta_initial = self.target_theta
-        print(f"初始市场紧张度 θ = {theta_initial:.4f} (外生参数)")
-        
-        # 计算匹配概率
-        lambda_probs = self.kfe_solver.compute_match_probabilities(
-            individuals, initial_effort, theta_initial
+
+        if verbose:
+            logger.info("初始市场紧张度 θ = %.4f（外生参数）", theta_initial)
+
+        # 当外部传入 base_population（政策场景复用共享样本）时，
+        # 不对匹配截距重校准，保留基准均衡校准好的截距，
+        # 使政策冲击（S/D/θ变化）能真实传导到匹配概率，而非被截距抵消。
+        # 只有首次基准均衡（base_population 为空，内部生成人口）时才重校准截距。
+        calibrate_lambda_on_init = generated_from_internal_sampler
+        self._calibrate_transition_intercepts(
+            individuals,
+            theta=theta_initial,
+            effort=initial_effort,
+            calibrate_lambda=calibrate_lambda_on_init,
+            calibrate_eta0=False,
+            verbose=verbose,
         )
-        
-        # 模拟随机匹配
+
+        lambda_probs = self.kfe_solver.compute_match_probabilities(
+            individuals,
+            initial_effort,
+            theta_initial,
+        )
         matched_mask = np.random.random(self.n_individuals) < lambda_probs
-        n_matched = matched_mask.sum()
-        
-        # 更新就业状态
-        individuals.loc[matched_mask, 'employment_status'] = 'employed'
-        individuals.loc[matched_mask, 'current_wage'] = individuals.loc[
-            matched_mask, 'W'
+        n_matched = int(matched_mask.sum())
+
+        individuals.loc[matched_mask, "employment_status"] = "employed"
+        individuals.loc[matched_mask, "current_wage"] = individuals.loc[
+            matched_mask,
+            "W",
         ]
-        
-        n_employed = (individuals['employment_status'] == 'employed').sum()
+
+        n_employed = int(
+            (individuals["employment_status"] == "employed").sum()
+        )
         initial_u_rate = 1.0 - n_employed / self.n_individuals
-        
-        print(f"初始匹配完成：{n_matched} 人匹配成功")
-        print(f"初始失业率 = {initial_u_rate*100:.2f}%")
-        print()
-        
+
+        if verbose:
+            logger.info("初始匹配完成：%s 人匹配成功", n_matched)
+            logger.info("初始失业率 = %.2f%%", initial_u_rate * 100)
+        self._calibrate_transition_intercepts(
+            individuals,
+            theta=theta_initial,
+            effort=initial_effort,
+            calibrate_lambda=False,
+            calibrate_eta0=True,
+            verbose=verbose,
+        )
+        if verbose:
+            logger.info("")
+
         return individuals
-    
+
     def solve(
-        self, 
+        self,
         individuals: Optional[pd.DataFrame] = None,
         verbose: bool = True,
-        callback: Optional[callable] = None
+        callback: Optional[Callable[[int, Dict], None]] = None,
+        base_population: Optional[pd.DataFrame] = None,
+        initial_T: Optional[np.ndarray] = None,
     ) -> Tuple[pd.DataFrame, Dict]:
         """
-        求解MFG均衡
-        
-        参数:
-            individuals: 初始人口（如为None，则自动初始化）
-            verbose: 是否输出详细信息
-            callback: 进度回调函数，签名为callback(iteration, stats)
-            
-        返回:
-            (individuals_equilibrium, equilibrium_info): 均衡状态和统计信息
+        求解 MFG 稳态均衡。
+
+        参数：
+            individuals: 初始人口状态；若为空则自动初始化。
+            verbose: 是否输出详细日志。
+            callback: 可选回调函数，签名为 `callback(iteration, stats)`。
+            base_population: 可复用的基础人口样本。
+            initial_T: 与基础样本配套的初始 T 值数组。
+
+        返回：
+            (individuals_equilibrium, equilibrium_info)。
         """
-        # 初始化人口
+        self.history = self._create_empty_history()
+        created_internal_population = individuals is None
+
         if individuals is None:
-            individuals = self.initialize_population()
-        
-        print("=" * 80)
-        print("开始MFG均衡求解")
-        print("=" * 80)
-        print(f"最大迭代轮数: {self.max_outer_iter}")
-        print(f"阻尼因子: {self.damping_factor} (V_new = {self.damping_factor}*V_computed + {1-self.damping_factor}*V_old)")
-        if self.use_relative_tol:
-            print(f"收敛阈值: ε_V={self.epsilon_V} (相对), ε_a={self.epsilon_a}, ε_u={self.epsilon_u}")
-        else:
-            print(f"收敛阈值: ε_V={self.epsilon_V}, ε_a={self.epsilon_a}, ε_u={self.epsilon_u}")
-        print()
-        
-        # 初始化上一轮的值（用于收敛判断）
+            individuals = self.initialize_population(
+                base_population=base_population,
+                initial_T=initial_T,
+                verbose=verbose,
+            )
+        elif initial_T is not None:
+            self.initial_T = np.asarray(initial_T, dtype=float).copy()
+
+        if self.initial_T is None:
+            raise ValueError("求解均衡前缺少 initial_T，无法计算 Bellman 方程。")
+
+        if (
+            not created_internal_population
+            and individuals is not None
+            and "employment_status" in individuals.columns
+        ):
+            self._calibrate_transition_intercepts(
+                individuals,
+                theta=self.target_theta,
+                effort=pd.Series(
+                    np.zeros(len(individuals), dtype=float),
+                    index=individuals.index,
+                ),
+                calibrate_lambda=True,
+                calibrate_eta0=True,
+                verbose=verbose,
+            )
+
+        if verbose:
+            logger.info("%s", "=" * 80)
+            logger.info("开始求解 MFG 均衡")
+            logger.info("%s", "=" * 80)
+            logger.info("最大外层迭代轮数: %s", self.max_outer_iter)
+            logger.info(
+                "阻尼因子: %.4f (V_new = %.4f * V_computed + %.4f * V_old)",
+                self.damping_factor,
+                self.damping_factor,
+                1 - self.damping_factor,
+            )
+            if self.use_relative_tol:
+                logger.info(
+                    "收敛阈值: ΔV=%.6f（相对）, Δa=%.6f, Δu=%.6f",
+                    self.epsilon_V,
+                    self.epsilon_a,
+                    self.epsilon_u,
+                )
+            else:
+                logger.info(
+                    "收敛阈值: ΔV=%.6f, Δa=%.6f, Δu=%.6f",
+                    self.epsilon_V,
+                    self.epsilon_a,
+                    self.epsilon_u,
+                )
+
         prev_V_U = None
         prev_V_E = None
         prev_a_optimal = None
         prev_u_rate = None
-        
-        # 外层MFG均衡迭代
+
+        last_V_U = None
+        last_V_E = None
+        last_a_optimal = None
+        last_theta = self.target_theta
+        last_u_rate = np.nan
+        last_stats: Dict = {}
+
         for outer_iter in range(self.max_outer_iter):
             if verbose:
-                print(f"{'='*80}")
-                print(f"外层迭代 {outer_iter + 1}/{self.max_outer_iter}")
-                print(f"{'='*80}")
-            
-            # 计算当前统计量
-            n_unemployed = (individuals['employment_status'] == 'unemployed').sum()
-            n_employed = (individuals['employment_status'] == 'employed').sum()
+                logger.info("%s", "=" * 80)
+                logger.info(
+                    "外层迭代 %s/%s",
+                    outer_iter + 1,
+                    self.max_outer_iter,
+                )
+                logger.info("%s", "=" * 80)
+
+            unemployed_mask = individuals["employment_status"] == "unemployed"
+            employed_mask = individuals["employment_status"] == "employed"
+            n_unemployed = int(unemployed_mask.sum())
+            n_employed = int(employed_mask.sum())
             u_rate = n_unemployed / self.n_individuals
-            
-            # 【修改】使用外生市场紧张度（不再根据V/U计算）
             theta = self.target_theta
-            
+
             if verbose:
-                print(f"失业数: {n_unemployed}, 就业数: {n_employed}")
-                print(f"失业率: {u_rate*100:.2f}%")
-                print(f"市场紧张度 θ = {theta:.4f}")
-                print()
-            
-            # 步骤1: 求解Bellman方程
-            if verbose:
-                print("步骤1: 求解Bellman方程...")
-            
+                logger.info("失业人数: %s, 就业人数: %s", n_unemployed, n_employed)
+                logger.info("失业率: %.2f%%", u_rate * 100)
+                logger.info("市场紧张度 θ = %.4f", theta)
+                logger.info("步骤 1: 求解 Bellman 方程...")
+
             V_U_computed, V_E_computed, a_optimal = self.bellman_solver.solve(
-                individuals, theta, self.initial_T
+                individuals,
+                theta,
+                self.initial_T,
+                initial_V_U=prev_V_U,
+                initial_V_E=prev_V_E,
+                verbose=verbose,
             )
-            
-            # 【新增】阻尼更新机制：平滑价值函数变化
-            if outer_iter > 0 and prev_V_U is not None:
-                V_U = self.damping_factor * V_U_computed + (1 - self.damping_factor) * prev_V_U
-                V_E = self.damping_factor * V_E_computed + (1 - self.damping_factor) * prev_V_E
+
+            if outer_iter > 0 and prev_V_U is not None and prev_V_E is not None:
+                V_U = (
+                    self.damping_factor * V_U_computed
+                    + (1 - self.damping_factor) * prev_V_U
+                )
+                V_E = (
+                    self.damping_factor * V_E_computed
+                    + (1 - self.damping_factor) * prev_V_E
+                )
                 if verbose:
-                    print(f"  应用阻尼更新（α={self.damping_factor}）")
+                    logger.info("应用阻尼更新（权重 = %.4f）", self.damping_factor)
             else:
-                V_U = V_U_computed.copy()
-                V_E = V_E_computed.copy()
-            
+                V_U = np.asarray(V_U_computed, dtype=float).copy()
+                V_E = np.asarray(V_E_computed, dtype=float).copy()
+
+            mean_V_U = float(np.mean(V_U[unemployed_mask])) if n_unemployed > 0 else 0.0
+            mean_V_E = float(np.mean(V_E[employed_mask])) if n_employed > 0 else 0.0
+            mean_a = float(np.mean(a_optimal[unemployed_mask])) if n_unemployed > 0 else 0.0
+
             if verbose:
-                mean_V_U = V_U[individuals['employment_status'] == 'unemployed'].mean()
-                mean_V_E = V_E[individuals['employment_status'] == 'employed'].mean()
-                mean_a = a_optimal[individuals['employment_status'] == 'unemployed'].mean()
-                print(f"  平均失业价值函数: {mean_V_U:.2f}")
-                print(f"  平均就业价值函数: {mean_V_E:.2f}")
-                print(f"  平均最优努力: {mean_a:.4f}")
-                print()
-            
-            # 步骤2: 求解KFE（人口演化）
-            if verbose:
-                print("步骤2: 求解KFE（人口演化）...")
-            
+                logger.info("平均失业价值函数: %.4f", mean_V_U)
+                logger.info("平均就业价值函数: %.4f", mean_V_E)
+                logger.info("平均最优努力: %.4f", mean_a)
+                logger.info("步骤 2: 求解 KFE（人口演化）...")
+
             individuals_next, stats = self.kfe_solver.evolve(
-                individuals, a_optimal, theta
+                individuals,
+                a_optimal,
+                theta,
+                verbose=verbose,
             )
-            
+            u_rate_next = float(stats["unemployment_rate"])
+
             if verbose:
-                print(f"  演化后失业率: {stats['unemployment_rate']*100:.2f}%")
-                print(f"  平均T: {stats['mean_T']:.2f}")
-                print(f"  平均S: {stats['mean_S']:.2f}")
-                print(f"  平均D: {stats['mean_D']:.2f}")
-                print(f"  平均W: {stats['mean_W']:.2f}")
-                print()
-            
-            # 步骤3: 检查收敛（先计算指标）
-            if outer_iter > 0:
-                # 计算价值函数变化
-                diff_V_U_abs = np.abs(V_U - prev_V_U).max()
-                diff_V_E_abs = np.abs(V_E - prev_V_E).max()
-                
-                # 【修改】使用相对阈值判断价值函数收敛
+                logger.info(
+                    "演化后失业率: %.2f%%",
+                    u_rate_next * 100,
+                )
+                logger.info("平均 T: %.4f", stats["mean_T"])
+                logger.info("平均 S: %.4f", stats["mean_S"])
+                logger.info("平均 D: %.4f", stats["mean_D"])
+                logger.info("平均 W: %.4f", stats["mean_W"])
+
+            if outer_iter > 0 and prev_V_U is not None and prev_V_E is not None:
+                diff_V_U_abs = float(np.max(np.abs(V_U - prev_V_U)))
+                diff_V_E_abs = float(np.max(np.abs(V_E - prev_V_E)))
+
                 if self.use_relative_tol:
-                    # 相对变化：|ΔV| / (|V| + 1e-10)
-                    V_U_magnitude = np.abs(V_U).mean() + 1e-10
-                    V_E_magnitude = np.abs(V_E).mean() + 1e-10
-                    diff_V_U_rel = diff_V_U_abs / V_U_magnitude
-                    diff_V_E_rel = diff_V_E_abs / V_E_magnitude
-                    diff_V = max(diff_V_U_rel, diff_V_E_rel)
+                    V_U_magnitude = float(np.mean(np.abs(V_U))) + 1e-10
+                    V_E_magnitude = float(np.mean(np.abs(V_E))) + 1e-10
+                    diff_V = max(
+                        diff_V_U_abs / V_U_magnitude,
+                        diff_V_E_abs / V_E_magnitude,
+                    )
                 else:
-                    # 绝对变化
                     diff_V = max(diff_V_U_abs, diff_V_E_abs)
-                
-                # 【修改】计算平均努力水平变化（而非最大值变化）
-                # 原因：a是离散化的（步长0.1），单个体变化至少0.1，但平均值是连续的
-                mean_a_current = a_optimal.mean()
-                mean_a_prev = prev_a_optimal.mean()
-                diff_a = abs(mean_a_current - mean_a_prev)
-                
-                # 计算失业率变化（绝对值）
-                diff_u = abs(u_rate - prev_u_rate)
+
+                diff_a = float(
+                    abs(np.mean(a_optimal) - np.mean(prev_a_optimal))
+                )
+                diff_u = float(abs(u_rate_next - prev_u_rate))
             else:
-                # 第一轮没有前置
                 diff_V = np.nan
                 diff_a = np.nan
                 diff_u = np.nan
-            
-            # 记录收敛指标（所有轮次都记录）
-            self.history['convergence_V'].append(diff_V)
-            self.history['convergence_a'].append(diff_a)
-            self.history['convergence_u'].append(diff_u)
-            
-            # 判断是否收敛
-            if outer_iter > 0:
-                if verbose:
-                    print(f"收敛检查:")
-                    if self.use_relative_tol:
-                        print(f"  |ΔV|/|V| = {diff_V:.6f} (阈值: {self.epsilon_V}, 相对)")
-                    else:
-                        print(f"  |ΔV| = {diff_V:.6f} (阈值: {self.epsilon_V})")
-                    print(f"  |Δmean(a)| = {diff_a:.6f} (阈值: {self.epsilon_a})")
-                    print(f"  |Δu| = {diff_u:.6f} (阈值: {self.epsilon_u})")
-                    print()
-                
-                if (diff_V < self.epsilon_V and 
-                    diff_a < self.epsilon_a and 
-                    diff_u < self.epsilon_u):
-                    print(f"{'='*80}")
-                    print(f"均衡已收敛！迭代 {outer_iter + 1} 轮")
-                    print(f"{'='*80}")
-                    print(f"最终失业率: {u_rate*100:.2f}%")
-                    print(f"最终市场紧张度: {theta:.4f}")
-                    print()
-                    
-                    # 【修复】收敛时也要记录最后一次历史
-                    self.history['iteration'].append(outer_iter + 1)
-                    self.history['theta'].append(theta)
-                    self.history['unemployment_rate'].append(u_rate)
-                    self.history['mean_T'].append(stats['mean_T'])
-                    self.history['mean_S'].append(stats['mean_S'])
-                    self.history['mean_D'].append(stats['mean_D'])
-                    self.history['mean_W'].append(stats['mean_W'])
-                    self.history['mean_wage_employed'].append(stats.get('mean_wage_employed', 0))
-                    
-                    if n_unemployed > 0:
-                        mean_V_U = V_U[individuals['employment_status'] == 'unemployed'].mean()
-                        mean_a = a_optimal[individuals['employment_status'] == 'unemployed'].mean()
-                    else:
-                        mean_V_U = 0
-                        mean_a = 0
-                    
-                    if n_employed > 0:
-                        mean_V_E = V_E[individuals['employment_status'] == 'employed'].mean()
-                    else:
-                        mean_V_E = 0
-                    
-                    self.history['mean_value_U'].append(mean_V_U)
-                    self.history['mean_value_E'].append(mean_V_E)
-                    self.history['mean_effort'].append(mean_a)
-                    
-                    # 保存均衡状态
-                    self._save_equilibrium(
-                        individuals_next, V_U, V_E, a_optimal, 
-                        outer_iter + 1, converged=True
-                    )
-                    
-                    return individuals_next, {
-                        'converged': True,
-                        'iterations': outer_iter + 1,
-                        'final_unemployment_rate': u_rate,
-                        'final_theta': theta,
-                        'final_statistics': stats,
-                        'history': self.history
-                    }
-            
-            # 记录历史
-            self.history['iteration'].append(outer_iter + 1)
-            self.history['theta'].append(theta)
-            self.history['unemployment_rate'].append(u_rate)
-            self.history['mean_T'].append(stats['mean_T'])
-            self.history['mean_S'].append(stats['mean_S'])
-            self.history['mean_D'].append(stats['mean_D'])
-            self.history['mean_W'].append(stats['mean_W'])
-            self.history['mean_wage_employed'].append(stats.get('mean_wage_employed', 0))
-            
-            if n_unemployed > 0:
-                mean_V_U = V_U[individuals['employment_status'] == 'unemployed'].mean()
-                mean_a = a_optimal[individuals['employment_status'] == 'unemployed'].mean()
-            else:
-                mean_V_U = 0
-                mean_a = 0
-            
-            if n_employed > 0:
-                mean_V_E = V_E[individuals['employment_status'] == 'employed'].mean()
-            else:
-                mean_V_E = 0
-            
-            self.history['mean_value_U'].append(mean_V_U)
-            self.history['mean_value_E'].append(mean_V_E)
-            self.history['mean_effort'].append(mean_a)
-            
-            # 调用进度回调函数（供GUI使用）
+
+            self.history["iteration"].append(outer_iter + 1)
+            self.history["theta"].append(theta)
+            # 历史轨迹统一记录“演化后”的总体统计口径，与 final_statistics 对齐。
+            self.history["unemployment_rate"].append(u_rate_next)
+            self.history["mean_T"].append(stats["mean_T"])
+            self.history["mean_S"].append(stats["mean_S"])
+            self.history["mean_D"].append(stats["mean_D"])
+            self.history["mean_W"].append(stats["mean_W"])
+            self.history["mean_wage_employed"].append(
+                stats.get("mean_wage_employed", 0.0)
+            )
+            self.history["mean_value_U"].append(mean_V_U)
+            self.history["mean_value_E"].append(mean_V_E)
+            self.history["mean_effort"].append(mean_a)
+            self.history["convergence_V"].append(diff_V)
+            self.history["convergence_a"].append(diff_a)
+            self.history["convergence_u"].append(diff_u)
+
             if callback is not None:
                 callback_stats = {
-                    'unemployment_rate': u_rate,
-                    'theta': theta,
-                    'mean_wage': individuals['current_wage'].mean(),
-                    'mean_T': stats['mean_T'],
-                    'mean_S': stats['mean_S'],
-                    'diff_V': diff_V if outer_iter > 0 else 0,
-                    'diff_u': diff_u if outer_iter > 0 else 0
+                    "unemployment_rate": u_rate_next,
+                    "theta": theta,
+                    "mean_wage": float(individuals_next["current_wage"].mean()),
+                    "mean_T": stats["mean_T"],
+                    "mean_S": stats["mean_S"],
+                    "diff_V": 0.0 if np.isnan(diff_V) else diff_V,
+                    "diff_u": 0.0 if np.isnan(diff_u) else diff_u,
                 }
                 callback(outer_iter + 1, callback_stats)
-            
-            # 更新状态
-            individuals = individuals_next.copy()
-            prev_V_U = V_U.copy()
-            prev_V_E = V_E.copy()
-            prev_a_optimal = a_optimal.copy()
-            prev_u_rate = u_rate
-        
-        # 未收敛
-        print(f"{'='*80}")
-        print(f"警告：达到最大迭代次数 {self.max_outer_iter}，均衡未收敛")
-        print(f"{'='*80}")
-        
-        # 保存最终状态
+
+            last_V_U = V_U
+            last_V_E = V_E
+            last_a_optimal = np.asarray(a_optimal, dtype=float).copy()
+            last_theta = theta
+            last_u_rate = u_rate_next
+            last_stats = stats
+
+            if outer_iter > 0:
+                if verbose:
+                    if self.use_relative_tol:
+                        logger.info(
+                            "收敛检查: |ΔV|/|V|=%.6f, |Δmean(a)|=%.6f, |Δu|=%.6f",
+                            diff_V,
+                            diff_a,
+                            diff_u,
+                        )
+                    else:
+                        logger.info(
+                            "收敛检查: |ΔV|=%.6f, |Δmean(a)|=%.6f, |Δu|=%.6f",
+                            diff_V,
+                            diff_a,
+                            diff_u,
+                        )
+
+                if (
+                    diff_V < self.epsilon_V
+                    and diff_a < self.epsilon_a
+                    and diff_u < self.epsilon_u
+                ):
+                    if verbose:
+                        logger.info("%s", "=" * 80)
+                        logger.info("均衡已收敛，共迭代 %s 轮", outer_iter + 1)
+                        logger.info("%s", "=" * 80)
+
+                    self._save_equilibrium(
+                        individuals_next,
+                        last_V_U,
+                        last_V_E,
+                        last_a_optimal,
+                        outer_iter + 1,
+                        converged=True,
+                    )
+                    return individuals_next, {
+                        "converged": True,
+                        "iterations": outer_iter + 1,
+                        "final_unemployment_rate": last_stats.get(
+                            "unemployment_rate",
+                            last_u_rate,
+                        ),
+                        "final_theta": last_theta,
+                        "lambda_intercept_shift": self.lambda_intercept_shift,
+                        "eta0": self.calibrated_eta0,
+                        "final_statistics": last_stats,
+                        "history": self.history,
+                    }
+
+            individuals = individuals_next.copy(deep=True)
+            prev_V_U = np.asarray(V_U, dtype=float).copy()
+            prev_V_E = np.asarray(V_E, dtype=float).copy()
+            prev_a_optimal = np.asarray(a_optimal, dtype=float).copy()
+            prev_u_rate = u_rate_next
+
+        if verbose:
+            logger.warning(
+                "达到最大外层迭代次数 %s，均衡仍未收敛。",
+                self.max_outer_iter,
+            )
+
+        if last_V_U is None or last_V_E is None or last_a_optimal is None:
+            raise RuntimeError("均衡求解未执行任何有效迭代。")
+
         self._save_equilibrium(
-            individuals, V_U, V_E, a_optimal, 
-            self.max_outer_iter, converged=False
+            individuals,
+            last_V_U,
+            last_V_E,
+            last_a_optimal,
+            self.max_outer_iter,
+            converged=False,
         )
-        
         return individuals, {
-            'converged': False,
-            'iterations': self.max_outer_iter,
-            'final_unemployment_rate': u_rate,
-            'final_theta': theta,
-            'final_statistics': stats,
-            'history': self.history
+            "converged": False,
+            "iterations": self.max_outer_iter,
+            "final_unemployment_rate": last_stats.get(
+                "unemployment_rate",
+                last_u_rate,
+            ),
+            "final_theta": last_theta,
+            "lambda_intercept_shift": self.lambda_intercept_shift,
+            "eta0": self.calibrated_eta0,
+            "final_statistics": last_stats,
+            "history": self.history,
         }
-    
+
     def _save_equilibrium(
         self,
         individuals: pd.DataFrame,
-        V_U: pd.Series,
-        V_E: pd.Series,
-        a_optimal: pd.Series,
+        V_U: np.ndarray,
+        V_E: np.ndarray,
+        a_optimal: np.ndarray,
         iterations: int,
-        converged: bool
-    ):
+        converged: bool,
+    ) -> None:
         """
-        保存均衡结果
-        
-        参数:
-            individuals: 均衡时的个体状态
-            V_U, V_E: 价值函数
-            a_optimal: 最优努力
-            iterations: 迭代轮数
-            converged: 是否收敛
+        保存均衡求解结果。
+
+        参数：
+            individuals: 均衡时刻的个体状态。
+            V_U: 失业状态价值函数。
+            V_E: 就业状态价值函数。
+            a_optimal: 最优努力策略。
+            iterations: 迭代轮数。
+            converged: 是否已经收敛。
         """
         if not self.save_results:
             return
-        
-        print("保存均衡结果...")
-        
-        # 保存个体状态
+
+        logger.info("保存均衡结果到 %s", self.output_dir)
+
+        v_u_series = pd.Series(np.asarray(V_U, dtype=float), index=individuals.index)
+        v_e_series = pd.Series(np.asarray(V_E, dtype=float), index=individuals.index)
+        a_series = pd.Series(
+            np.asarray(a_optimal, dtype=float),
+            index=individuals.index,
+        )
+        employed_mask = individuals["employment_status"] == "employed"
+        a_series.loc[employed_mask] = 0.0
+
         individuals_path = self.output_dir / "equilibrium_individuals.csv"
-        individuals.to_csv(individuals_path, index=False, encoding='utf-8-sig')
-        print(f"  个体状态已保存至: {individuals_path}")
-        
-        # 保存价值函数和策略
-        policy_df = pd.DataFrame({
-            'V_U': V_U,
-            'V_E': V_E,
-            'a_optimal': a_optimal
-        })
+        individuals.to_csv(individuals_path, index=False, encoding="utf-8-sig")
+
+        policy_df = pd.DataFrame(
+            {
+                "V_U": v_u_series,
+                "V_E": v_e_series,
+                "a_optimal": a_series,
+            }
+        )
         policy_path = self.output_dir / "equilibrium_policy.csv"
-        policy_df.to_csv(policy_path, index=True, encoding='utf-8-sig')
-        print(f"  价值函数和策略已保存至: {policy_path}")
-        
-        # 保存历史记录
+        policy_df.to_csv(policy_path, index=True, encoding="utf-8-sig")
+
         history_df = pd.DataFrame(self.history)
         history_path = self.output_dir / "equilibrium_history.csv"
-        history_df.to_csv(history_path, index=False, encoding='utf-8-sig')
-        print(f"  迭代历史已保存至: {history_path}")
-        
-        # 保存汇总信息
+        history_df.to_csv(history_path, index=False, encoding="utf-8-sig")
+
         summary = {
-            'converged': converged,
-            'iterations': iterations,
-            'n_individuals': self.n_individuals,
-            'target_theta': self.target_theta,  # 【修改】保存外生市场紧张度
-            'final_unemployment_rate': self.history['unemployment_rate'][-1],
-            'final_theta': self.history['theta'][-1]
+            "converged": converged,
+            "iterations": iterations,
+            "n_individuals": self.n_individuals,
+            "target_theta": self.target_theta,
+            "lambda_intercept_shift": self.lambda_intercept_shift,
+            "eta0": self.calibrated_eta0,
+            "final_unemployment_rate": float(
+                (individuals["employment_status"] == "unemployed").mean()
+            ),
+            "final_theta": self.history["theta"][-1],
         }
-        
         summary_path = self.output_dir / "equilibrium_summary.pkl"
-        with open(summary_path, 'wb') as f:
-            pickle.dump(summary, f)
-        print(f"  汇总信息已保存至: {summary_path}")
-        
-        # 保存价值函数完整分布（用于可视化价值函数分布）
-        value_distribution = pd.DataFrame({
-            'individual_id': individuals.index,
-            'V_U': V_U,
-            'V_E': V_E,
-            'delta_V': V_E - V_U,
-            'a_optimal': a_optimal,
-            'employment_status': individuals['employment_status'],
-            'T': individuals['T'],
-            'S': individuals['S'],
-            'D': individuals['D'],
-            'W': individuals['W']
-        })
+        with open(summary_path, "wb") as file:
+            pickle.dump(summary, file)
+
+        value_distribution = pd.DataFrame(
+            {
+                "individual_id": individuals.index,
+                "V_U": v_u_series,
+                "V_E": v_e_series,
+                "delta_V": v_e_series - v_u_series,
+                "a_optimal": a_series,
+                "employment_status": individuals["employment_status"],
+                "T": individuals["T"],
+                "S": individuals["S"],
+                "D": individuals["D"],
+                "W": individuals["W"],
+            }
+        )
         value_dist_path = self.output_dir / "value_distribution_full.csv"
-        value_distribution.to_csv(value_dist_path, index=False, encoding='utf-8-sig')
-        print(f"  价值函数完整分布已保存至: {value_dist_path}")
-        
-        # 保存分就业/失业状态的统计摘要（用于对比可视化）
-        status_summary = individuals.groupby('employment_status').agg({
-            'T': ['mean', 'std', 'min', 'max'],
-            'S': ['mean', 'std', 'min', 'max'],
-            'D': ['mean', 'std', 'min', 'max'],
-            'W': ['mean', 'std', 'min', 'max'],
-            'current_wage': ['mean', 'std', 'count']
-        }).round(2)
+        value_distribution.to_csv(
+            value_dist_path,
+            index=False,
+            encoding="utf-8-sig",
+        )
+
+        status_summary = individuals.groupby("employment_status").agg(
+            {
+                "T": ["mean", "std", "min", "max"],
+                "S": ["mean", "std", "min", "max"],
+                "D": ["mean", "std", "min", "max"],
+                "W": ["mean", "std", "min", "max"],
+                "current_wage": ["mean", "std", "count"],
+            }
+        ).round(2)
         status_summary_path = self.output_dir / "status_comparison_summary.csv"
-        status_summary.to_csv(status_summary_path, encoding='utf-8-sig')
-        print(f"  就业/失业对比统计已保存至: {status_summary_path}")
-        print()
+        status_summary.to_csv(status_summary_path, encoding="utf-8-sig")
+
+    def solve_equilibrium(
+        self,
+        verbose: bool = True,
+        base_population: Optional[pd.DataFrame] = None,
+        initial_T: Optional[np.ndarray] = None,
+    ) -> Tuple[pd.DataFrame, Dict]:
+        """
+        类方法形式的均衡求解入口。
+
+        该方法仅对 `solve` 做一层轻量包装，便于外部按面向对象方式调用。
+        """
+        return self.solve(
+            verbose=verbose,
+            base_population=base_population,
+            initial_T=initial_T,
+        )
 
 
 def solve_equilibrium(
     config_path: str = "CONFIG/mfg_config.yaml",
     population_adjustment: Optional[Dict] = None,
-    save_results: bool = True
+    save_results: bool = True,
+    base_population: Optional[pd.DataFrame] = None,
+    initial_T: Optional[np.ndarray] = None,
+    verbose: bool = True,
 ) -> Tuple[pd.DataFrame, Dict]:
     """
-    求解MFG均衡的便捷函数
-    
-    参数:
-        config_path: MFG配置文件路径
-        population_adjustment: 人口分布调整参数（可选）
-            - mean_S_multiplier: 技能水平S的倍数调整
-            - mean_D_multiplier: 数字素养D的倍数调整
-        
-    返回:
-        (individuals_equilibrium, equilibrium_info): 均衡状态和统计信息
+    求解 MFG 均衡的便捷函数。
+
+    参数：
+        config_path: MFG 配置文件路径。
+        population_adjustment: 可选的人口分布调整参数。
+        save_results: 是否将结果写入磁盘。
+        base_population: 可复用的基础人口样本。
+        initial_T: 与基础样本对应的初始 T 数组。
+        verbose: 是否输出详细日志。
+
+    返回：
+        (individuals_equilibrium, equilibrium_info)。
     """
     solver = EquilibriumSolver(config_path, population_adjustment, save_results)
-    return solver.solve()
-
+    return solver.solve(
+        verbose=verbose,
+        base_population=base_population,
+        initial_T=initial_T,
+    )

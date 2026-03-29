@@ -126,3 +126,81 @@ cython_debug/
 experimental/
 deprecated/
 .augment/rules/imported/rules/rule.md
+
+# ==============================================================================
+# 项目特定补充 (科研、AI工具、跨平台)
+# ==============================================================================
+
+# ===== Stata 相关 (科研项目常用) =====
+*.dta
+*.gph
+*.smcl
+*.stpr
+*.sthlp
+*.stsem
+
+# ===== AI 辅助工具配置 =====
+.cursor/
+.augment/
+.windsurfrules
+.windsurf/
+
+# ===== 数据与结果目录的强化忽略 (适配大小写和多级子目录) =====
+# 1. 忽略所有层级的 DATA 和 OUTPUT 目录下的生成产物
+**/DATA/raw/*
+**/DATA/processed/*
+!**/DATA/raw/.gitkeep
+!**/DATA/processed/.gitkeep
+
+**/OUTPUT/**/*
+**/output/**/*
+!**/OUTPUT/.gitkeep
+!**/output/.gitkeep
+
+# 2. 全局忽略常见的图像/图表产物 (如论文插图中间过程、调试图等)
+*.png
+*.jpg
+*.jpeg
+*.svg
+*.pdf
+# 若需要将某个临时 PDF 标记为版本控制，可通过 git add -f 强制添加
+
+# 3. 白名单：保留正式的文档、报告 (不包含图片类)
+!/docs/**/*
+!/Docs/**/*
+!/终期结项/**/*
+!/立项书与中期报告书/**/*
+
+# 额外保护：大容量数据格式 (常用于模拟)
+*.parquet
+*.feather
+*.json.gz
+*.pt
+*.pth
+*.onnx
+
+# ===== 打包与分发补充 =====
+*.spec
+activate_env.bat
+run_gui.bat
+run_gui_fixed.bat
+
+# ===== 系统与冗余 =====
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# ==============================================================================
+# 最终覆盖规则 (强制忽略)
+# ==============================================================================
+*.png
+*.jpg
+*.jpeg
+*.dta
+*.sav
+*.dta.t
+*.pdf
+*.doc
+*.docx
+*.docm
+# 以上规则强制忽略了全项目范围内的模拟结果、大型数据以及 Word 报告原稿。

@@ -1,0 +1,832 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>论文3.1-3.5修改版</title>
+</head>
+
+<body style="margin:0;padding:0;font-family:'Times New Roman',serif;">
+
+    <!-- ============================================================ -->
+    <!-- 说明：本文件为修改版HTML片段，按节分块，可分别复制粘贴至Word -->
+    <!-- 数学公式保留LaTeX格式（$行内$，$$独立行间$$），需借助MathType或Word内置公式插件转换 -->
+    <!-- 图1（每期时序图）：请在Word中手动插入drawio导出图 -->
+    <!-- ============================================================ -->
+
+    <!-- ===== 章节标题 ===== -->
+    <h1 style="font-family:黑体;font-size:14pt;font-weight:bold;
+    margin-top:24pt;margin-bottom:0pt;line-height:115%;">
+        3&nbsp; 理论模型
+    </h1>
+
+    <p style="font-family:宋体;font-size:12pt;text-indent:24pt;
+    line-height:150%;margin-top:0pt;margin-bottom:0pt;">
+        本节构建一个离散时间平均场博弈（Mean-Field Game, MFG）模型，刻画农村女性就业市场中个体求职决策与宏观市场状态的动态交互。MFG理论（Lasry &amp; Lions,
+        2007）适用于分析大量异质性个体在共享宏观环境下的最优决策及其集体效应。借鉴搜寻匹配理论（Diamond, 1982; Mortensen &amp; Pissarides,
+        1994），本文将个体求职努力及其对自身状态的动态影响纳入模型，与宏观市场状态的内生演化形成闭环。模型由贝尔曼方程与柯尔莫哥洛夫前向方程（KFE）耦合构成，求解目标为平均场均衡（MFE）。
+    </p>
+
+    <!-- ===== 3.1 节 ===== -->
+    <h2 style="font-family:黑体;font-size:13pt;font-weight:bold;
+    margin-top:12pt;margin-bottom:0pt;line-height:115%;">
+        3.1&nbsp; 模型设定
+    </h2>
+
+    <p style="font-family:宋体;font-size:12pt;text-indent:24pt;
+    line-height:150%;margin-top:0pt;margin-bottom:0pt;">
+        考虑离散时间 $t \in \{0,1,2,\ldots,T\}$ 的经济体，其中包含连续的异质性农村女性劳动力。每个个体 $i$ 在时刻 $t$ 的可变状态由四维向量刻画：
+    </p>
+
+    <p style="text-align:center;margin-top:6pt;margin-bottom:6pt;">
+        $$x_{it} = (T_{it},\, S_{it},\, D_{it},\, W_{it}) \in \mathbb{R}^4 \quad (1)$$
+    </p>
+
+    <p style="font-family:宋体;font-size:12pt;text-indent:24pt;
+    line-height:150%;margin-top:0pt;margin-bottom:0pt;">
+        其中，$T$ 为劳动供给时间（小时/周），$S$ 为工作技能水平（标准化至 $[0,1]$，参照 O*NET 评价体系），$D$ 为数字素养水平（标准化至 $[0,1]$，参见王杰等，2022），$W$
+        为期望工资（元/月）。此外，个体具有不随决策变化的固定特征 $\sigma_i$（年龄、教育、子女数等）。状态向量与固定特征的描述性统计见表1。
+    </p>
+
+    <!-- 【hf1 修改】：原段落改为引用表格，表1内容由用户在Word中使用三线表呈现 -->
+    <!-- 请在此处插入表1（三线表格式，含描述性统计） -->
+    <p style="font-family:宋体;font-size:10pt;text-align:center;
+    margin-top:8pt;margin-bottom:4pt;font-weight:bold;">
+        表1&nbsp; 状态变量与固定特征描述性统计
+    </p>
+    <!-- [请在Word中替换为正式三线表] -->
+
+    <p style="font-family:宋体;font-size:12pt;text-indent:24pt;
+    line-height:150%;margin-top:0pt;margin-bottom:0pt;">
+        <!-- 统一符号体系：努力水平进入匹配函数并影响状态更新 -->
+        个体在任意时刻处于失业（U）或就业（E）状态。失业者选择努力水平 $a_{i,t} \in [0,1]$
+        作为核心决策变量，通过式（2）—（5）改善自身状态向量，进而间接提升求职成功概率；就业者被假设不主动施加努力，其状态向量在就业期间保持不变。宏观市场供需状况由市场紧张度
+        $\theta_t = V/U_t$ 刻画，其中 $V$ 为外生岗位空缺数，$U_t$ 为内生失业人数（Shimer, 2005）。
+    </p>
+
+    <p style="font-family:宋体;font-size:12pt;text-indent:24pt;
+    line-height:150%;margin-top:0pt;margin-bottom:0pt;">
+        个体通过调整努力水平内生地改变自身状态。本文设计如下更新机制：
+    </p>
+
+    <p style="text-align:center;margin-top:6pt;margin-bottom:6pt;">
+        $$T_{i,t+1} = T_{it} + \gamma_T a_{it}\cdot (T^{\max} - T_{it}) \quad (2)$$
+    </p>
+    <p style="text-align:center;margin-top:6pt;margin-bottom:6pt;">
+        $$W_{i,t+1} = \max\{W^{\min},\, W_{it} - \gamma_W a_{it}\} \quad (3)$$
+    </p>
+    <p style="text-align:center;margin-top:6pt;margin-bottom:6pt;">
+        $$S_{i,t+1} = S_{it} + \gamma_S a_{it}(1 - S_{it}) \quad (4)$$
+    </p>
+    <p style="text-align:center;margin-top:6pt;margin-bottom:6pt;">
+        $$D_{i,t+1} = D_{it} + \gamma_D a_{it}(1 - D_{it}) \quad (5)$$
+    </p>
+
+    <p style="font-family:宋体;font-size:12pt;text-indent:24pt;
+    line-height:150%;margin-top:0pt;margin-bottom:0pt;">
+        式（2）表示努力增加工作时间供给，受上限 $T^{\max}$ 约束；式（3）表示努力降低期望工资以适应市场，但不低于
+        $W^{\min}$；式（4）（5）表示技能与数字素养的提升存在边际递减效应，与人力资本理论（Becker, 1964）一致。$\gamma_T,\gamma_S,\gamma_D,\gamma_W > 0$
+        为努力敏感度参数，具体取值通过校准确定（第4节）。
+    </p>
+
+    <p style="font-family:宋体;font-size:12pt;text-indent:24pt;
+    line-height:150%;margin-top:0pt;margin-bottom:0pt;">
+        失业者每期以匹配概率 $\lambda(x_{it},\sigma_i,a_{it},\theta_t)$ 进入就业状态，就业者每期以离职概率 $\mu(x_{it},\sigma_i)$ 回到失业状态。匹配概率函数的微观基础将在第3.2节构建，离职率函数的具体形式将在第3.4节给出。
+    </p>
+
+    <!-- 【hf3 修改】：每期时序文字段替换为图1引用 -->
+    <p style="font-family:宋体;font-size:12pt;text-indent:24pt;
+    line-height:150%;margin-top:0pt;margin-bottom:0pt;">
+        模型每期的决策与状态转移时序如图1所示。
+    </p>
+
+    <!-- [请在Word中此处插入图1：模型每期时序图（drawio导出）] -->
+    <p style="font-family:宋体;font-size:10pt;text-align:center;
+    margin-top:4pt;margin-bottom:8pt;">
+        图1&nbsp; 模型每期时序示意图
+    </p>
+
+
+    <!-- ===== 3.2 节 ===== -->
+    <h2 style="font-family:黑体;font-size:13pt;font-weight:bold;
+    margin-top:12pt;margin-bottom:0pt;line-height:115%;">
+        3.2&nbsp; 匹配函数的微观基础
+    </h2>
+
+    <p style="font-family:宋体;font-size:12pt;text-indent:24pt;
+    line-height:150%;margin-top:0pt;margin-bottom:0pt;">
+        传统搜寻匹配文献通常在宏观层面直接假设匹配函数的参数形式，如 Cobb-Douglas 型（Petrongolo &amp; Pissarides,
+        2001）。这一做法虽然简便，但存在两方面局限：其一，宏观匹配函数无法反映个体异质性对匹配结果的差异化影响；其二，函数参数缺乏微观行为基础，难以识别具体特征变量的边际效应。为克服上述局限，本文采用
+        <!-- 【hf4 修改】：去掉"+"号 -->
+        以ABM模拟为基础、辅以Logistic回归的两阶段方法，从微观匹配过程出发构建匹配概率函数 $\lambda(x_{it},\sigma_i,a_{it},\theta_t)$，使其系数具有可解释的经济含义。
+    </p>
+
+    <p style="font-family:宋体;font-size:12pt;text-indent:24pt;
+    line-height:150%;margin-top:0pt;margin-bottom:0pt;">
+        匹配模拟的前提是构建劳动力与企业两侧的人口分布。劳动力侧的分布基于问卷调查数据构建：对连续变量（工作时长 $T$、期望工资 $W$）采用核密度估计（KDE）拟合边际分布，对有界变量（技能水平 $S$、数字素养
+        $D$）采用经验分布，再利用 Gaussian Copula 方法（Nelsen, 2006）将四维边际分布联结为联合分布 $F_L$。
+        <!-- 【hf5 修改】：企业侧数据来源改为保守表述 -->
+        企业侧岗位特征 $f_j$（岗位工资、技能要求、数字化程度、工时要求）采用四维正态分布建模，参数依据第4节校准程序确定。
+    </p>
+
+    <p style="font-family:宋体;font-size:12pt;text-indent:24pt;
+    line-height:150%;margin-top:0pt;margin-bottom:0pt;">
+        在两侧分布构建完成后，进行虚拟劳动力市场匹配模拟。给定市场紧张度 $\theta$，从劳动力分布 $F_L$ 中抽取 $N$ 个失业者个体，从企业分布中生成 $\lceil\theta N\rceil$ 个岗位空缺，实施
+        Gale-Shapley 双边稳定匹配算法（Gale &amp; Shapley, 1962），具体流程见图2（算法1）。每批次匹配1,000个劳动力个体，进行多批次模拟后共获得约100,000条匹配数据，生成每个求职者
+        $i$ 的匹配标签 $y_i \in \{0,1\}$（1为匹配成功，0为未匹配）。
+    </p>
+
+    <!-- 【hf6 修改】：GS算法表（美赛算法表格式）-->
+    <p style="font-family:宋体;font-size:10pt;text-align:center;
+    margin-top:8pt;margin-bottom:4pt;font-weight:bold;">
+        图2&nbsp; 算法1：Gale-Shapley 双边稳定匹配算法
+    </p>
+
+    <table align="center" style="width:440pt;border-collapse:collapse;
+    border:1.5pt solid black;margin-top:4pt;margin-bottom:8pt;">
+        <tr>
+            <td style="padding:4pt 8pt;border-bottom:1.5pt solid black;
+        font-family:宋体;font-size:10pt;font-weight:bold;">
+                算法1：Gale-Shapley 双边稳定匹配算法
+            </td>
+        </tr>
+        <tr>
+            <td style="padding:3pt 8pt;border-bottom:0.5pt solid black;
+        font-family:宋体;font-size:10pt;">
+                <b>输入</b>：$N$ 个求职者（状态向量 $x_{it} = (T_{it}, S_{it}, D_{it}, W_{it})$，固定特征 $\sigma_i$）；
+                $\lceil\theta N\rceil$ 个岗位空缺（岗位特征 $f_j = (w_j^f, s_j^f, d_j^f, t_j^f)^\top$）
+            </td>
+        </tr>
+        <tr>
+            <td style="padding:3pt 8pt;border-bottom:0.5pt solid black;
+        font-family:宋体;font-size:10pt;">
+                <b>输出</b>：稳定匹配结果 $\{(i,j)\}$ 及每位求职者的匹配标签 $y_i \in \{0,1\}$
+            </td>
+        </tr>
+        <tr>
+            <td style="padding:4pt 8pt;font-family:'Courier New',monospace;font-size:9.5pt;
+        line-height:160%;">
+                1:&nbsp; <b>初始化</b>：所有求职者标记为未匹配；所有岗位标记为空缺<br>
+                2:&nbsp; <b>构建求职者偏好</b>：对每位求职者 $i$，计算其与所有岗位 $j$ 的适配度评分<br>
+                &nbsp;&nbsp;&nbsp;&nbsp; $Q_{ij} = -\lambda_w|W_i - w_j^f| - \lambda_s\max(s_j^f - S_i, 0) - \lambda_d\max(d_j^f - D_i, 0)$<br>
+                &nbsp;&nbsp;&nbsp;&nbsp; 依 $Q_{ij}$ 降序排列，得偏好列表 $\mathcal{P}_i$<br>
+                3:&nbsp; <b>构建岗位偏好</b>：对每个岗位 $j$，计算综合能力指标<br>
+                &nbsp;&nbsp;&nbsp;&nbsp; $C_i = \mu_s S_i + \mu_d D_i + \mu_t T_i$<br>
+                &nbsp;&nbsp;&nbsp;&nbsp; 依 $C_i$ 降序排列，得偏好列表 $\mathcal{R}_j$<br>
+                4:&nbsp; <b>repeat</b>（迭代匹配，求职者主动提议）<br>
+                5:&nbsp;&nbsp;&nbsp;&nbsp; 每位未匹配求职者向 $\mathcal{P}_i$ 中排名最前的未申请岗位提出申请<br>
+                6:&nbsp;&nbsp;&nbsp;&nbsp; 每个岗位 $j$ 暂留能力最强的候选者，拒绝其余申请者<br>
+                7:&nbsp;&nbsp;&nbsp;&nbsp; 被拒绝的求职者将该岗位从 $\mathcal{P}_i$ 中移除<br>
+                8:&nbsp; <b>until</b> 不存在阻塞对（blocking pair）或所有求职者的 $\mathcal{P}_i$ 已耗尽<br>
+                9:&nbsp; 输出稳定匹配对集合；令 $y_i = 1$ 若求职者 $i$ 被匹配，否则 $y_i = 0$
+            </td>
+        </tr>
+    </table>
+
+    <p style="font-family:宋体;font-size:12pt;text-indent:24pt;
+    line-height:150%;margin-top:0pt;margin-bottom:0pt;">
+        <!-- 统一符号体系：匹配函数显式包含努力水平与个体特征 -->
+        基于上述模拟数据，以匹配标签 $y_i$ 为因变量，以个体特征为自变量，建立 Logistic 回归模型：
+    </p>
+
+    <p style="text-align:center;margin-top:6pt;margin-bottom:6pt;">
+        $$\lambda(x_{it},\sigma_i,a_{it},\theta_t) = \frac{1}{1 + \exp\!\left(-\left(\beta_0 + \beta^\top H_i\right)\right)} \quad (6)$$
+    </p>
+
+    <p style="font-family:宋体;font-size:12pt;text-indent:24pt;
+    line-height:150%;margin-top:0pt;margin-bottom:0pt;">
+        其中特征向量 $H_i$ 定义为：
+    </p>
+
+    <p style="text-align:center;margin-top:6pt;margin-bottom:6pt;">
+        $$H_i = (T_{it},\, S_{it},\, D_{it},\, W_{it},\, a_{it},\, \theta_t,\, \mathrm{age}_i,\, \mathrm{edu}_i,\, \mathrm{child}_i) \quad (7)$$
+    </p>
+
+    <p style="font-family:宋体;font-size:12pt;text-indent:24pt;
+    line-height:150%;margin-top:0pt;margin-bottom:0pt;">
+        $\beta_0$ 为截距项，$\beta$ 为特征系数向量，均通过最大似然法估计。式（7）中 $H_i$ 同时纳入状态变量、努力水平、市场紧张度与个体特征，因此匹配概率函数具有清晰的微观解释。基于ABM模拟数据的Logistic回归结果如表2所示。
+    </p>
+
+    <p style="font-family:宋体;font-size:10pt;text-align:center;
+    margin-top:8pt;margin-bottom:4pt;font-weight:bold;">
+        表2&nbsp; 匹配概率函数Logistic回归结果
+    </p>
+
+    <table align="center" style="width:440pt;border-collapse:collapse;
+    border-top:2pt solid black;border-bottom:2pt solid black;
+    margin-top:4pt;margin-bottom:8pt;">
+        <tr style="border-bottom:1pt solid black;">
+            <td style="width:88pt;padding:3pt 5pt;font-family:宋体;font-size:9pt;font-weight:bold;text-align:center;">变量
+            </td>
+            <td style="width:72pt;padding:3pt 5pt;font-family:宋体;font-size:9pt;font-weight:bold;text-align:center;">系数
+            </td>
+            <td style="width:72pt;padding:3pt 5pt;font-family:宋体;font-size:9pt;font-weight:bold;text-align:center;">标准误
+            </td>
+            <td style="width:56pt;padding:3pt 5pt;font-family:宋体;font-size:9pt;font-weight:bold;text-align:center;">z 值
+            </td>
+            <td style="width:56pt;padding:3pt 5pt;font-family:宋体;font-size:9pt;font-weight:bold;text-align:center;">p 值
+            </td>
+            <td style="width:96pt;padding:3pt 5pt;font-family:宋体;font-size:9pt;font-weight:bold;text-align:center;">95%
+                CI</td>
+        </tr>
+        <tr>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;">截距项</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">&#8722;5.735***</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">(0.070)</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">&#8722;81.42</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">0.000</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">[&#8722;5.873, &#8722;5.597]
+            </td>
+        </tr>
+        <tr>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;">工作时长 (T)</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">0.129***</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">(0.001)</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">122.43</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">0.000</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">[0.127, 0.131]</td>
+        </tr>
+        <tr>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;">技能水平 (S)</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">0.040***</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">(0.001)</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">45.57</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">0.000</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">[0.038, 0.041]</td>
+        </tr>
+        <tr>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;">数字素养 (D)</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">0.128***</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">(0.002)</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">71.49</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">0.000</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">[0.125, 0.132]</td>
+        </tr>
+        <tr>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;">期望工资 (W)</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">&#8722;0.001***</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">(0.000)</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">&#8722;82.54</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">0.000</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">[&#8722;0.001, &#8722;0.001]
+            </td>
+        </tr>
+        <tr>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;">$\xi$ (age, edu, children)</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">&#8722;0.162**</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">(0.053)</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">&#8722;3.05</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">0.002</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">[&#8722;0.266, &#8722;0.058]
+            </td>
+        </tr>
+        <tr style="border-bottom:2pt solid black;">
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;">$\theta$（市场紧张度）</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">0.812***</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">(0.043)</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">18.91</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">0.000</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">[0.728, 0.897]</td>
+        </tr>
+        <tr>
+            <td colspan="6" style="padding:3pt 5pt;font-family:宋体;font-size:8pt;
+        text-align:left;">
+                注：*** $p&lt;0.01$，** $p&lt;0.05$，* $p&lt;0.1$；括号内为标准误。
+            </td>
+        </tr>
+    </table>
+
+    <p style="font-family:宋体;font-size:12pt;text-indent:24pt;
+    line-height:150%;margin-top:0pt;margin-bottom:0pt;">
+        回归结果显示，$T$、$S$、$D$ 均显著正向影响匹配概率，其中数字素养（$D$）系数 0.128 约为传统技能（$S$）系数 0.040
+        的3倍，凸显数字能力对农村女性就业的重要性。期望工资（$W$）系数显著为负，与保留工资理论（Mortensen, 1986）一致。控制变量 $\xi$ 系数 &#8722;0.162
+        在5%水平显著，反映年龄、教育和子女数对匹配的结构性制约。市场紧张度 $\theta$ 系数 0.812 高度显著，验证了搜寻匹配理论的核心预测（Shimer, 2005）。
+    </p>
+
+
+    <!-- ===== 3.3 节 ===== -->
+    <h2 style="font-family:黑体;font-size:13pt;font-weight:bold;
+    margin-top:12pt;margin-bottom:0pt;line-height:115%;">
+        3.3&nbsp; 个体最优决策：贝尔曼方程
+    </h2>
+
+    <p style="font-family:宋体;font-size:12pt;text-indent:24pt;
+    line-height:150%;margin-top:0pt;margin-bottom:0pt;">
+        设贴现因子为 $\rho \in (0,1)$，反映个体对未来收益的耐心程度。在MFG框架下，每个失业个体将宏观市场状态视为外生给定，并在此环境下选择最优努力水平以最大化跨期期望效用。
+    </p>
+
+    <p style="font-family:宋体;font-size:12pt;text-indent:24pt;
+    line-height:150%;margin-top:0pt;margin-bottom:0pt;">
+        处于失业状态的个体值函数 $V_t^U(x,\sigma_i)$ 满足如下贝尔曼方程：
+    </p>
+
+    <p style="text-align:center;margin-top:6pt;margin-bottom:6pt;">
+        $$V_t^U = \max_{a_t\in[0,1]}\left\{ b(x) - \kappa a_t^2 + \rho\left[\lambda(\cdot)V_{t+1}^E(x') + (1-\lambda(\cdot))V_{t+1}^U(x')\right]\right\} \quad (10)$$
+    </p>
+
+    <p style="font-family:宋体;font-size:12pt;text-indent:24pt;
+    line-height:150%;margin-top:0pt;margin-bottom:0pt;">
+        式（10）中各项的经济含义如下。$b(x)$ 为失业状态下的即时收益，包括失业保险金、家庭非劳动收入及闲暇的效用价值。$\kappa a_t^2$
+        为求职努力的成本函数，采用二次型形式以体现边际成本递增的特征：低努力水平时成本较低，随努力增加成本加速上升，这与劳动供给文献中对求职行为的标准假设一致（Mortensen &amp; Pissarides, 1994）。参数
+        $\kappa &gt; 0$ 控制努力成本的整体水平。$\lambda(\cdot) := \lambda(x_t,\sigma_i,a_t,\theta_t)$ 为第3.2节估计的匹配概率函数，$x'$ 为按式（2）—（5）在最优努力 $a_t$
+        下更新后的下期状态。方程的经济逻辑为：失业者在当期获得即时收益并付出努力成本后，以概率 $\lambda$ 在下期转为就业、以概率 $(1-\lambda)$ 继续失业，个体选择使跨期总效用最大化的最优努力 $a^*$。
+    </p>
+
+    <!-- 【hf10 修改】：就业者值函数段，明确假设就业者不努力 -->
+    <p style="font-family:宋体;font-size:12pt;text-indent:24pt;
+    line-height:150%;margin-top:0pt;margin-bottom:0pt;">
+        处于就业状态的个体值函数为：
+    </p>
+
+    <p style="text-align:center;margin-top:6pt;margin-bottom:6pt;">
+        $$V_t^E = \omega(x,\sigma_i) + \rho\left[(1-\mu(\cdot))V_{t+1}^E + \mu(\cdot)V_{t+1}^U\right] \quad (11)$$
+    </p>
+
+    <p style="font-family:宋体;font-size:12pt;text-indent:24pt;
+    line-height:150%;margin-top:0pt;margin-bottom:0pt;">
+        其中 $\omega(x,\sigma_i)$ 为就业工资收入，取决于个体的技能水平、数字素养等状态特征及固定特征；$\mu(\cdot) := \mu(x,\sigma_i)$ 为外生离职率，其具体函数形式将在第3.4节给出。
+    </p>
+
+    <p style="font-family:宋体;font-size:12pt;text-indent:24pt;
+    line-height:150%;margin-top:0pt;margin-bottom:0pt;">
+        对式（10）中的努力水平 $a$ 求一阶条件，可得最优努力的隐式表达：
+    </p>
+
+    <p style="text-align:center;margin-top:6pt;margin-bottom:6pt;">
+        $$\frac{\partial \lambda}{\partial a}\rho\left(V_{t+1}^E - V_{t+1}^U\right) + \rho(1-\lambda)\frac{\partial V_{t+1}^U}{\partial x'}\frac{\partial x'}{\partial a} = 2\kappa a \quad (12)$$
+    </p>
+
+    <p style="font-family:宋体;font-size:12pt;text-indent:24pt;
+    line-height:150%;margin-top:0pt;margin-bottom:0pt;">
+        最优努力 $a^*$ 在边际收益等于边际成本处确定。式（10）—（12）的数值求解方法将在第3.5节中阐述。
+    </p>
+
+
+    <!-- ===== 3.4 节 ===== -->
+    <h2 style="font-family:黑体;font-size:13pt;font-weight:bold;
+    margin-top:12pt;margin-bottom:0pt;line-height:115%;">
+        3.4&nbsp; 群体演化：KFE 方程
+    </h2>
+
+    <p style="font-family:宋体;font-size:12pt;text-indent:24pt;
+    line-height:150%;margin-top:0pt;margin-bottom:0pt;">
+        第3.3节描述了单个个体的最优决策，本节转向群体层面，刻画失业和就业人口密度在状态空间上的动态演化。在离散时间框架下，人口密度的演化由 Kolmogorov 前向方程（KFE）描述。
+    </p>
+
+    <p style="font-family:宋体;font-size:12pt;text-indent:24pt;
+    line-height:150%;margin-top:0pt;margin-bottom:0pt;">
+        在给出KFE方程之前，首先定义离职率的具体函数形式。本文将外生离职率设定为 Logistic 函数：
+    </p>
+
+    <p style="text-align:center;margin-top:6pt;margin-bottom:6pt;">
+        $$\mu(x_{it},\sigma_i) = \frac{1}{1 + \exp(-\eta^\top Z_i)} \quad (13)$$
+    </p>
+
+    <p style="font-family:宋体;font-size:12pt;text-indent:24pt;
+    line-height:150%;margin-top:0pt;margin-bottom:0pt;">
+        <!-- 【hf11 修改】：μ_target 保守表述 -->
+        其中 $Z_i$ 包含个体状态向量与固定特征中影响离职概率的相关变量，$\eta$ 为参数向量。截距项 $\eta_0$
+        通过校准确定，使模型稳态下的平均离职率与目标宏观离职率相匹配；目标离职率 $\bar{\mu}_{\mathrm{target}}$ 的具体数值将结合第4节校准结果报告。Logistic 形式保证 $\mu \in
+        (0,1)$，同时允许离职率随个体特征（如技能水平、数字素养）异质性变化。
+    </p>
+
+    <p style="font-family:宋体;font-size:12pt;text-indent:24pt;
+    line-height:150%;margin-top:0pt;margin-bottom:0pt;">
+        记时刻 $t$ 状态为 $x$ 的失业人口密度为 $f_t^U(x)$，就业人口密度为 $f_t^E(x)$。给定个体最优策略 $a^*(x,\sigma)$，失业人口密度的演化方程为：
+    </p>
+
+    <p style="text-align:center;margin-top:6pt;margin-bottom:6pt;">
+        $$f_{t+1}^U(x') = \sum_{x:g(x,a^*)=x'}\left[(1-\lambda(\cdot))f_t^U(x)+\mu(\cdot)f_t^E(x)\right] \quad (14)$$
+    </p>
+
+    <p style="font-family:宋体;font-size:12pt;text-indent:24pt;
+    line-height:150%;margin-top:0pt;margin-bottom:0pt;">
+        就业人口密度的演化方程为：
+    </p>
+
+    <p style="text-align:center;margin-top:6pt;margin-bottom:6pt;">
+        $$f_{t+1}^E(x) = \lambda(\cdot)f_t^U(x) + (1-\mu(\cdot))f_t^E(x) \quad (15)$$
+    </p>
+
+    <p style="font-family:宋体;font-size:12pt;text-indent:24pt;
+    line-height:150%;margin-top:0pt;margin-bottom:0pt;">
+        式（14）的经济含义为：下期处于状态 $x'$ 的失业人口来自两部分——当期未匹配成功且状态更新后到达 $x'$ 的失业者，以及当期离职的就业者。其中 $g(x,a^*) = x'$
+        表示状态按式（2）—（5）在最优努力下的更新映射。式（15）表示下期就业人口来自新匹配成功的失业者与未离职的存量就业者。两式共同刻画了人口密度在状态空间上的流动与重新分配。
+    </p>
+
+    <p style="font-family:宋体;font-size:12pt;text-indent:24pt;
+    line-height:150%;margin-top:0pt;margin-bottom:0pt;">
+        群体分布的演化同时内生地决定了宏观市场状态的更新。总失业人数 $U_t = \int f_t^U(x)\,dx$，市场紧张度随之更新为 $\theta_t = V /
+        U_t$，进而反馈影响个体的匹配概率与最优决策，形成个体行为与群体分布之间的动态耦合。
+    </p>
+
+    <!-- 【hf12 修改】：蒙特卡洛方法理由段，改为经济学化语言 -->
+    <p style="font-family:宋体;font-size:12pt;text-indent:24pt;
+    line-height:150%;margin-top:0pt;margin-bottom:0pt;">
+        本文采用基于个体的蒙特卡洛方法模拟KFE演化。具体地，维护 $N = 10{,}000$
+        个虚拟个体的状态集合，每期按照最优策略更新其状态，并依据匹配概率和离职概率随机抽样决定就业状态转移。选择这一方法的原因有两点：其一，研究对象的异质性特征体现在四维状态空间之上，传统网格离散化方案面临计算成本随维度指数级攀升的困境，粒子追踪方式能够以合理的计算代价处理高维分布；其二，大量异质性个体在共享市场环境下的分散决策正是基于个体仿真的经典适用场景，该方法与本文MFG-ABM框架的理论逻辑自然契合（Carmona
+        &amp; Delarue, 2018；Tesfatsion &amp; Judd, 2006）。
+    </p>
+
+
+    <!-- ===== 3.5 节 ===== -->
+    <h2 style="font-family:黑体;font-size:13pt;font-weight:bold;
+    margin-top:12pt;margin-bottom:0pt;line-height:115%;">
+        3.5&nbsp; 平均场均衡的定义与求解
+    </h2>
+
+    <p style="font-family:宋体;font-size:12pt;text-indent:24pt;
+    line-height:150%;margin-top:0pt;margin-bottom:0pt;">
+        前述贝尔曼方程（第3.3节）描述了给定宏观分布下的个体最优决策，KFE方程（第3.4节）描述了给定个体策略下的群体演化。
+        <!-- 【hf13 修改】：将正式定义改为叙述式 -->
+        平均场均衡（Mean-Field Equilibrium, MFE）要求二者相互自洽：给定宏观人口分布序列，每个个体的贝尔曼方程（式10）存在最优解
+        $a^*(x)$；而在该最优解下，KFE方程描述的群体演化恰好重新生成了该宏观分布。市场紧张度由内生失业人数通过 $\theta = V / U$
+        确定，与个体行为形成闭环——个体最优策略与宏观人口分布互为不动点，即为均衡所在。
+    </p>
+
+    <!-- 【hf14 修改】：迭代求解步骤改为美赛算法表格式 -->
+    <p style="font-family:宋体;font-size:12pt;text-indent:24pt;
+    line-height:150%;margin-top:0pt;margin-bottom:0pt;">
+        本文采用交替迭代法求解MFE，具体流程见图3（算法2）。
+    </p>
+
+    <p style="font-family:宋体;font-size:10pt;text-align:center;
+    margin-top:8pt;margin-bottom:4pt;font-weight:bold;">
+        图3&nbsp; 算法2：平均场均衡交替迭代求解
+    </p>
+
+    <table align="center" style="width:440pt;border-collapse:collapse;
+    border:1.5pt solid black;margin-top:4pt;margin-bottom:8pt;">
+        <tr>
+            <td style="padding:4pt 8pt;border-bottom:1.5pt solid black;
+        font-family:宋体;font-size:10pt;font-weight:bold;">
+                算法2：平均场均衡（MFE）交替迭代求解
+            </td>
+        </tr>
+        <tr>
+            <td style="padding:3pt 8pt;border-bottom:0.5pt solid black;
+        font-family:宋体;font-size:10pt;">
+                <b>输入</b>：初始人口分布 $m^{(0)}$；初始市场紧张度 $\theta^{(0)}$；阻尼因子 $\delta = 0.3$；
+                收敛容差 $\varepsilon_V, \varepsilon_a, \varepsilon_u$
+            </td>
+        </tr>
+        <tr>
+            <td style="padding:3pt 8pt;border-bottom:0.5pt solid black;
+        font-family:宋体;font-size:10pt;">
+                <b>输出</b>：均衡策略函数 $a^*(x)$；均衡人口分布 $m^{U*}, m^{E*}$；均衡市场紧张度 $\theta^*$
+            </td>
+        </tr>
+        <tr>
+            <td style="padding:4pt 8pt;font-family:'Courier New',monospace;font-size:9.5pt;
+        line-height:170%;">
+                1:&nbsp; 令 $k \leftarrow 0$<br>
+                2:&nbsp; <b>repeat</b>（外层迭代）<br>
+                3:&nbsp;&nbsp;&nbsp;&nbsp; <i>// 步骤1：个体最优</i><br>
+                4:&nbsp;&nbsp;&nbsp;&nbsp; 给定 $m^{(k)}$ 和 $\theta^{(k)}$，采用值迭代法求解贝尔曼方程（式10—11）：<br>
+                5:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 从 $V^{(0)} \equiv 0$ 出发，逐轮更新，直至 $\|V^{(n+1)} - V^{(n)}\|_\infty < \varepsilon_V$<br>
+                    6:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 提取最优策略 $a^{(k)}(x) = \arg\max_a\{\cdots\}$<br>
+                    7:&nbsp;&nbsp;&nbsp;&nbsp; <i>// 步骤2：群体演化</i><br>
+                    8:&nbsp;&nbsp;&nbsp;&nbsp; 给定 $a^{(k)}$，蒙特卡洛模拟推进KFE方程（式14—15），<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 得到 $m^{\rm new}$ 与新失业人数 $U^{\rm new}$<br>
+                    9:&nbsp;&nbsp;&nbsp;&nbsp; <i>// 步骤3：阻尼更新</i><br>
+                    10:&nbsp;&nbsp;&nbsp; $m^{(k+1)} \leftarrow (1-\delta)\, m^{(k)} + \delta\, m^{\rm new}$<br>
+                    11:&nbsp;&nbsp;&nbsp; $\theta^{(k+1)} \leftarrow V / U^{\rm new}$<br>
+                    12:&nbsp;&nbsp;&nbsp; $k \leftarrow k + 1$<br>
+                    13: <b>until</b> 以下三项收敛条件同时满足：<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; $\|V^{(k)} - V^{(k-1)}\|_\infty < \varepsilon_V$&nbsp;&nbsp;&nbsp;&nbsp;(17a)<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; $\|a^{(k)} - a^{(k-1)}\|_\infty < \varepsilon_a$&nbsp;&nbsp;&nbsp;&nbsp;(17b)<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; $|u^{(k)} - u^{(k-1)}| < \varepsilon_u$&nbsp;&nbsp;&nbsp;&nbsp;(17c)<br>
+                                14: <b>return</b> $a^* = a^{(k)}$，$m^* = m^{(k)}$，$\theta^* = \theta^{(k)}$
+            </td>
+        </tr>
+    </table>
+
+    <p style="font-family:宋体;font-size:12pt;text-indent:24pt;
+    line-height:150%;margin-top:0pt;margin-bottom:0pt;">
+        三项条件同时满足时即达到平均场均衡。算法收敛性由贝尔曼算子的压缩映射性质保证（Stokey &amp; Lucas, 1989），阻尼更新（式16）有效抑制非线性反馈导致的振荡（Achdou &amp;
+        Capuzzo-Dolcetta, 2010），实践中通常在50—200轮外层迭代内收敛。
+    </p>
+
+    <!-- ===== 第四部分 ===== -->
+    <h1 style="font-family:黑体;font-size:14pt;font-weight:bold;
+    margin-top:24pt;margin-bottom:0pt;line-height:115%;">
+        4&nbsp; 参数校准
+    </h1>
+
+    <!-- ===== 4.1 节 ===== -->
+    <h2 style="font-family:黑体;font-size:13pt;font-weight:bold;
+    margin-top:12pt;margin-bottom:0pt;line-height:115%;">
+        4.1&nbsp; 校准方法
+    </h2>
+
+    <p style="font-family:宋体;font-size:12pt;text-indent:24pt;
+    line-height:150%;margin-top:0pt;margin-bottom:0pt;">
+        本文采用模拟矩匹配法（Simulated Method of Moments, SMM）估计模型结构参数（McFadden, 1989；Pakes &amp; Pollard, 1989）。SMM估计量定义为：
+    </p>
+
+    <p style="text-align:center;margin-top:6pt;margin-bottom:6pt;">
+        $$
+        \hat{\theta} = \arg\min_{\theta} \left[ m^* - m(\theta) \right]' W \left[ m^* - m(\theta) \right]
+        $$
+    </p>
+
+    <p style="font-family:宋体;font-size:12pt;text-indent:24pt;
+    line-height:150%;margin-top:0pt;margin-bottom:0pt;">
+        其中 $m^*$ 为从调查数据计算的目标矩向量，$m(\theta)$ 为给定参数 $\theta$ 时的模型模拟矩向量，$W$ 为正定权重矩阵。
+    </p>
+
+    <p style="font-family:宋体;font-size:12pt;text-indent:24pt;
+    line-height:150%;margin-top:0pt;margin-bottom:0pt;">
+        为消除不同量纲矩之间的比较困难，本文以各矩的自助法（bootstrap）标准误之倒数平方为权重，构造对角权重矩阵 $W = \mathrm{diag}(1/\hat{\sigma}_1^2, \ldots, 1/\hat{\sigma}_k^2)$，使失业率、平均工资等量纲迥异的矩在目标函数中获得与其估计精度相匹配的权重。数值优化采用差分进化算法（Differential Evolution），以应对目标函数因模型非线性而可能出现的多峰问题。
+    </p>
+
+    <!-- ===== 4.2 节 ===== -->
+    <h2 style="font-family:黑体;font-size:13pt;font-weight:bold;
+    margin-top:12pt;margin-bottom:0pt;line-height:115%;">
+        4.2&nbsp; 待校准参数与目标矩
+    </h2>
+
+    <p style="font-family:宋体;font-size:12pt;text-indent:24pt;
+    line-height:150%;margin-top:0pt;margin-bottom:0pt;">
+        模型包含7个需要赋值的结构参数，如表1所示。为确定哪些参数可以由数据可靠识别，本文计算了各参数对8个目标矩的数值弹性，使用中心差分法构造Jacobian矩阵，并以各参数平均绝对弹性 $\bar{\varepsilon}_j$ 为依据，按升序作拐点图。拐点由端点连线最大垂距法确定，拐点左侧的参数弹性显著偏低，表明所选矩对其识别能力有限；右侧参数则与目标矩存在稳定的识别关联。据此，$\gamma_W$、$\gamma_T$、$\gamma_D$、$\rho$ 四个参数被纳入SMM联合估计，$\kappa$ 与 $\alpha_T$、$\gamma_S$ 对所选矩的平均弹性较弱，参照已有文献进行固定取值。
+    </p>
+
+    <p style="font-family:宋体;font-size:10pt;text-align:center;
+    margin-top:8pt;margin-bottom:4pt;font-weight:bold;">
+        表1&nbsp; 待校准结构参数
+    </p>
+
+    <table align="center" style="width:auto;border-collapse:collapse;
+    border-top:2pt solid black;border-bottom:2pt solid black;
+    margin-top:4pt;margin-bottom:8pt;">
+        <tr style="border-bottom:1pt solid black;">
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;font-weight:bold;text-align:center;">参数</td>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;font-weight:bold;text-align:center;">含义</td>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;font-weight:bold;text-align:center;">取值范围</td>
+        </tr>
+        <tr>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;text-align:center;">$\rho$</td>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;text-align:center;">贴现因子</td>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;text-align:center;">[0.01, 0.99]</td>
+        </tr>
+        <tr>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;text-align:center;">$\kappa$</td>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;text-align:center;">求职努力成本系数</td>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;text-align:center;">[100, 10000]</td>
+        </tr>
+        <tr>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;text-align:center;">$\alpha_T$</td>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;text-align:center;">工时偏离负效用系数</td>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;text-align:center;">[0.0, 1.0]</td>
+        </tr>
+        <tr>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;text-align:center;">$\gamma_T$</td>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;text-align:center;">工时状态更新速率</td>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;text-align:center;">[0.01, 1.0]</td>
+        </tr>
+        <tr>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;text-align:center;">$\gamma_S$</td>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;text-align:center;">技能更新速率</td>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;text-align:center;">[0.01, 1.0]</td>
+        </tr>
+        <tr>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;text-align:center;">$\gamma_D$</td>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;text-align:center;">数字素养更新速率</td>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;text-align:center;">[0.01, 1.0]</td>
+        </tr>
+        <tr>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;text-align:center;">$\gamma_W$</td>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;text-align:center;">期望工资更新速率</td>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;text-align:center;">[0.01, 1.0]</td>
+        </tr>
+    </table>
+
+    <p style="font-family:宋体;font-size:12pt;text-indent:24pt;
+    line-height:150%;margin-top:0pt;margin-bottom:0pt;">
+        目标矩来源于中国劳动力动态调查（CLDS）2018年数据中农村女性子样本，共采用8个矩，具体目标矩定义如表2所示。
+    </p>
+
+    <p style="font-family:宋体;font-size:10pt;text-align:center;
+    margin-top:8pt;margin-bottom:4pt;font-weight:bold;">
+        表2&nbsp; 目标矩体系
+    </p>
+
+    <table align="center" style="width:440pt;border-collapse:collapse;
+    border-top:2pt solid black;border-bottom:2pt solid black;
+    margin-top:4pt;margin-bottom:8pt;">
+        <tr style="border-bottom:1pt solid black;">
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;font-weight:bold;text-align:center;">矩编号</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;font-weight:bold;text-align:center;">矩名称</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;font-weight:bold;text-align:center;">目标值</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;font-weight:bold;text-align:center;">数据来源</td>
+        </tr>
+        <tr>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">M1</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;">失业率</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">1.73%</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;">CLDS 2018，ILO三分法</td>
+        </tr>
+        <tr>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">M2</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;">平均月工资</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">3578元</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;">CLDS 2018，在业女性样本</td>
+        </tr>
+        <tr>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">M3</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;">工资标准差</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">2592元</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;">CLDS 2018，在业女性样本</td>
+        </tr>
+        <tr>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">M4</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;">平均每周工时</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">48.0小时</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;">CLDS 2018，工作模块</td>
+        </tr>
+        <tr>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">M5</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;">就业转移率（月）</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">0.028</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;">CLDS 2016-2018面板折算</td>
+        </tr>
+        <tr>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">M6</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;">就业分离率（月）</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">0.0028</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;">CLDS 2016-2018面板折算</td>
+        </tr>
+        <tr>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">M7</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;">工资四分位距比</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">3.00</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;">CLDS 2018，在业女性样本</td>
+        </tr>
+        <tr>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">M8</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;">每周工时标准差</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">21.1小时</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;">CLDS 2018，工作模块</td>
+        </tr>
+    </table>
+
+    <p style="font-family:宋体;font-size:12pt;text-indent:24pt;
+    line-height:150%;margin-top:0pt;margin-bottom:0pt;">
+        各矩与参数之间的识别对应关系如下：均衡失业率（M1）和就业转移率（M5）主要识别努力成本系数 $\kappa$；平均工资（M2）和工资四分位距比（M7）对应期望工资更新速率 $\gamma_W$；工时均值与标准差（M4、M8）识别工时更新速率 $\gamma_T$；工资标准差（M3）则同时承载 $\gamma_S$ 与 $\gamma_W$ 的联合约束；分离率（M6）直接约束就业稳定性机制。整体上，8个目标矩对4个内部参数形成过度识别，为模型的外部有效性检验提供了基础。
+    </p>
+
+    <!-- ===== 4.3 节 ===== -->
+    <h2 style="font-family:黑体;font-size:13pt;font-weight:bold;
+    margin-top:12pt;margin-bottom:0pt;line-height:115%;">
+        4.3&nbsp; 校准结果
+    </h2>
+
+    <p style="font-family:宋体;font-size:12pt;text-indent:24pt;
+    line-height:150%;margin-top:0pt;margin-bottom:0pt;">
+        模型全部结构参数的取值如表3所示：
+    </p>
+
+    <p style="font-family:宋体;font-size:10pt;text-align:center;
+    margin-top:8pt;margin-bottom:4pt;font-weight:bold;">
+        表3&nbsp; 参数校准结果
+    </p>
+
+    <table align="center" style="width:auto;border-collapse:collapse;
+    border-top:2pt solid black;border-bottom:2pt solid black;
+    margin-top:4pt;margin-bottom:8pt;">
+        <tr style="border-bottom:1pt solid black;">
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;font-weight:bold;text-align:center;">参数</td>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;font-weight:bold;text-align:center;">含义</td>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;font-weight:bold;text-align:center;">取值</td>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;font-weight:bold;text-align:center;">赋值方式</td>
+        </tr>
+        <tr>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;text-align:center;">$\kappa$</td>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;text-align:center;">求职努力成本系数</td>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;text-align:center;">1500</td>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;text-align:center;">文献赋值</td>
+        </tr>
+        <tr>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;text-align:center;">$\alpha_T$</td>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;text-align:center;">工时偏离负效用系数</td>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;text-align:center;">0.250</td>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;text-align:center;">文献赋值</td>
+        </tr>
+        <tr>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;text-align:center;">$\gamma_S$</td>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;text-align:center;">技能更新速率</td>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;text-align:center;">0.350</td>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;text-align:center;">文献赋值</td>
+        </tr>
+        <tr>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;text-align:center;">$\rho$</td>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;text-align:center;">贴现因子</td>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;text-align:center;">0.581</td>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;text-align:center;">SMM估计</td>
+        </tr>
+        <tr>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;text-align:center;">$\gamma_T$</td>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;text-align:center;">工时状态更新速率</td>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;text-align:center;">0.419</td>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;text-align:center;">SMM估计</td>
+        </tr>
+        <tr>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;text-align:center;">$\gamma_D$</td>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;text-align:center;">数字素养更新速率</td>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;text-align:center;">0.359</td>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;text-align:center;">SMM估计</td>
+        </tr>
+        <tr>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;text-align:center;">$\gamma_W$</td>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;text-align:center;">期望工资更新速率</td>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;text-align:center;">0.224</td>
+            <td style="padding:3pt 8pt;font-family:宋体;font-size:10pt;text-align:center;">SMM估计</td>
+        </tr>
+    </table>
+
+    <p style="font-family:宋体;font-size:12pt;text-indent:24pt;
+    line-height:150%;margin-top:0pt;margin-bottom:0pt;">
+        四个内部参数的估计结果具有清晰的经济含义。贴现因子 $\rho = 0.581$ 意味着农村女性劳动者在就业决策中更侧重当期收益，这与该群体所面临的流动性约束和不确定性环境相吻合。三个状态更新速率 $\gamma_T$、$\gamma_D$、$\gamma_W$ 均处于 $[0.2, 0.5]$ 区间，表明个体的工时适应、数字技能积累和工资预期调整均具有一定惯性，其中工资预期的更新最为缓慢（$\gamma_W = 0.224$），这与行为经济学中关于参考点依赖的实证发现一致。
+    </p>
+
+    <p style="font-family:宋体;font-size:12pt;text-indent:24pt;
+    line-height:150%;margin-top:0pt;margin-bottom:0pt;">
+        表4列示了校准后模型的矩拟合情况。
+    </p>
+
+    <p style="font-family:宋体;font-size:10pt;text-align:center;
+    margin-top:8pt;margin-bottom:4pt;font-weight:bold;">
+        表4&nbsp; 目标矩拟合对比
+    </p>
+
+    <table align="center" style="width:440pt;border-collapse:collapse;
+    border-top:2pt solid black;border-bottom:2pt solid black;
+    margin-top:4pt;margin-bottom:8pt;">
+        <tr style="border-bottom:1pt solid black;">
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;font-weight:bold;text-align:center;">矩编号</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;font-weight:bold;text-align:center;">矩名称</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;font-weight:bold;text-align:center;">数据值</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;font-weight:bold;text-align:center;">模拟值</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;font-weight:bold;text-align:center;">相对偏差</td>
+        </tr>
+        <tr>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">M1</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;">失业率</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">1.73%</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">2.00%</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">+15.6%</td>
+        </tr>
+        <tr>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">M2</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;">平均月工资</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">3578元</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">3500元</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">&#8722;2.2%</td>
+        </tr>
+        <tr>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">M3</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;">工资标准差</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">2592元</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">0.4元</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">&#8722;99.98%</td>
+        </tr>
+        <tr>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">M4</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;">平均每周工时</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">48.0h</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">46.0h</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">&#8722;4.2%</td>
+        </tr>
+        <tr>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">M5</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;">就业转移率</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">0.028</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">0.030</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">+5.4%</td>
+        </tr>
+        <tr>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">M6</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;">就业分离率</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">0.0028</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">0.0050</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">+78.6%</td>
+        </tr>
+        <tr>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">M7</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;">工资四分位距比</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">3.00</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">1.00</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">&#8722;66.7%</td>
+        </tr>
+        <tr>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">M8</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;">每周工时标准差</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">21.1h</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">0.0h</td>
+            <td style="padding:3pt 5pt;font-family:宋体;font-size:9pt;text-align:center;">&#8722;100%</td>
+        </tr>
+    </table>
+
+</body>
+
+</html>

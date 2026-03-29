@@ -1,6 +1,7 @@
 import sys
 from pathlib import Path
 import os
+import argparse
 
 # 【重要】禁用Numba并行，配合DE的32进程并行（避免过度订阅）
 os.environ['NUMBA_NUM_THREADS'] = '1'
@@ -19,7 +20,29 @@ print(f"[配置检查] 线程数: {numba.config.NUMBA_NUM_THREADS}")
 print(f"[配置检查] 并行层: {numba.config.THREADING_LAYER}")
 
 
-def test_calibration_quick():
+def confirm_run(prompt: str, auto_yes: bool = False) -> bool:
+    """
+    统一处理确认逻辑，避免非交互环境出现EOFError。
+    
+    参数:
+        prompt: 提示语
+        auto_yes: 是否自动确认
+    
+    返回:
+        是否继续执行
+    """
+    if auto_yes:
+        return True
+    
+    if not sys.stdin.isatty():
+        print("检测到非交互环境，且未设置--yes，默认取消本次测试。")
+        return False
+    
+    response = input(prompt)
+    return response.lower() == 'y'
+
+
+def test_calibration_quick(auto_yes: bool = False):
     """
     快速测试（5次迭代）
     
@@ -37,9 +60,8 @@ def test_calibration_quick():
     print("预计时间：30-40分钟")
     print("="*80)
     
-    # 确认用户是否继续
-    response = input("\n是否开始快速测试？(y/n): ")
-    if response.lower() != 'y':
+    # 确认是否继续
+    if not confirm_run("\n是否开始快速测试？(y/n): ", auto_yes):
         print("测试已取消")
         return
     
@@ -89,7 +111,7 @@ def test_calibration_quick():
     print("="*80)
 
 
-def test_calibration_small_scale():
+def test_calibration_small_scale(auto_yes: bool = False):
     """
     小规模测试（20次迭代）
     
@@ -107,9 +129,8 @@ def test_calibration_small_scale():
     print("预计时间：2-3小时")
     print("="*80)
     
-    # 确认用户是否继续
-    response = input("\n是否开始小规模测试？(y/n): ")
-    if response.lower() != 'y':
+    # 确认是否继续
+    if not confirm_run("\n是否开始小规模测试？(y/n): ", auto_yes):
         print("测试已取消")
         return
     
@@ -148,7 +169,7 @@ def test_calibration_small_scale():
     print("="*80)
 
 
-def test_calibration_full():
+def test_calibration_full(auto_yes: bool = False):
     """
     完整测试（运行至收敛或200次迭代）
     
@@ -164,9 +185,8 @@ def test_calibration_full():
     print("预计时间：4-20小时")
     print("="*80)
     
-    # 确认用户是否继续
-    response = input("\n是否开始完整校准？(y/n): ")
-    if response.lower() != 'y':
+    # 确认是否继续
+    if not confirm_run("\n是否开始完整校准？(y/n): ", auto_yes):
         print("测试已取消")
         return
     
@@ -199,7 +219,7 @@ def test_calibration_full():
     print("="*80)
 
 
-def main():
+def main(choice: str = None, auto_yes: bool = False):
     """主测试入口"""
     print("\n" + "="*80)
     print("CALIBRATION模块测试")
@@ -210,14 +230,18 @@ def main():
     print("  3. 完整测试（运行至收敛，约4-20小时）")
     print("  0. 退出")
     
-    choice = input("\n请输入选项 (0-3): ")
+    if choice is None:
+        if not sys.stdin.isatty():
+            print("\n检测到非交互环境，请使用参数 --choice {0|1|2|3} 指定测试类型。")
+            return
+        choice = input("\n请输入选项 (0-3): ")
     
     if choice == '1':
-        test_calibration_quick()
+        test_calibration_quick(auto_yes=auto_yes)
     elif choice == '2':
-        test_calibration_small_scale()
+        test_calibration_small_scale(auto_yes=auto_yes)
     elif choice == '3':
-        test_calibration_full()
+        test_calibration_full(auto_yes=auto_yes)
     elif choice == '0':
         print("退出测试")
     else:
@@ -225,5 +249,17 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
-
+    parser = argparse.ArgumentParser(description="CALIBRATION模块测试")
+    parser.add_argument(
+        '--choice',
+        choices=['0', '1', '2', '3'],
+        default=None,
+        help='测试类型：0退出，1快速，2小规模，3完整'
+    )
+    parser.add_argument(
+        '--yes',
+        action='store_true',
+        help='跳过开始确认，直接执行'
+    )
+    args = parser.parse_args()
+    main(choice=args.choice, auto_yes=args.yes)

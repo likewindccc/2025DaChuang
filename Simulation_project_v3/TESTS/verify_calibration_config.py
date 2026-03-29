@@ -55,18 +55,18 @@ def verify_calibration_config():
             optimal_value = current_optimal[name]
             in_bounds = bounds[0] <= optimal_value <= bounds[1]
             
-            status = "✓" if in_bounds else "✗"
+            status = "[OK]" if in_bounds else "[ERR]"
             print(f"{status} {name:10s}: [{bounds[0]:8.2f}, {bounds[1]:8.2f}]  "
                   f"当前值={optimal_value:8.2f}")
             
             if not in_bounds:
                 all_in_bounds = False
-                print(f"  ⚠️ 警告：当前最优值不在范围内！")
+                print("  [WARN] 警告：当前最优值不在范围内！")
     
     if all_in_bounds:
-        print("\n结果：所有参数范围正确 ✓")
+        print("\n结果：所有参数范围正确 [OK]")
     else:
-        print("\n结果：存在参数范围问题 ✗")
+        print("\n结果：存在参数范围问题 [ERR]")
     
     print("\n【检查2：alpha_T参数是否正确添加】")
     print("-"*80)
@@ -77,12 +77,12 @@ def verify_calibration_config():
     if has_alpha_T:
         alpha_T_param = next(p for p in calib_config['parameters'] 
                             if p['name'] == 'alpha_T')
-        print(f"✓ alpha_T参数已添加")
+        print("[OK] alpha_T参数已添加")
         print(f"  配置路径: {alpha_T_param['config_path']}")
         print(f"  参数范围: {alpha_T_param['bounds']}")
         print(f"  初始值: {alpha_T_param['initial_value']}")
     else:
-        print(f"✗ alpha_T参数未找到")
+        print("[ERR] alpha_T参数未找到")
     
     print("\n【检查3：配置路径是否与MFG配置匹配】")
     print("-"*80)
@@ -101,18 +101,18 @@ def verify_calibration_config():
             
             # 检查最后一个键是否存在
             if keys[-1] in target:
-                print(f"✓ {name:10s}: {config_path:40s} → {target[keys[-1]]}")
+                print(f"[OK] {name:10s}: {config_path:40s} → {target[keys[-1]]}")
             else:
-                print(f"✗ {name:10s}: {config_path:40s} → 键不存在！")
+                print(f"[ERR] {name:10s}: {config_path:40s} → 键不存在！")
                 all_paths_valid = False
         except (KeyError, TypeError) as e:
-            print(f"✗ {name:10s}: {config_path:40s} → 路径错误: {e}")
+            print(f"[ERR] {name:10s}: {config_path:40s} → 路径错误: {e}")
             all_paths_valid = False
     
     if all_paths_valid:
-        print("\n结果：所有配置路径正确 ✓")
+        print("\n结果：所有配置路径正确 [OK]")
     else:
-        print("\n结果：存在配置路径问题 ✗")
+        print("\n结果：存在配置路径问题 [ERR]")
     
     print("\n【检查4：OptimizationUtils能否正常加载】")
     print("-"*80)
@@ -120,7 +120,7 @@ def verify_calibration_config():
     try:
         param_utils = OptimizationUtils(calib_config)
         
-        print(f"✓ OptimizationUtils初始化成功")
+        print("[OK] OptimizationUtils初始化成功")
         print(f"  参数数量: {param_utils.n_params}")
         print(f"  参数名称: {param_utils.get_param_names()}")
         
@@ -136,10 +136,10 @@ def verify_calibration_config():
         for name, value in params_dict.items():
             print(f"  {name:10s}: {value:8.2f}")
         
-        print("\n结果：参数工具类正常工作 ✓")
+        print("\n结果：参数工具类正常工作 [OK]")
     except Exception as e:
-        print(f"✗ OptimizationUtils初始化失败: {e}")
-        print("\n结果：参数工具类存在问题 ✗")
+        print(f"[ERR] OptimizationUtils初始化失败: {e}")
+        print("\n结果：参数工具类存在问题 [ERR]")
     
     print("\n【检查5：测试参数更新MFG配置】")
     print("-"*80)
@@ -168,7 +168,7 @@ def verify_calibration_config():
             save_path=None
         )
         
-        print("✓ 参数更新测试成功")
+        print("[OK] 参数更新测试成功")
         print("\n更新后的参数值:")
         print(f"  rho:     {updated_config['economics']['rho']}")
         print(f"  kappa:   {updated_config['economics']['kappa']}")
@@ -178,21 +178,21 @@ def verify_calibration_config():
         print(f"  gamma_D: {updated_config['economics']['state_update']['gamma_D']}")
         print(f"  gamma_W: {updated_config['economics']['state_update']['gamma_W']}")
         
-        print("\n结果：配置更新功能正常 ✓")
+        print("\n结果：配置更新功能正常 [OK]")
     except Exception as e:
-        print(f"✗ 配置更新测试失败: {e}")
+        print(f"[ERR] 配置更新测试失败: {e}")
         import traceback
         traceback.print_exc()
-        print("\n结果：配置更新功能存在问题 ✗")
+        print("\n结果：配置更新功能存在问题 [ERR]")
     
     print("\n" + "="*80)
     print("验证完成")
     print("="*80)
     
     if all_in_bounds and has_alpha_T and all_paths_valid:
-        print("\n✅ 所有检查通过，校准模块配置正确！")
+        print("\n[OK] 所有检查通过，校准模块配置正确！")
     else:
-        print("\n⚠️ 部分检查未通过，请检查上述问题")
+        print("\n[WARN] 部分检查未通过，请检查上述问题")
     
     print("="*80)
 

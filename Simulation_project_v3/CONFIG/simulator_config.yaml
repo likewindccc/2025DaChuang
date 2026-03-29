@@ -1,60 +1,156 @@
 # SIMULATOR模块配置文件
 # 场景模拟与政策分析参数
+# 对应论文第六部分 6 类政策反事实模拟（A~F）
 
+# ============================================================
 # 场景定义
+# ============================================================
 scenarios:
+  # ----------------------------------------------------------
   # 基准场景（无政策干预）
+  # ----------------------------------------------------------
   baseline:
     name: "基准场景"
-    description: "不实施任何政策，使用默认参数"
+    description: "不实施任何政策，使用校准后的参数"
     policy_type: null
     population_adjustment: null
     state_update_adjustment: null
-  
-  # 低强度培训政策
-  training_low:
-    name: "低强度培训政策"
-    description: "提升初始技能水平S和数字素养D各10%"
-    policy_type: "training"
-    population_adjustment:
-      mean_S_multiplier: 1.1  # 技能水平提升10%
-      mean_D_multiplier: 1.1  # 数字素养提升10%
-    state_update_adjustment:
-      gamma_S_multiplier: 1.0  # 状态更新系数不变
-      gamma_D_multiplier: 1.0
-  
-  # 高强度培训政策
-  training_high:
-    name: "高强度培训政策"
-    description: "提升初始技能水平S和数字素养D各20%，并加速状态更新50%"
-    policy_type: "training"
-    population_adjustment:
-      mean_S_multiplier: 1.2  # 技能水平提升20%
-      mean_D_multiplier: 1.2  # 数字素养提升20%
-    state_update_adjustment:
-      gamma_S_multiplier: 1.5  # 状态更新系数提升50%
-      gamma_D_multiplier: 1.5
 
+  # ----------------------------------------------------------
+  # 场景A：数字素养提升政策
+  # 现实对应：农村数字基础设施建设、数字技能培训项目
+  # ----------------------------------------------------------
+  digital_low:
+    name: "A1-数字素养提升(低)"
+    description: "初始数字素养D提升10%"
+    policy_type: "digital_training"
+    population_adjustment:
+      mean_D_multiplier: 1.1
+    state_update_adjustment: null
+
+  digital_high:
+    name: "A2-数字素养提升(高)"
+    description: "初始数字素养D提升30%，并加速数字素养积累30%"
+    policy_type: "digital_training"
+    population_adjustment:
+      mean_D_multiplier: 1.3
+    state_update_adjustment:
+      gamma_D_multiplier: 1.3
+
+  # ----------------------------------------------------------
+  # 场景B：职业技能提升政策
+  # 现实对应：职业培训补贴、技能认证项目
+  # ----------------------------------------------------------
+  skill_low:
+    name: "B1-职业技能提升(低)"
+    description: "初始工作技能S提升10%"
+    policy_type: "skill_training"
+    population_adjustment:
+      mean_S_multiplier: 1.1
+    state_update_adjustment: null
+
+  skill_high:
+    name: "B2-职业技能提升(高)"
+    description: "初始工作技能S提升30%，并加速技能积累30%"
+    policy_type: "skill_training"
+    population_adjustment:
+      mean_S_multiplier: 1.3
+    state_update_adjustment:
+      gamma_S_multiplier: 1.3
+
+  # ----------------------------------------------------------
+  # 场景C：就业信息优化政策
+  # 现实对应：就业信息平台建设、人力资源服务站设立
+  # 通过提升市场紧张度θ（增加有效岗位供给）来模拟
+  # ----------------------------------------------------------
+  info_low:
+    name: "C1-就业信息优化(低)"
+    description: "市场紧张度θ提升30%（更多有效岗位供给）"
+    policy_type: "info_platform"
+    population_adjustment: null
+    state_update_adjustment:
+      target_theta_multiplier: 1.3
+
+  info_high:
+    name: "C2-就业信息优化(高)"
+    description: "市场紧张度θ提升60%（大规模信息平台建设）"
+    policy_type: "info_platform"
+    population_adjustment: null
+    state_update_adjustment:
+      target_theta_multiplier: 1.6
+
+  # ----------------------------------------------------------
+  # 场景D：灵活工时政策
+  # 现实对应：鼓励企业提供弹性工作制、支持"家门口就业"
+  # 通过降低偏离理想工时的负效用系数α_T来模拟
+  # ----------------------------------------------------------
+  flexwork_low:
+    name: "D1-灵活工时(低)"
+    description: "工时负效用系数α_T降低30%（弹性工作制）"
+    policy_type: "flex_work"
+    population_adjustment: null
+    state_update_adjustment:
+      alpha_T_multiplier: 0.7
+
+  flexwork_high:
+    name: "D2-灵活工时(高)"
+    description: "工时负效用系数α_T降低50%（全面弹性工作制）"
+    policy_type: "flex_work"
+    population_adjustment: null
+    state_update_adjustment:
+      alpha_T_multiplier: 0.5
+
+  # ----------------------------------------------------------
+  # 场景E：失业保障调整政策
+  # 现实对应：调整失业救济水平、社区服务补贴
+  # 通过提升失业即时收益b0来模拟
+  # ----------------------------------------------------------
+  benefit_low:
+    name: "E1-失业保障提升(低)"
+    description: "失业保障b0提升50%（500→750元）"
+    policy_type: "unemployment_benefit"
+    population_adjustment: null
+    state_update_adjustment:
+      b0_multiplier: 1.5
+
+  benefit_high:
+    name: "E2-失业保障提升(高)"
+    description: "失业保障b0提升100%（500→1000元）"
+    policy_type: "unemployment_benefit"
+    population_adjustment: null
+    state_update_adjustment:
+      b0_multiplier: 2.0
+
+  # ----------------------------------------------------------
+  # 场景F：组合政策
+  # 同时实施数字素养培训+职业技能培训+就业信息平台优化
+  # 考察政策之间的互补效应
+  # ----------------------------------------------------------
+  combined:
+    name: "F-组合政策(D+S+θ)"
+    description: "数字素养D+20%、工作技能S+20%、市场紧张度θ+30%"
+    policy_type: "combined"
+    population_adjustment:
+      mean_D_multiplier: 1.2
+      mean_S_multiplier: 1.2
+    state_update_adjustment:
+      target_theta_multiplier: 1.3
+
+
+# ============================================================
 # 模拟控制参数
+# ============================================================
 simulation:
-  # 最大迭代轮数
   max_iterations: 100
-  
-  # 收敛判断标准（与MFG模块保持一致）
   convergence_criteria:
-    # 使用实用收敛标准（宏观稳定即可）
     use_practical_convergence: true
-    # 最后20轮失业率标准差阈值
     unemployment_rate_std_threshold: 0.005
-    # 最后20轮相对价值函数变化阈值
     relative_V_change_threshold: 0.10
 
+# ============================================================
 # 输出控制
+# ============================================================
 output:
-  # 是否保存各场景的详细结果
   save_detailed_results: true
-  # 是否保存场景对比汇总表
   save_comparison_table: true
-  # 输出目录
   output_dir: "OUTPUT/simulation"
-

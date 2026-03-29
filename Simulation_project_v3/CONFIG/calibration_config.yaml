@@ -1,113 +1,142 @@
-# 校准配置文件
+# 校准配置文件（CLDS口径 + 多步走流程）
 
-# 校准参数定义
-# 注：参数范围和初始值已根据MFG模块调优结果更新（2025年版本）
 parameters:
   - name: rho
     display_name: 贴现因子
     config_path: economics.rho
-    bounds: [0.30, 0.60]
-    initial_value: 0.40
+    bounds: [0.90, 0.99]  # 修正：标准劳动市场模型均在0.90-0.99，原[0.20,0.75]无经济学依据
+    initial_value: 0.95
     transform: null
-    description: 个体对未来的贴现率，越大越重视未来（当前最优值0.40）
-    
+    description: 个体对未来收益的贴现权重
+
   - name: kappa
     display_name: 努力成本系数
     config_path: economics.kappa
-    bounds: [1000.0, 4000.0]
-    initial_value: 2000.0
+    bounds: [500.0, 8000.0]
+    # 外部校准：Christensen et al.(2005,Econometrica)，均衡努力成本约占月工资5-10%
+    initial_value: 1500.0
     transform: null
-    description: 努力的边际成本，越大个体越不愿意努力（当前最优值2000.0）
-    
+    description: 努力边际成本系数
+
   - name: alpha_T
     display_name: T负效用系数
     config_path: economics.disutility_T.alpha
-    bounds: [0.10, 0.60]
-    initial_value: 0.30
+    bounds: [0.05, 0.85]
+    # 外部校准：Rogerson & Wallenius(2009,JME)，匹配CLDS均衡工时占时间禀赋43%
+    initial_value: 0.25
     transform: null
-    description: T偏离理想工作时间的负效用系数（当前最优值0.30）
-    
+    description: 偏离理想工时的负效用系数
+
   - name: gamma_T
     display_name: T状态更新系数
     config_path: economics.state_update.gamma_T
-    bounds: [0.20, 0.50]
+    bounds: [0.05, 0.80]
     initial_value: 0.30
     transform: null
-    description: 努力对可工作时间T的影响系数（当前值0.30）
-    
+    description: 努力对可工作时间T的影响
+
   - name: gamma_S
     display_name: S状态更新系数
     config_path: economics.state_update.gamma_S
-    bounds: [0.30, 0.70]
-    initial_value: 0.45
+    bounds: [0.05, 0.95]
+    # 外部校准：Heckman,Lochner&Taber(1998,AER)，农村低技能女性工资-工龄梯度2-3%/年
+    initial_value: 0.35
     transform: null
-    description: 努力对技能水平S的影响系数（当前值0.45）
-    
+    description: 努力对技能S的影响
+
   - name: gamma_D
     display_name: D状态更新系数
     config_path: economics.state_update.gamma_D
-    bounds: [0.30, 0.70]
-    initial_value: 0.45
+    bounds: [0.05, 0.40]  # 修正：原上界0.95导致γ_D=0.784，均衡D趋近满分；收紧至0.40
+    initial_value: 0.20
     transform: null
-    description: 努力对数字素养D的影响系数（当前值0.45）
-    
+    description: 努力对数字素养D的影响
+
   - name: gamma_W
     display_name: W状态更新系数
     config_path: economics.state_update.gamma_W
-    bounds: [0.10, 0.30]
+    bounds: [0.01, 0.60]
     initial_value: 0.15
     transform: null
-    description: 努力对期望工资W的影响系数，负向（当前值0.15）
+    description: 努力对预期工资W的影响（负向）
 
-# 目标矩定义
 target_moments:
   config_file: CONFIG/target_moments.yaml
-  weight_type: identity
+  # 当前正式校准只使用 target_moments.yaml 中标记为当前活跃口径的
+  # M1/M2/M3/M4/M7/M8 六个矩；M5/M6 保留在目标矩文件中，但不参与本轮优化。
+  # 使用手工对角权重（diagonal），避免 inverse_variance_bootstrap 下
+  # 小SE的率类矩权重爆炸、大SE的工资矩权重归零的问题。
+  #
+  # 权重设计思路：对各矩进行"相对误差标准化"，即 SMM 实际最小化的是
+  # 加权后的相对偏差。近似做法：weight ≈ 1 / target_value^2，
+  # 再乘以经济重要性调节系数（如率类矩已被归一化，无需额外放大）。
+  #
+  # 当前权重取值（等效于各矩按相对误差平权，经济重要性微调）：
+  #   - 率类矩当前仅保留 M1。
+  #   - 工资矩（M2/M3/M7）：工资对研究主题核心，给予较高权重。
+  #   - 工时矩（M4/M8）：次要，适中权重。
+  weight_type: diagonal
+  strict_bootstrap_se: false
   moments:
     - name: unemployment_rate
-      display_name: 失业率
-      weight: 1.0
-      
+      display_name: M1失业率
+      # 目标值 3.5%（由 CLDS ILO 口径1.73% 与城镇调查失业率4.9% 综合调整）
+      # 权重降至 300（原1000）：农村失业率无官方统计，目标值本身存在口径不确定性
+      # 1/0.035² ≈ 816，取 300 适度压缩，避免独占目标函数
+      weight: 300.0
     - name: mean_wage
-      display_name: 平均工资
-      weight: 1.0
-      
-    - name: std_wage
-      display_name: 工资标准差
-      weight: 1.0
+      display_name: M2平均工资
+      # 权重 = 1/3578² ≈ 7.8e-8，需放大使其有实际意义
+      # 相对于 M1 对等化处理：1/0.0173² ≈ 3340，工资相对误差1%对应36元
+      # 取 0.0001 ≈ 1/3578²×1000（等效于允许100元的误差与1%失业率偏差等权）
+      weight: 0.0001
+    - name: log_std_wage
+      display_name: M3对数工资标准差
+      # 目标值 0.649（无量纲对数量），权重 = 1/0.649² ≈ 2.37
+      # 相比原 std_wage（目标值2591元，weight=0.0001），
+      # 对数化后量纲变小，权重自动放大，与其他矩平衡
+      weight: 2.37
+    - name: mean_weekly_hours
+      display_name: M4平均周工时
+      # 当前目标值为 52.0，1/52² ≈ 3.7e-4，取 0.001（等效于1小时偏差与M1相近）
+      weight: 0.001
+    - name: wage_iqr_ratio
+      display_name: M7工资IQR比值
+      # P75/P25=3.0，取 0.1（比值无量纲，1/3²≈0.11，近似等权）
+      weight: 0.1
+    - name: std_weekly_hours
+      display_name: M8工时标准差
+      # 当前目标值为 16.7，1/16.7² ≈ 0.0036，取 0.002 适度压缩
+      weight: 0.002
+  # 当前口径与论文脚本 run_paper_simulation.py 保持一致，仅使用
+  # M1/M2/M3/M4/M7/M8 六个活跃目标矩；M5/M6 保留在 target_moments.yaml
+  # 仅作历史参考，不进入当前校准与论文主表。
 
-# 优化算法设置
+
 optimization:
-  method: differential_evolution  # 并行优化算法
+  method: differential_evolution
   options:
-    maxiter: 100  # 最大迭代代数（每代评估32个点，总计3200次评估）
-    popsize: 32   # 种群大小：每代评估32个参数组合
-    workers: 32   # 使用32个进程并行评估
-    updating: deferred  # 延迟更新，允许并行
-    atol: 1.0e-4
-    tol: 1.0e-4
-    polish: false  # 不做局部优化（太慢）
-  alternative_methods:
-    - Nelder-Mead  # 备用方案
-    - L-BFGS-B
-    - Powell
+    maxiter: 50
+    popsize: 8
+    workers: 16
+    updating: deferred
+    atol: 1.0e-3
+    tol: 1.0e-3
+    polish: false
 
-# 断点续跑设置
 checkpoint:
   enabled: true
-  save_frequency: 10
+  save_frequency: 1
   keep_last_n: 3
   auto_resume: true
   checkpoint_dir: OUTPUT/calibration
 
-# MFG求解设置
 mfg_solver:
   config_path: CONFIG/mfg_config.yaml
   max_iterations: 150
   convergence_check: true
   population_adjustment: null
 
-# 输出设置
 output:
   output_dir: OUTPUT/calibration
   save_history: true
@@ -116,23 +145,43 @@ output:
   verbose: 2
   log_file: OUTPUT/calibration/calibration.log
 
-# 两阶段校准设置
+calibration_strategy:
+  step0_jacobian:
+    # elbow分析已完成，结果已硬编码至step1 override，故关闭此步骤节省计算
+    enabled: false
+    relative_step: 0.03
+    output_file: OUTPUT/calibration/jacobian_analysis.csv
+  step1_classification:
+    enabled: true
+    weak_sensitivity_threshold: 0.03
+    # elbow识别结果（mean_abs_elasticity升序排名前3）：固定为外部参数
+    external_params_override: [gamma_S, kappa, alpha_T]
+    # elbow识别结果（排名后4）：参与SMM内部优化
+    internal_params_override: [gamma_W, gamma_T, gamma_D, rho]
+
 two_stage_calibration:
   enabled: true
-  stage1:
-    name: 敏感性分析引导
-    use_sensitivity_results: true
-    sensitivity_results_dir: OUTPUT/sensitivity_analysis
-    adjust_bounds: true
-    adjust_initial_values: true
-  stage2:
-    name: SMM精确校准
-    use_adjusted_config: true
+  stage4:
+    enabled: true
+    name: 鲁棒阶段
+    weight_type: inverse_variance_bootstrap
+    strict_bootstrap_se: false
+  stage5:
+    enabled: false
+    name: 高效阶段
+    weight_type: efficient_from_covariance
+    covariance_replicates: 8
+    covariance_regularization: 1.0e-8
+    method: differential_evolution
+    options:
+      maxiter: 3
+      popsize: 4
+      atol: 1.0e-4
+      tol: 1.0e-4
+      polish: false
 
-# 调试与测试设置
 debug:
   quick_test: false
   quick_test_iterations: 5
   save_intermediate_results: true
   print_detailed_log: true
-

@@ -24,7 +24,7 @@ enterprise_distribution:
     T_req: 45.0
     S_req: 25.0
     D_req: 10.0
-    W_offer: 4500.0
+    W_offer: 3500.0  # 修正：原4500对应劳动力期望工资口径，改为3500对齐CLDS目标矩3578元
   
   std:
     T_req: 8.0

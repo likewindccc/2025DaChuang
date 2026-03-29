@@ -4,7 +4,7 @@
 检查项：
 1. NUMBA_NUM_THREADS 应为 1
 2. OMP_NUM_THREADS 应为 1
-3. DE workers 配置为 32
+3. DE workers 配置为 auto/all 或正整数
 4. 无过度订阅风险
 """
 
@@ -16,6 +16,12 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 import yaml
+
+# 在导入numba前先设置线程环境变量，避免配置被锁定
+os.environ.setdefault('NUMBA_NUM_THREADS', '1')
+os.environ.setdefault('OMP_NUM_THREADS', '1')
+os.environ.setdefault('MKL_NUM_THREADS', '1')
+
 import numba
 
 
@@ -34,7 +40,7 @@ def check_environment_variables():
     all_ok = True
     for var_name, expected in checks:
         actual = os.environ.get(var_name, 'NOT_SET')
-        status = "✓" if actual == expected else "✗"
+        status = "[OK]" if actual == expected else "[ERR]"
         
         if actual != expected:
             all_ok = False
@@ -42,14 +48,18 @@ def check_environment_variables():
         print(f"  {status} {var_name}: {actual} (期望: {expected})")
     
     # 检查Numba实际配置
+    try:
+        numba.set_num_threads(1)
+    except Exception:
+        pass
     numba_threads = numba.config.NUMBA_NUM_THREADS
     print(f"\n  Numba实际线程数: {numba_threads}")
     
     if numba_threads != 1:
-        print(f"  ✗ 警告：Numba未正确配置为1线程！")
+        print("  [ERR] 警告：Numba未正确配置为1线程！")
         all_ok = False
     else:
-        print(f"  ✓ Numba正确配置为串行模式")
+        print("  [OK] Numba正确配置为串行模式")
     
     return all_ok
 
@@ -76,16 +86,22 @@ def check_calibration_config():
     all_ok = True
     
     if method != 'differential_evolution':
-        print(f"  ✗ 警告：未使用差分进化算法")
+        print("  [ERR] 警告：未使用差分进化算法")
         all_ok = False
     else:
-        print(f"  ✓ 使用差分进化算法")
+        print("  [OK] 使用差分进化算法")
     
-    if workers != 32:
-        print(f"  ✗ 警告：workers不是32")
-        all_ok = False
+    if isinstance(workers, str):
+        if workers.strip().lower() in {'auto', 'all', '-1'}:
+            print("  [OK] workers已配置为自动全核")
+        else:
+            print("  [ERR] workers字符串配置非法")
+            all_ok = False
+    elif int(workers) > 0:
+        print(f"  [OK] workers为固定正整数: {workers}")
     else:
-        print(f"  ✓ 配置为32进程并行")
+        print("  [ERR] workers必须为正整数或auto/all")
+        all_ok = False
     
     return all_ok
 
@@ -102,8 +118,12 @@ def calculate_parallelism():
     with open(config_path, 'r', encoding='utf-8') as f:
         config = yaml.safe_load(f)
     
-    workers = config['optimization']['options'].get('workers', 1)
-    
+    workers_raw = config['optimization']['options'].get('workers', 1)
+    if isinstance(workers_raw, str) and workers_raw.strip().lower() in {'auto', 'all', '-1'}:
+        workers = os.cpu_count() or 1
+    else:
+        workers = int(workers_raw)
+
     total_threads = workers * numba_threads
     
     print(f"  DE进程数: {workers}")
@@ -111,16 +131,17 @@ def calculate_parallelism():
     print(f"  总并行任务数: {total_threads}")
     print()
     
-    if total_threads == 32:
-        print(f"  ✓ 完美配置！32个进程 × 1个线程 = 32个任务")
-        print(f"  ✓ 在32核CPU上达到完美负载均衡")
+    cpu_count = os.cpu_count() or 1
+    if total_threads == cpu_count:
+        print(f"  [OK] 完美配置！{workers}个进程 × {numba_threads}个线程 = {cpu_count}个任务")
+        print(f"  [OK] 在当前{cpu_count}核CPU上达到满负载")
         return True
-    elif total_threads > 64:
-        print(f"  ✗ 严重过度订阅！{total_threads}个任务竞争32核心")
-        print(f"  ✗ 过度订阅比例: {total_threads / 32:.1f}倍")
+    elif total_threads > cpu_count * 2:
+        print(f"  [ERR] 严重过度订阅！{total_threads}个任务竞争{cpu_count}核心")
+        print(f"  [ERR] 过度订阅比例: {total_threads / cpu_count:.1f}倍")
         return False
     else:
-        print(f"  ⚠️ 配置可能需要调整")
+        print("  [WARN] 配置可能需要调整")
         return True
 
 
@@ -134,9 +155,9 @@ def print_recommendations():
 推荐配置（方案A - 已实施）：
   - NUMBA_NUM_THREADS=1
   - OMP_NUM_THREADS=1
-  - DE workers=32
-  - 总任务数=32
-  - 适用于32核CPU
+  - DE workers=auto
+  - 总任务数=CPU核心数
+  - 适配任意核数CPU
   
 预期性能：
   - 单次MFG: ~18分钟
@@ -164,9 +185,9 @@ def main():
     
     print("\n" + "=" * 80)
     if check1 and check2 and check3:
-        print("✅ 所有检查通过！配置正确，可以开始校准任务")
+        print("[OK] 所有检查通过！配置正确，可以开始校准任务")
     else:
-        print("❌ 部分检查失败！请修复配置后再运行")
+        print("[ERR] 部分检查失败！请修复配置后再运行")
     print("=" * 80 + "\n")
     
     return check1 and check2 and check3

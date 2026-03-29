@@ -51,6 +51,7 @@ MFG均衡求解器测试脚本（完整规模版）
 """
 
 import sys
+import argparse
 import os
 import numpy as np
 import pandas as pd
@@ -68,8 +69,8 @@ sys.path.insert(0, str(project_root))
 
 from MODULES.MFG import solve_equilibrium
 
-# 设置中文字体
-plt.rcParams['font.sans-serif'] = ['Microsoft YaHei']
+# 服务器环境使用通用字体（无需中文字体支持）
+plt.rcParams['font.sans-serif'] = ['DejaVu Sans']
 plt.rcParams['axes.unicode_minus'] = False
 plt.rcParams['font.size'] = 14  # 全局字体大小
 plt.rcParams['axes.labelsize'] = 16  # 坐标轴标签字体
@@ -188,15 +189,15 @@ def test_mfg_equilibrium_small():
         print("\n生成可视化图表...")
         
         plt.figure(figsize=(14, 8))
-        plt.plot(history['iteration'], 
-                [u*100 for u in history['unemployment_rate']], 
+        plt.plot(history['iteration'],
+                [u*100 for u in history['unemployment_rate']],
                 'b-', linewidth=3)
-        plt.xlabel('迭代轮数', fontsize=18, fontweight='bold')
-        plt.ylabel('失业率 (%)', fontsize=18, fontweight='bold')
+        plt.xlabel('Iteration', fontsize=18, fontweight='bold')
+        plt.ylabel('Unemployment Rate (%)', fontsize=18, fontweight='bold')
         plt.grid(True, alpha=0.3, linewidth=1.5)
         plt.tight_layout()
         plt.savefig('OUTPUT/mfg/convergence_unemployment_rate.png', dpi=300, bbox_inches='tight')
-        print("  ✓ 失业率演化图已保存")
+        print("  [OK] Unemployment rate plot saved")
         plt.close()
         
         # ============================================================
@@ -204,12 +205,12 @@ def test_mfg_equilibrium_small():
         # ============================================================
         plt.figure(figsize=(14, 8))
         plt.plot(history['iteration'], history['theta'], 'r-', linewidth=3)
-        plt.xlabel('迭代轮数', fontsize=18, fontweight='bold')
-        plt.ylabel('市场紧张度 θ', fontsize=18, fontweight='bold')
+        plt.xlabel('Iteration', fontsize=18, fontweight='bold')
+        plt.ylabel('Market Tightness theta', fontsize=18, fontweight='bold')
         plt.grid(True, alpha=0.3, linewidth=1.5)
         plt.tight_layout()
         plt.savefig('OUTPUT/mfg/convergence_theta.png', dpi=300, bbox_inches='tight')
-        print("  ✓ 市场紧张度演化图已保存")
+        print("  [OK] Market tightness plot saved")
         plt.close()
         
         # ============================================================
@@ -217,12 +218,12 @@ def test_mfg_equilibrium_small():
         # ============================================================
         plt.figure(figsize=(14, 8))
         plt.plot(history['iteration'], history['mean_effort'], 'g-', linewidth=3)
-        plt.xlabel('迭代轮数', fontsize=18, fontweight='bold')
-        plt.ylabel('平均努力水平', fontsize=18, fontweight='bold')
+        plt.xlabel('Iteration', fontsize=18, fontweight='bold')
+        plt.ylabel('Mean Effort Level', fontsize=18, fontweight='bold')
         plt.grid(True, alpha=0.3, linewidth=1.5)
         plt.tight_layout()
         plt.savefig('OUTPUT/mfg/convergence_effort.png', dpi=300, bbox_inches='tight')
-        print("  ✓ 平均努力水平演化图已保存")
+        print("  [OK] Mean effort plot saved")
         plt.close()
         
         # ============================================================
@@ -234,50 +235,50 @@ def test_mfg_equilibrium_small():
             plt.semilogy(
                 [history['iteration'][i] for i in valid_indices],
                 [history['convergence_V'][i] for i in valid_indices],
-                color='purple', linewidth=3, label='|ΔV| (价值函数变化)'
+                color='purple', linewidth=3, label='|dV| (Value function change)'
             )
             plt.semilogy(
                 [history['iteration'][i] for i in valid_indices],
                 [history['convergence_a'][i] for i in valid_indices],
-                color='orange', linewidth=3, label='|Δa| (努力水平变化)'
+                color='orange', linewidth=3, label='|da| (Effort level change)'
             )
-            plt.axhline(y=config['equilibrium']['convergence']['epsilon_V'], 
-                       color='r', linestyle='--', linewidth=2, label='收敛阈值')
-            plt.xlabel('迭代轮数', fontsize=18, fontweight='bold')
-            plt.ylabel('收敛指标 (对数尺度)', fontsize=18, fontweight='bold')
+            plt.axhline(y=config['equilibrium']['convergence']['epsilon_V'],
+                       color='r', linestyle='--', linewidth=2, label='Convergence threshold')
+            plt.xlabel('Iteration', fontsize=18, fontweight='bold')
+            plt.ylabel('Convergence Metric (log scale)', fontsize=18, fontweight='bold')
             plt.legend(loc='best', fontsize=14)
             plt.grid(True, alpha=0.3, linewidth=1.5)
             plt.tight_layout()
             plt.savefig('OUTPUT/mfg/convergence_metrics.png', dpi=300, bbox_inches='tight')
-            print("  ✓ 收敛指标监控图已保存")
+            print("  [OK] Convergence metrics plot saved")
             plt.close()
         
         # ============================================================
         # 可视化5：失业者最优努力水平分布
         # ============================================================
         plt.figure(figsize=(14, 8))
-        plt.hist(unemployed_policy['a_optimal'], bins=20, 
+        plt.hist(unemployed_policy['a_optimal'], bins=20,
                 edgecolor='black', alpha=0.7, color='steelblue')
-        plt.xlabel('最优努力水平', fontsize=18, fontweight='bold')
-        plt.ylabel('频数', fontsize=18, fontweight='bold')
+        plt.xlabel('Optimal Effort Level', fontsize=18, fontweight='bold')
+        plt.ylabel('Count', fontsize=18, fontweight='bold')
         plt.grid(True, alpha=0.3, linewidth=1.5, axis='y')
         plt.tight_layout()
         plt.savefig('OUTPUT/mfg/effort_distribution_histogram.png', dpi=300, bbox_inches='tight')
-        print("  ✓ 努力水平分布直方图已保存")
+        print("  [OK] Effort distribution histogram saved")
         plt.close()
         
         # ============================================================
         # 可视化6：技能水平与最优努力的关系
         # ============================================================
         plt.figure(figsize=(14, 8))
-        plt.scatter(unemployed['S'].values, unemployed_policy['a_optimal'].values, 
+        plt.scatter(unemployed['S'].values, unemployed_policy['a_optimal'].values,
                    alpha=0.5, s=50, c='steelblue', edgecolors='navy', linewidth=0.5)
-        plt.xlabel('技能水平 S', fontsize=18, fontweight='bold')
-        plt.ylabel('最优努力水平', fontsize=18, fontweight='bold')
+        plt.xlabel('Skill Level S', fontsize=18, fontweight='bold')
+        plt.ylabel('Optimal Effort Level', fontsize=18, fontweight='bold')
         plt.grid(True, alpha=0.3, linewidth=1.5)
         plt.tight_layout()
         plt.savefig('OUTPUT/mfg/effort_vs_skill.png', dpi=300, bbox_inches='tight')
-        print("  ✓ 技能-努力关系散点图已保存")
+        print("  [OK] Skill vs effort scatter plot saved")
         plt.close()
         
         print("\n" + "=" * 80)
@@ -331,6 +332,14 @@ def test_mfg_equilibrium_full():
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description="MFG均衡求解器完整规模测试")
+    parser.add_argument(
+        '--yes',
+        action='store_true',
+        help='跳过启动确认，直接运行'
+    )
+    args = parser.parse_args()
+    
     print("=" * 80)
     print("MFG均衡求解器 - 完整规模测试")
     print("=" * 80)
@@ -349,9 +358,11 @@ if __name__ == '__main__':
     print("     • 努力分布直方图")
     print("     • 技能-努力散点图")
     print("  3. 详细统计分析")
-    print("\n按Enter键开始运行...")
-    input()
+    if args.yes or not sys.stdin.isatty():
+        print("\n已启用自动启动，直接开始运行...")
+    else:
+        print("\n按Enter键开始运行...")
+        input()
     
     # 运行完整规模测试
     individuals, info = test_mfg_equilibrium_small()
-

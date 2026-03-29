@@ -1,0 +1,72 @@
+meta:
+  description: CLDS实算目标矩（农村女性，15-64岁）
+  data_source: CLDS 2018年个体问卷（主）+ CLDS 2016年（面板追踪）
+  filter: 性别=女, 户口I1_3_2∈{2,4}（农业/失地农业）, 年龄15-64岁
+  sample_size_2018: 928
+  sample_employed_2018: 568
+  panel_tracked: 187
+  M1_method: 'ILO三分法: I3_1=1就业; I3_1=2且I3c_5=1失业; 其余=非劳动力'
+  M5M6_method: IID精确匹配2016-2018，I3a_7_0(2016年当前状态)→I3_1(2018年工作经历)，24个月月度折算
+  wage_method: I3a_6（2017年总收入）/12，IQR2.5倍法过滤异常值
+  transition_diagnostics:
+    panel_matched_n: 187
+    panel_valid_n: 120
+    definition_gap_n: 7
+    steady_state_unemp: 0.0895
+    cross_section_nonwork_rate: 0.2252
+    note: 两者口径不同（转移率基于面板、截面基于2017年以来是否工作过），仅供诊断参考
+moments:
+  unemployment_rate:
+    tag: M1
+    value: 0.0173
+    n: 578
+    description: 失业率（ILO定义：失业/劳动力，失业=无工作且最近3个月积极找工作）
+    confidence: HIGH
+  mean_wage:
+    tag: M2
+    n: 530
+    confidence: HIGH
+    value: 3578.3
+    description: 月工资均值（I3a_6年收入/12，IQR2.5倍过滤）
+  std_wage:
+    tag: M3
+    n: 530
+    confidence: HIGH
+    value: 2591.6
+    description: 月工资标准差（元）
+  mean_weekly_hours:
+    tag: M4
+    n: 544
+    confidence: HIGH
+    value: 48.0
+    description: 平均周工时（I3a_1，就业农村女性，1-112小时过滤）
+  job_finding_rate:
+    tag: M5
+    value: 0.0285
+    n: 12
+    confidence: LOW
+    description: 月度就业转移率（2016无工作→2018工作经历，24个月折算）
+  separation_rate:
+    tag: M6
+    value: 0.0028
+    n: 108
+    confidence: HIGH
+    description: 月度分离率（2016就业→2018无工作经历，24个月折算）
+  wage_iqr_ratio:
+    tag: M7
+    n: 530
+    confidence: HIGH
+    value: 3.0
+    description: 工资P75/P25比值（工资分散度指标）
+  std_weekly_hours:
+    tag: M8
+    n: 544
+    confidence: HIGH
+    value: 21.1
+    description: 工时标准差（小时/周）
+  digital_job_ratio:
+    tag: M9
+    value: 0.5681
+    n: 345
+    confidence: MEDIUM
+    description: 工作中经常/有时使用互联网的农村就业女性比例（数字素养D维度代理）

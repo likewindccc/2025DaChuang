@@ -1,13 +1,18 @@
 economics:
-  employment_utility:
-    mean_wage: 4500.0
-    std_wage: 1500.0
   disutility_T:
+    alpha: 0.25
     enabled: true
-    alpha: 0.3
-  kappa: 2000.0
-  rho: 0.40
+    T_ref: 40.0  # 参考工时（标准40小时工作制），灵活工时政策通过降低alpha_T改变工时负效用幅度
+  employment_utility:
+    mean_wage: 3500.0  # 修正：原4500→3500，与population_config企业W_offer保持一致
+    std_wage: 1500.0   # 回滚：优先政策可解释性（std=2000噪声过大掉相了政策信号）
+    beta_wage_S: 20.0  # S技能工资溢价（元/单位S偏差）
+    beta_wage_D: 50.0  # D技能工资溢价（元/单位D偏差）
+    min_wage: 500.0    # 保持500：防止对数工资截断极端值（不再回去1000）
+  kappa: 1500.0
+  rho: 0.9345435170456339  # 同步自 calibrated_parameters.yaml（2026-03-20）
   separation_rate:
+    auto_calibrate_eta0: false
     eta0: -3.46
     eta_D: -0.5
     eta_S: -0.8
@@ -16,12 +21,16 @@ economics:
     eta_age: -0.6
     eta_children: 0.15
     eta_edu: -0.3
-    target_rate: 0.05
+    eta0_bounds:
+    - -20.0
+    - 5.0
+    target_rate: 0.0028
   state_update:
-    gamma_D: 0.44999999999999996
-    gamma_S: 0.44999999999999996
-    gamma_T: 0.3
-    gamma_W: 0.15
+    gamma_D: 0.17584553689593435  # 同步自 calibrated_parameters.yaml（2026-03-20）
+    gamma_S: 0.35
+    gamma_T: 0.05549974877669023  # 同步自 calibrated_parameters.yaml（2026-03-20）
+    gamma_W: 0.5164044429425967   # 同步自 calibrated_parameters.yaml（2026-03-20）
+    sigma_match: 0.1
   unemployment_benefit:
     b0: 500.0
 effort:
@@ -32,19 +41,26 @@ equilibrium:
   convergence:
     epsilon_V: 0.01
     epsilon_a: 0.01
-    epsilon_u: 0.001
+    epsilon_u: 0.02   # 放宽：MC噪声约±0.2pp/轮，0.01过严导致伪未收敛
     use_relative_tol: true
   damping_factor: 0.3
   max_outer_iter: 100
 market:
   initialization:
     initial_effort: 0.0
+  match_probability:
+    auto_calibrate_intercept: false
+    intercept_bounds:
+    - -20.0
+    - 5.0
+    intercept_shift: 0.0
+    target_rate: 0.0285
   target_theta: 1.5
 paths:
   match_function_model: OUTPUT/logistic/match_function_model.pkl
   output_dir: OUTPUT/mfg
 population:
-  n_individuals: 10000
+  n_individuals: 5000
 value_iteration:
-  max_iter: 500
-  tol: 0.0001
+  max_iter: 250
+  tol: 0.01  # 修正：ρ=0.935下收缩速率慢，从0.001放宽至0.01以恢复运行速度

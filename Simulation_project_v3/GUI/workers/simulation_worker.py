@@ -101,11 +101,9 @@ class SimulationWorker(QThread):
                 import traceback
                 log_path = Path(sys.argv[0]).resolve().parent / 'runtime_boot.log'
                 with open(log_path, 'a', encoding='utf-8') as fh:
-                    fh.write('SimulationWorker 异常:
-')
+                    fh.write('SimulationWorker 异常:\n')
                     fh.write(traceback.format_exc())
-                    fh.write('
-')
+                    fh.write('\n')
             except Exception:
                 pass
             

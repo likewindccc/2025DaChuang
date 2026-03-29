@@ -1,0 +1,62 @@
+Option Explicit
+
+Sub LatexToWordMath_Better()
+    On Error GoTo ErrHandler
+    Application.ScreenUpdating = False
+    
+    ' 先转行间公式，再转行内公式
+    ConvertMathByDelimiter "$$"
+    ConvertMathByDelimiter "$"
+    
+    Application.ScreenUpdating = True
+    MsgBox "转换完成！已自动移除 $/$$ 并转换为 Word 公式。", vbInformation
+    Exit Sub
+
+ErrHandler:
+    Application.ScreenUpdating = True
+    MsgBox "转换失败：" & Err.Description, vbExclamation
+End Sub
+
+Private Sub ConvertMathByDelimiter(ByVal delim As String)
+    Dim rng As Range
+    Dim pattern As String
+    Dim cleanText As String
+    Dim leftLen As Long
+    
+    Set rng = ActiveDocument.Range(0, ActiveDocument.Content.End)
+    leftLen = Len(delim)
+    
+    ' 关键：使用“非贪婪等价”模式，避免跨多段匹配
+    If delim = "$$" Then
+        pattern = "\$\$([!\$]@)\$\$"
+    Else
+        pattern = "\$([!\$]@)\$"
+    End If
+    
+    With rng.Find
+        .ClearFormatting
+        .Replacement.ClearFormatting
+        .Text = pattern
+        .Forward = True
+        .Wrap = wdFindStop
+        .Format = False
+        .MatchWildcards = True
+    End With
+    
+    Do While rng.Find.Execute
+        If Len(rng.Text) > 2 * leftLen Then
+            ' 去掉头尾定界符
+            cleanText = Mid$(rng.Text, leftLen + 1, Len(rng.Text) - 2 * leftLen)
+            
+            If Len(Trim$(cleanText)) > 0 Then
+                rng.Text = cleanText
+                ActiveDocument.OMaths.Add rng
+                rng.OMaths(1).BuildUp
+            End If
+        End If
+        
+        ' 继续从当前位置向后找，防止重复匹配
+        rng.Collapse wdCollapseEnd
+        rng.End = ActiveDocument.Content.End
+    Loop
+End Sub
